@@ -1,3 +1,3 @@
 module github.com/ieee0824/transcript-go
 
-go 1.24.1
+go 1.25
