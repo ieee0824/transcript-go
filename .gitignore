@@ -30,3 +30,6 @@ Thumbs.db
 # Environment
 .env
 .env.local
+
+# Generated dictionary data (run `go run ./cmd/dictconv` to generate)
+data/
