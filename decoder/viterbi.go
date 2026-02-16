@@ -1,8 +1,10 @@
 package decoder
 
 import (
+	"math"
 	"sort"
 	"strings"
+
 	"github.com/ieee0824/transcript-go/acoustic"
 	"github.com/ieee0824/transcript-go/internal/mathutil"
 	"github.com/ieee0824/transcript-go/language"
@@ -191,8 +193,13 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 			}
 
 			// Transition to exit state -> next phoneme or word boundary
+			// Baum-Welch on isolated segments doesn't estimate exit transitions,
+			// so apply a floor of log(0.5) when TransLog[s][exit] is LogZero.
 			exitState := acoustic.NumStatesPerPhoneme - 1
 			exitTrans := hmm.TransLog[tok.stateIdx][exitState]
+			if exitTrans <= mathutil.LogZero+1 {
+				exitTrans = math.Log(0.5)
+			}
 			if exitTrans > mathutil.LogZero+1 {
 				if tok.phonIdx+1 < len(info.phonemes) {
 					// Next phoneme in current word
