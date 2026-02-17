@@ -56,16 +56,18 @@ func Forward(hmm *PhonemeHMM, obs [][]float64) [][]float64 {
 }
 
 // Backward computes the backward variable beta[t][j] in log domain.
-// beta[t][j] = log P(o_{t+1}..o_T | q_t=j, model)
+// beta[t][j] = log P(o_{t+1}..o_T, exit | q_t=j, model)
+// At T-1, beta includes the exit transition: beta[T-1][i] = a(i, exit).
 func Backward(hmm *PhonemeHMM, obs [][]float64) [][]float64 {
 	T := len(obs)
 	N := NumStatesPerPhoneme
 	beta := mathutil.NewMatFill(T, N, mathutil.LogZero)
 
-	// t=T-1: beta[T-1][j] = log(1) = 0 for all emitting states.
-	_ = N
+	// t=T-1: model must exit after the last observation.
+	// beta[T-1][i] = a(i, exit) so that P(O|λ) includes exit probability.
+	exitJ := NumStatesPerPhoneme - 1
 	for i := 1; i <= NumEmittingStates; i++ {
-		beta[T-1][i] = 0.0
+		beta[T-1][i] = hmm.TransLog[i][exitJ]
 	}
 
 	// Recurse: t=T-2..0
@@ -145,8 +147,10 @@ func backwardWithEmit(hmm *PhonemeHMM, emit [][]float64, T int, beta [][]float64
 		}
 	}
 
+	// β(T-1, i) = a(i, exit): model must exit after last observation.
+	exitJ := NumStatesPerPhoneme - 1
 	for i := 1; i <= NumEmittingStates; i++ {
-		beta[T-1][i] = 0.0
+		beta[T-1][i] = hmm.TransLog[i][exitJ]
 	}
 
 	for t := T - 2; t >= 0; t-- {
@@ -227,7 +231,11 @@ func TrainPhoneme(hmm *PhonemeHMM, sequences [][][]float64, cfg TrainingConfig) 
 			forwardWithEmit(hmm, emit[:T], T, alpha[:T])
 			backwardWithEmit(hmm, emit[:T], T, beta[:T])
 
-			ll := totalLogLikelihood(alpha[:T])
+			// Compute P(O|λ) = Σ_j α(T-1,j) * β(T-1,j) including exit.
+			ll := mathutil.LogZero
+			for j := 1; j <= NumEmittingStates; j++ {
+				ll = mathutil.LogAdd(ll, alpha[T-1][j]+beta[T-1][j])
+			}
 			if ll <= mathutil.LogZero+1 {
 				continue
 			}
@@ -252,6 +260,20 @@ func TrainPhoneme(hmm *PhonemeHMM, sequences [][][]float64, cfg TrainingConfig) 
 								emit[t+1][j-1] + beta[t+1][j] - ll
 							transAcc[i][j] = mathutil.LogAdd(transAcc[i][j], xi)
 						}
+					}
+				}
+			}
+
+			// Accumulate exit transitions at the last frame.
+			// At T-1 the model must exit the HMM, so
+			// ξ(T-1, i, exit) = α(T-1,i) + a(i,exit) - ll.
+			{
+				exitJ := NumStatesPerPhoneme - 1
+				lastT := T - 1
+				for i := 1; i <= NumEmittingStates; i++ {
+					if alpha[lastT][i] > mathutil.LogZero+1 && hmm.TransLog[i][exitJ] > mathutil.LogZero+1 {
+						xi := alpha[lastT][i] + hmm.TransLog[i][exitJ] - ll
+						transAcc[i][exitJ] = mathutil.LogAdd(transAcc[i][exitJ], xi)
 					}
 				}
 			}

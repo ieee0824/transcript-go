@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"math"
 	"os"
 	"strings"
 
@@ -63,8 +64,9 @@ func main() {
 		wavPath := parts[0]
 		words := strings.Fields(parts[1])
 
-		// Convert words to phoneme sequence
+		// Convert words to phoneme sequence with leading/trailing silence
 		var phonemes []acoustic.Phoneme
+		phonemes = append(phonemes, acoustic.PhonSil) // leading silence
 		allFound := true
 		for _, w := range words {
 			ph, ok := dict.PhonemeSequence(w)
@@ -75,9 +77,10 @@ func main() {
 			}
 			phonemes = append(phonemes, ph...)
 		}
-		if !allFound || len(phonemes) == 0 {
+		if !allFound || len(phonemes) <= 1 {
 			continue
 		}
+		phonemes = append(phonemes, acoustic.PhonSil) // trailing silence
 
 		utts = append(utts, utterance{wavPath, words, phonemes})
 	}
@@ -153,7 +156,66 @@ func main() {
 	fmt.Fprintf(os.Stderr, "Model saved to %s\n", *output)
 }
 
+// detectSilenceBounds uses c0 energy to find silence regions at utterance edges.
+// Returns (speechStart, speechEnd) frame indices: features[speechStart:speechEnd] is speech.
+func detectSilenceBounds(features [][]float64) (int, int) {
+	T := len(features)
+	if T < 6 {
+		return 0, T
+	}
+
+	// c0 (first MFCC coefficient) is proportional to log energy
+	minC0 := math.Inf(1)
+	maxC0 := math.Inf(-1)
+	for t := 0; t < T; t++ {
+		c := features[t][0]
+		if c < minC0 {
+			minC0 = c
+		}
+		if c > maxC0 {
+			maxC0 = c
+		}
+	}
+
+	threshold := minC0 + 0.3*(maxC0-minC0)
+
+	// Find leading silence end (search first 25% of frames)
+	speechStart := 0
+	limit := T / 4
+	for t := 0; t < limit; t++ {
+		if features[t][0] > threshold {
+			break
+		}
+		speechStart = t + 1
+	}
+	if speechStart < 3 {
+		speechStart = 3
+	}
+
+	// Find trailing silence start (search last 25% of frames)
+	speechEnd := T
+	for t := T - 1; t >= T-limit; t-- {
+		if features[t][0] > threshold {
+			break
+		}
+		speechEnd = t
+	}
+	if T-speechEnd < 3 {
+		speechEnd = T - 3
+	}
+
+	if speechStart >= speechEnd {
+		speechStart = 3
+		speechEnd = T - 3
+	}
+	if speechEnd <= speechStart {
+		return 0, T
+	}
+	return speechStart, speechEnd
+}
+
 // segmentUniform distributes frames evenly among phonemes.
+// Silence phonemes at utterance boundaries get energy-detected silence frames.
 func segmentUniform(utts []uttData) map[acoustic.Phoneme][][][]float64 {
 	phonemeData := make(map[acoustic.Phoneme][][][]float64)
 	for _, u := range utts {
@@ -162,19 +224,68 @@ func segmentUniform(utts []uttData) map[acoustic.Phoneme][][][]float64 {
 		if T < N {
 			continue
 		}
-		framesPerPhone := T / N
-		remainder := T % N
-		offset := 0
-		for j, ph := range u.phonemes {
-			segLen := framesPerPhone
-			if j < remainder {
-				segLen++
+
+		// Check for leading/trailing sil phonemes
+		hasLeadSil := N > 0 && u.phonemes[0] == acoustic.PhonSil
+		hasTrailSil := N > 1 && u.phonemes[N-1] == acoustic.PhonSil
+
+		if hasLeadSil || hasTrailSil {
+			speechStart, speechEnd := detectSilenceBounds(u.features)
+
+			// Assign silence segments
+			if hasLeadSil && speechStart >= 3 {
+				phonemeData[acoustic.PhonSil] = append(phonemeData[acoustic.PhonSil], u.features[:speechStart])
 			}
-			if segLen < 3 {
+			if hasTrailSil && T-speechEnd >= 3 {
+				phonemeData[acoustic.PhonSil] = append(phonemeData[acoustic.PhonSil], u.features[speechEnd:])
+			}
+
+			// Distribute remaining frames among speech phonemes
+			start := 0
+			if hasLeadSil {
+				start = 1
+			}
+			end := N
+			if hasTrailSil {
+				end = N - 1
+			}
+			speechPhonemes := u.phonemes[start:end]
+			speechFeatures := u.features[speechStart:speechEnd]
+			Ts := len(speechFeatures)
+			Ns := len(speechPhonemes)
+			if Ns == 0 || Ts < Ns {
 				continue
 			}
-			phonemeData[ph] = append(phonemeData[ph], u.features[offset:offset+segLen])
-			offset += segLen
+			framesPerPhone := Ts / Ns
+			remainder := Ts % Ns
+			offset := 0
+			for j, ph := range speechPhonemes {
+				segLen := framesPerPhone
+				if j < remainder {
+					segLen++
+				}
+				if segLen < 3 {
+					continue
+				}
+				phonemeData[ph] = append(phonemeData[ph], speechFeatures[offset:offset+segLen])
+				offset += segLen
+			}
+		} else {
+			// No silence: uniform distribution as before
+			framesPerPhone := T / N
+			remainder := T % N
+			offset := 0
+			for j, ph := range u.phonemes {
+				segLen := framesPerPhone
+				if j < remainder {
+					segLen++
+				}
+				if segLen < 3 {
+					continue
+				}
+				phonemeData[ph] = append(phonemeData[ph], u.features[offset:offset+segLen])
+				offset += segLen
+			}
 		}
 	}
 	return phonemeData

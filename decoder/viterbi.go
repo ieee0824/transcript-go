@@ -85,6 +85,9 @@ func (p *tokenPool) reset() {
 	p.pos = 0
 }
 
+// silWord is the special silence word that can appear between real words.
+const silWord = "<sil>"
+
 // Decode performs Viterbi beam search decoding on a sequence of feature frames.
 func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGramModel, dict *lexicon.Dictionary, cfg Config) *Result {
 	T := len(features)
@@ -115,6 +118,40 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 		return &Result{}
 	}
 
+	// Locate silence word index (-1 if not in dictionary)
+	silWordIdx := -1
+	for wi, info := range wordInfos {
+		if info.word == silWord {
+			silWordIdx = wi
+			break
+		}
+	}
+
+	// Pre-compute emission log-likelihoods for all phonemes/states/frames.
+	allPhonemes := acoustic.AllPhonemes()
+	phonOrd := make(map[acoustic.Phoneme]int, len(allPhonemes))
+	for i, ph := range allPhonemes {
+		phonOrd[ph] = i
+	}
+	emitCols := len(allPhonemes) * acoustic.NumEmittingStates
+	emitCache := mathutil.NewMat(T, emitCols)
+	for pi, ph := range allPhonemes {
+		hmm, ok := am.Phonemes[ph]
+		if !ok {
+			continue
+		}
+		for s := 1; s <= acoustic.NumEmittingStates; s++ {
+			col := pi*acoustic.NumEmittingStates + (s - 1)
+			gmm := hmm.States[s].GMM
+			for t := 0; t < T; t++ {
+				emitCache[t][col] = gmm.LogProb(features[t])
+			}
+		}
+	}
+	cachedEmit := func(ph acoustic.Phoneme, stateIdx, t int) float64 {
+		return emitCache[t][phonOrd[ph]*acoustic.NumEmittingStates+(stateIdx-1)]
+	}
+
 	// Pre-allocate token pools (double-buffer)
 	estimatedTokens := len(wordInfos) * 4
 	if estimatedTokens < 256 {
@@ -132,17 +169,20 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 	// Reusable LM history buffer
 	lmHistBuf := make([]string, 0, 16)
 
-	// Initialize tokens
+	// Initialize tokens: silence gets no LM score / penalty
 	for wi, info := range wordInfos {
 		phoneme := info.phonemes[0]
-		hmm, ok := am.Phonemes[phoneme]
-		if !ok {
+		if _, ok := am.Phonemes[phoneme]; !ok {
 			continue
 		}
-		lmScore := lm.LogProb([]string{"<s>"}, info.word) * cfg.LMWeight
-		acScore := hmm.LogLikelihood(1, features[0])
+		acScore := cachedEmit(phoneme, 1, 0)
 		tok := currentPool.get()
-		tok.score = acScore + lmScore + cfg.WordInsertionPenalty
+		if wi == silWordIdx {
+			tok.score = acScore
+		} else {
+			lmScore := lm.LogProb([]string{"<s>"}, info.word) * cfg.LMWeight
+			tok.score = acScore + lmScore + cfg.WordInsertionPenalty
+		}
 		tok.wordIdx = wi
 		tok.phonIdx = 0
 		tok.stateIdx = 1
@@ -154,6 +194,7 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 	for t := 1; t < T; t++ {
 		nextPool.reset()
 		nextTokens = nextTokens[:0]
+		bestNextScore := math.Inf(-1)
 
 		for _, tok := range activeTokens {
 			info := wordInfos[tok.wordIdx]
@@ -166,14 +207,18 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 			// Self-loop: stay in same state
 			selfTrans := hmm.TransLog[tok.stateIdx][tok.stateIdx]
 			if selfTrans > mathutil.LogZero+1 {
-				acScore := hmm.LogLikelihood(tok.stateIdx, features[t])
+				acScore := cachedEmit(phoneme, tok.stateIdx, t)
+				s := tok.score + selfTrans + acScore
 				nt := nextPool.get()
-				nt.score = tok.score + selfTrans + acScore
+				nt.score = s
 				nt.wordIdx = tok.wordIdx
 				nt.phonIdx = tok.phonIdx
 				nt.stateIdx = tok.stateIdx
 				nt.history = tok.history
 				nextTokens = append(nextTokens, nt)
+				if s > bestNextScore {
+					bestNextScore = s
+				}
 			}
 
 			// Forward transition within phoneme HMM
@@ -181,20 +226,23 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 			if nextState <= acoustic.NumEmittingStates {
 				fwdTrans := hmm.TransLog[tok.stateIdx][nextState]
 				if fwdTrans > mathutil.LogZero+1 {
-					acScore := hmm.LogLikelihood(nextState, features[t])
+					acScore := cachedEmit(phoneme, nextState, t)
+					s := tok.score + fwdTrans + acScore
 					nt := nextPool.get()
-					nt.score = tok.score + fwdTrans + acScore
+					nt.score = s
 					nt.wordIdx = tok.wordIdx
 					nt.phonIdx = tok.phonIdx
 					nt.stateIdx = nextState
 					nt.history = tok.history
 					nextTokens = append(nextTokens, nt)
+					if s > bestNextScore {
+						bestNextScore = s
+					}
 				}
 			}
 
 			// Transition to exit state -> next phoneme or word boundary
-			// Baum-Welch on isolated segments doesn't estimate exit transitions,
-			// so apply a floor of log(0.5) when TransLog[s][exit] is LogZero.
+			// Apply a floor of log(0.5) when TransLog[s][exit] is LogZero.
 			exitState := acoustic.NumStatesPerPhoneme - 1
 			exitTrans := hmm.TransLog[tok.stateIdx][exitState]
 			if exitTrans <= mathutil.LogZero+1 {
@@ -204,63 +252,128 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 				if tok.phonIdx+1 < len(info.phonemes) {
 					// Next phoneme in current word
 					nextPhon := info.phonemes[tok.phonIdx+1]
-					nextHMM, ok := am.Phonemes[nextPhon]
-					if ok {
-						acScore := nextHMM.LogLikelihood(1, features[t])
+					if _, ok := am.Phonemes[nextPhon]; ok {
+						acScore := cachedEmit(nextPhon, 1, t)
+						s := tok.score + exitTrans + acScore
 						nt := nextPool.get()
-						nt.score = tok.score + exitTrans + acScore
+						nt.score = s
 						nt.wordIdx = tok.wordIdx
 						nt.phonIdx = tok.phonIdx + 1
 						nt.stateIdx = 1
 						nt.history = tok.history
 						nextTokens = append(nextTokens, nt)
+						if s > bestNextScore {
+							bestNextScore = s
+						}
 					}
 				} else {
-					// Word boundary: push current word to history
-					newNode := &wordHistoryNode{
-						word:  info.word,
-						frame: 0,
-						prev:  tok.history,
-					}
-					if tok.history != nil {
-						newNode.length = tok.history.length + 1
-					} else {
-						newNode.length = 1
-					}
-					// Recover start frame from the current token context
-					if tok.history != nil {
-						// not trivial to know exact start, use t as word-end marker
-					}
-
-					// Build LM history from linked list
-					lmHistBuf = lmHistBuf[:0]
-					cur := tok.history
-					for cur != nil {
-						lmHistBuf = append(lmHistBuf, cur.word)
-						cur = cur.prev
-					}
-					// Reverse to get chronological order, then append current word
-					for i, j := 0, len(lmHistBuf)-1; i < j; i, j = i+1, j-1 {
-						lmHistBuf[i], lmHistBuf[j] = lmHistBuf[j], lmHistBuf[i]
-					}
-					lmHistBuf = append(lmHistBuf, info.word)
-
+					// Word boundary
 					baseScore := tok.score + exitTrans
-					for nwi, ninfo := range wordInfos {
-						nextPhon := ninfo.phonemes[0]
-						nextHMM, ok := am.Phonemes[nextPhon]
-						if !ok {
-							continue
+					if bestNextScore > math.Inf(-1) && baseScore < bestNextScore-cfg.BeamWidth {
+						continue
+					}
+
+					if silWordIdx >= 0 && tok.wordIdx == silWordIdx {
+						// === Silence completed ===
+						// Don't push sil to history; use pre-sil LM context.
+						// Build LM history from existing (pre-sil) history.
+						lmHistBuf = lmHistBuf[:0]
+						cur := tok.history
+						for cur != nil {
+							lmHistBuf = append(lmHistBuf, cur.word)
+							cur = cur.prev
 						}
-						lmScore := lm.LogProb(lmHistBuf, ninfo.word) * cfg.LMWeight
-						acScore := nextHMM.LogLikelihood(1, features[t])
-						nt := nextPool.get()
-						nt.score = baseScore + lmScore + acScore + cfg.WordInsertionPenalty
-						nt.wordIdx = nwi
-						nt.phonIdx = 0
-						nt.stateIdx = 1
-						nt.history = newNode
-						nextTokens = append(nextTokens, nt)
+						for i, j := 0, len(lmHistBuf)-1; i < j; i, j = i+1, j-1 {
+							lmHistBuf[i], lmHistBuf[j] = lmHistBuf[j], lmHistBuf[i]
+						}
+
+						// Expand to all non-silence words
+						for nwi, ninfo := range wordInfos {
+							if nwi == silWordIdx {
+								continue // prevent sil→sil
+							}
+							nextPhon := ninfo.phonemes[0]
+							if _, ok := am.Phonemes[nextPhon]; !ok {
+								continue
+							}
+							var lmScore float64
+							if len(lmHistBuf) > 0 {
+								lmScore = lm.LogProb(lmHistBuf, ninfo.word) * cfg.LMWeight
+							} else {
+								lmScore = lm.LogProb([]string{"<s>"}, ninfo.word) * cfg.LMWeight
+							}
+							acScore := cachedEmit(nextPhon, 1, t)
+							s := baseScore + lmScore + acScore + cfg.WordInsertionPenalty
+							nt := nextPool.get()
+							nt.score = s
+							nt.wordIdx = nwi
+							nt.phonIdx = 0
+							nt.stateIdx = 1
+							nt.history = tok.history // pass through, don't push sil
+							nextTokens = append(nextTokens, nt)
+							if s > bestNextScore {
+								bestNextScore = s
+							}
+						}
+					} else {
+						// === Regular word completed ===
+						newNode := &wordHistoryNode{
+							word:  info.word,
+							frame: t,
+							prev:  tok.history,
+						}
+						if tok.history != nil {
+							newNode.length = tok.history.length + 1
+						} else {
+							newNode.length = 1
+						}
+
+						// Build LM history
+						lmHistBuf = lmHistBuf[:0]
+						cur := tok.history
+						for cur != nil {
+							lmHistBuf = append(lmHistBuf, cur.word)
+							cur = cur.prev
+						}
+						for i, j := 0, len(lmHistBuf)-1; i < j; i, j = i+1, j-1 {
+							lmHistBuf[i], lmHistBuf[j] = lmHistBuf[j], lmHistBuf[i]
+						}
+						lmHistBuf = append(lmHistBuf, info.word)
+
+						for nwi, ninfo := range wordInfos {
+							nextPhon := ninfo.phonemes[0]
+							if _, ok := am.Phonemes[nextPhon]; !ok {
+								continue
+							}
+							acScore := cachedEmit(nextPhon, 1, t)
+							if silWordIdx >= 0 && nwi == silWordIdx {
+								// Transition to silence: acoustic only, no LM / penalty
+								s := baseScore + acScore
+								nt := nextPool.get()
+								nt.score = s
+								nt.wordIdx = nwi
+								nt.phonIdx = 0
+								nt.stateIdx = 1
+								nt.history = newNode
+								nextTokens = append(nextTokens, nt)
+								if s > bestNextScore {
+									bestNextScore = s
+								}
+							} else {
+								lmScore := lm.LogProb(lmHistBuf, ninfo.word) * cfg.LMWeight
+								s := baseScore + lmScore + acScore + cfg.WordInsertionPenalty
+								nt := nextPool.get()
+								nt.score = s
+								nt.wordIdx = nwi
+								nt.phonIdx = 0
+								nt.stateIdx = 1
+								nt.history = newNode
+								nextTokens = append(nextTokens, nt)
+								if s > bestNextScore {
+									bestNextScore = s
+								}
+							}
+						}
 					}
 				}
 			}
@@ -285,15 +398,24 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 		}
 	}
 
-	// Build result: collect final word (current wordIdx) + history
-	finalNode := &wordHistoryNode{
-		word: wordInfos[best.wordIdx].word,
-		prev: best.history,
-	}
-	if best.history != nil {
-		finalNode.length = best.history.length + 1
+	// Build result: if final word is silence, use history as-is
+	var finalNode *wordHistoryNode
+	if silWordIdx >= 0 && best.wordIdx == silWordIdx {
+		finalNode = best.history
 	} else {
-		finalNode.length = 1
+		finalNode = &wordHistoryNode{
+			word: wordInfos[best.wordIdx].word,
+			prev: best.history,
+		}
+		if best.history != nil {
+			finalNode.length = best.history.length + 1
+		} else {
+			finalNode.length = 1
+		}
+	}
+
+	if finalNode == nil {
+		return &Result{LogScore: best.score}
 	}
 
 	words, starts := finalNode.toSlice()

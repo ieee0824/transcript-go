@@ -123,25 +123,35 @@ func TestForwardBackward(t *testing.T) {
 	alpha := Forward(hmm, obs)
 	beta := Backward(hmm, obs)
 
-	// Total log-likelihood from forward and backward should agree
-	llForward := totalLogLikelihood(alpha)
-
-	llBackward := math.Inf(-1)
+	// Total log-likelihood P(O|λ) = Σ_j α(t,j)*β(t,j) should agree at any time t.
+	// β now includes exit: β(T-1,i) = a(i, exit).
+	T := len(obs)
+	llAtEnd := math.Inf(-1)
 	for j := 1; j <= NumEmittingStates; j++ {
-		val := alpha[0][j] + beta[0][j]
-		if llBackward == math.Inf(-1) {
-			llBackward = val
+		val := alpha[T-1][j] + beta[T-1][j]
+		if llAtEnd == math.Inf(-1) {
+			llAtEnd = val
 		} else {
-			llBackward = math.Log(math.Exp(llBackward) + math.Exp(val))
+			llAtEnd = math.Log(math.Exp(llAtEnd) + math.Exp(val))
 		}
 	}
 
-	if math.Abs(llForward-llBackward) > 0.5 {
-		t.Errorf("forward LL = %f, backward LL = %f, differ too much", llForward, llBackward)
+	llAtStart := math.Inf(-1)
+	for j := 1; j <= NumEmittingStates; j++ {
+		val := alpha[0][j] + beta[0][j]
+		if llAtStart == math.Inf(-1) {
+			llAtStart = val
+		} else {
+			llAtStart = math.Log(math.Exp(llAtStart) + math.Exp(val))
+		}
 	}
 
-	if math.IsNaN(llForward) || math.IsInf(llForward, -1) {
-		t.Errorf("forward LL is invalid: %f", llForward)
+	if math.Abs(llAtEnd-llAtStart) > 0.5 {
+		t.Errorf("LL at T-1 = %f, LL at t=0 = %f, differ too much", llAtEnd, llAtStart)
+	}
+
+	if math.IsNaN(llAtEnd) || math.IsInf(llAtEnd, -1) {
+		t.Errorf("forward LL is invalid: %f", llAtEnd)
 	}
 }
 
@@ -192,6 +202,55 @@ func TestBaumWelch_LikelihoodImproves(t *testing.T) {
 
 	if finalLL <= initialLL {
 		t.Errorf("training did not improve LL: initial=%f, final=%f", initialLL, finalLL)
+	}
+}
+
+func TestBaumWelch_ExitTransitionEstimated(t *testing.T) {
+	rng := rand.New(rand.NewSource(42))
+	dim := 2
+
+	// Generate synthetic training data
+	numSeqs := 50
+	seqLen := 9
+	sequences := make([][][]float64, numSeqs)
+	for s := 0; s < numSeqs; s++ {
+		seq := make([][]float64, seqLen)
+		for f := 0; f < seqLen; f++ {
+			center := float64(f/3) * 3.0
+			seq[f] = []float64{center + rng.NormFloat64()*0.3, center + rng.NormFloat64()*0.3}
+		}
+		sequences[s] = seq
+	}
+
+	hmm := NewPhonemeHMM(PhonA, dim, 1)
+
+	// Verify initial exit transition is set
+	exitJ := NumStatesPerPhoneme - 1
+	initExit := hmm.TransLog[NumEmittingStates][exitJ]
+	if initExit <= -700 {
+		t.Fatalf("initial exit transition is LogZero: %f", initExit)
+	}
+
+	cfg := TrainingConfig{
+		MaxIterations:     10,
+		ConvergenceThresh: 0.001,
+		MinVariance:       0.01,
+	}
+	if err := TrainPhoneme(hmm, sequences, cfg); err != nil {
+		t.Fatalf("TrainPhoneme error: %v", err)
+	}
+
+	// After training, exit transition from the last emitting state (3→4)
+	// must NOT be LogZero. This was the root cause bug.
+	// States 1 and 2 have no direct path to exit in a left-to-right HMM,
+	// so only state 3→exit is checked.
+	exitTrans := hmm.TransLog[NumEmittingStates][exitJ]
+	t.Logf("TransLog[3][4] after training: %f (exp=%f)", exitTrans, math.Exp(exitTrans))
+	if exitTrans <= -700 {
+		t.Errorf("TransLog[3][4] = %f (LogZero) after training; exit transition not accumulated", exitTrans)
+	}
+	if exitTrans < -10 {
+		t.Errorf("exit transition too small: %f", exitTrans)
 	}
 }
 
