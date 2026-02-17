@@ -16,6 +16,7 @@ type Config struct {
 	UseDelta      bool
 	UseDeltaDelta bool
 	CepLifter     int
+	UseCMN        bool // cepstral mean normalization
 }
 
 // DefaultConfig returns the standard MFCC configuration.
@@ -33,6 +34,7 @@ func DefaultConfig() Config {
 		UseDelta:      true,
 		UseDeltaDelta: true,
 		CepLifter:     22,
+		UseCMN:        true,
 	}
 }
 
@@ -90,6 +92,11 @@ func Extract(samples []float64, cfg Config) ([][]float64, error) {
 			liftTbl.apply(cepstra)
 		}
 		mfccs[i] = cepstra
+	}
+
+	// 4.5. Cepstral mean normalization (before delta)
+	if cfg.UseCMN {
+		ApplyCMN(mfccs)
 	}
 
 	// 5. Append deltas
