@@ -18,26 +18,36 @@ type PhonemeAlignment struct {
 // against a known phoneme sequence using the given acoustic model.
 // Returns per-phoneme frame boundaries.
 func ForcedAlign(am *AcousticModel, phonemes []Phoneme, features [][]float64) ([]PhonemeAlignment, error) {
-	T := len(features)
 	N := len(phonemes)
-	if N == 0 {
-		return nil, fmt.Errorf("empty phoneme sequence")
-	}
-	if T < N {
-		return nil, fmt.Errorf("too few frames (%d) for %d phonemes", T, N)
-	}
-
-	// Validate all phonemes exist in model and collect HMMs
 	hmms := make([]*PhonemeHMM, N)
 	for i, ph := range phonemes {
 		h, ok := am.Phonemes[ph]
 		if !ok {
 			return nil, fmt.Errorf("phoneme %q not in acoustic model", ph)
 		}
-		if h.States[1] == nil {
-			return nil, fmt.Errorf("phoneme %q has no trained emitting states", ph)
-		}
 		hmms[i] = h
+	}
+	return ForcedAlignHMMs(hmms, phonemes, features)
+}
+
+// ForcedAlignHMMs performs Viterbi forced alignment with explicitly provided HMM sequence.
+// This allows triphone-resolved HMMs to be passed in.
+func ForcedAlignHMMs(hmms []*PhonemeHMM, phonemes []Phoneme, features [][]float64) ([]PhonemeAlignment, error) {
+	T := len(features)
+	N := len(hmms)
+	if N == 0 {
+		return nil, fmt.Errorf("empty phoneme sequence")
+	}
+	if len(phonemes) != N {
+		return nil, fmt.Errorf("phonemes length (%d) != hmms length (%d)", len(phonemes), N)
+	}
+	if T < N {
+		return nil, fmt.Errorf("too few frames (%d) for %d phonemes", T, N)
+	}
+	for i, h := range hmms {
+		if h.States[1] == nil {
+			return nil, fmt.Errorf("phoneme %q has no trained emitting states", phonemes[i])
+		}
 	}
 
 	S := N * NumEmittingStates // total composite states

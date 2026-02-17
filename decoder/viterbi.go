@@ -100,10 +100,12 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 		return &Result{}
 	}
 
-	// Build phoneme sequences for each word
+	// Build phoneme sequences and resolve HMMs for each word
 	type wordInfo struct {
 		word     string
 		phonemes []acoustic.Phoneme
+		hmms     []*acoustic.PhonemeHMM // resolved HMM per phoneme position
+		hmmOrds  []int                  // index into uniqueHMMs for emission cache
 	}
 	wordInfos := make([]wordInfo, 0, len(vocab))
 	for _, w := range vocab {
@@ -111,7 +113,25 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 		if !ok || len(phonemes) == 0 {
 			continue
 		}
-		wordInfos = append(wordInfos, wordInfo{word: w, phonemes: phonemes})
+		info := wordInfo{word: w, phonemes: phonemes}
+		// Resolve HMMs: triphone if available, else monophone
+		if am.HasTriphones() {
+			triphones := acoustic.WordToTriphones(phonemes)
+			info.hmms = make([]*acoustic.PhonemeHMM, len(phonemes))
+			for i, tri := range triphones {
+				info.hmms[i] = am.ResolveHMM(tri)
+			}
+		} else {
+			info.hmms = make([]*acoustic.PhonemeHMM, len(phonemes))
+			for i, ph := range phonemes {
+				info.hmms[i] = am.Phonemes[ph]
+			}
+		}
+		// Check first phoneme has valid HMM
+		if info.hmms[0] == nil {
+			continue
+		}
+		wordInfos = append(wordInfos, info)
 	}
 
 	if len(wordInfos) == 0 {
@@ -127,29 +147,36 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 		}
 	}
 
-	// Pre-compute emission log-likelihoods for all phonemes/states/frames.
-	allPhonemes := acoustic.AllPhonemes()
-	phonOrd := make(map[acoustic.Phoneme]int, len(allPhonemes))
-	for i, ph := range allPhonemes {
-		phonOrd[ph] = i
-	}
-	emitCols := len(allPhonemes) * acoustic.NumEmittingStates
-	emitCache := mathutil.NewMat(T, emitCols)
-	for pi, ph := range allPhonemes {
-		hmm, ok := am.Phonemes[ph]
-		if !ok {
-			continue
+	// Build unique HMM set for emission cache
+	hmmSet := make(map[*acoustic.PhonemeHMM]int)
+	var uniqueHMMs []*acoustic.PhonemeHMM
+	for i := range wordInfos {
+		wordInfos[i].hmmOrds = make([]int, len(wordInfos[i].phonemes))
+		for j, hmm := range wordInfos[i].hmms {
+			ord, exists := hmmSet[hmm]
+			if !exists {
+				ord = len(uniqueHMMs)
+				hmmSet[hmm] = ord
+				uniqueHMMs = append(uniqueHMMs, hmm)
+			}
+			wordInfos[i].hmmOrds[j] = ord
 		}
+	}
+
+	// Pre-compute emission log-likelihoods for all unique HMMs
+	emitCols := len(uniqueHMMs) * acoustic.NumEmittingStates
+	emitCache := mathutil.NewMat(T, emitCols)
+	for hi, hmm := range uniqueHMMs {
 		for s := 1; s <= acoustic.NumEmittingStates; s++ {
-			col := pi*acoustic.NumEmittingStates + (s - 1)
+			col := hi*acoustic.NumEmittingStates + (s - 1)
 			gmm := hmm.States[s].GMM
 			for t := 0; t < T; t++ {
 				emitCache[t][col] = gmm.LogProb(features[t])
 			}
 		}
 	}
-	cachedEmit := func(ph acoustic.Phoneme, stateIdx, t int) float64 {
-		return emitCache[t][phonOrd[ph]*acoustic.NumEmittingStates+(stateIdx-1)]
+	cachedEmit := func(hmmOrd int, stateIdx, t int) float64 {
+		return emitCache[t][hmmOrd*acoustic.NumEmittingStates+(stateIdx-1)]
 	}
 
 	// Pre-allocate token pools (double-buffer)
@@ -171,11 +198,10 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 
 	// Initialize tokens: silence gets no LM score / penalty
 	for wi, info := range wordInfos {
-		phoneme := info.phonemes[0]
-		if _, ok := am.Phonemes[phoneme]; !ok {
+		if info.hmms[0] == nil {
 			continue
 		}
-		acScore := cachedEmit(phoneme, 1, 0)
+		acScore := cachedEmit(info.hmmOrds[0], 1, 0)
 		tok := currentPool.get()
 		if wi == silWordIdx {
 			tok.score = acScore
@@ -198,16 +224,13 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 
 		for _, tok := range activeTokens {
 			info := wordInfos[tok.wordIdx]
-			phoneme := info.phonemes[tok.phonIdx]
-			hmm, ok := am.Phonemes[phoneme]
-			if !ok {
-				continue
-			}
+			hmm := info.hmms[tok.phonIdx]
+			hmmOrd := info.hmmOrds[tok.phonIdx]
 
 			// Self-loop: stay in same state
 			selfTrans := hmm.TransLog[tok.stateIdx][tok.stateIdx]
 			if selfTrans > mathutil.LogZero+1 {
-				acScore := cachedEmit(phoneme, tok.stateIdx, t)
+				acScore := cachedEmit(hmmOrd, tok.stateIdx, t)
 				s := tok.score + selfTrans + acScore
 				nt := nextPool.get()
 				nt.score = s
@@ -226,7 +249,7 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 			if nextState <= acoustic.NumEmittingStates {
 				fwdTrans := hmm.TransLog[tok.stateIdx][nextState]
 				if fwdTrans > mathutil.LogZero+1 {
-					acScore := cachedEmit(phoneme, nextState, t)
+					acScore := cachedEmit(hmmOrd, nextState, t)
 					s := tok.score + fwdTrans + acScore
 					nt := nextPool.get()
 					nt.score = s
@@ -242,7 +265,6 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 			}
 
 			// Transition to exit state -> next phoneme or word boundary
-			// Apply a floor of log(0.5) when TransLog[s][exit] is LogZero.
 			exitState := acoustic.NumStatesPerPhoneme - 1
 			exitTrans := hmm.TransLog[tok.stateIdx][exitState]
 			if exitTrans <= mathutil.LogZero+1 {
@@ -251,20 +273,18 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 			if exitTrans > mathutil.LogZero+1 {
 				if tok.phonIdx+1 < len(info.phonemes) {
 					// Next phoneme in current word
-					nextPhon := info.phonemes[tok.phonIdx+1]
-					if _, ok := am.Phonemes[nextPhon]; ok {
-						acScore := cachedEmit(nextPhon, 1, t)
-						s := tok.score + exitTrans + acScore
-						nt := nextPool.get()
-						nt.score = s
-						nt.wordIdx = tok.wordIdx
-						nt.phonIdx = tok.phonIdx + 1
-						nt.stateIdx = 1
-						nt.history = tok.history
-						nextTokens = append(nextTokens, nt)
-						if s > bestNextScore {
-							bestNextScore = s
-						}
+					nextHmmOrd := info.hmmOrds[tok.phonIdx+1]
+					acScore := cachedEmit(nextHmmOrd, 1, t)
+					s := tok.score + exitTrans + acScore
+					nt := nextPool.get()
+					nt.score = s
+					nt.wordIdx = tok.wordIdx
+					nt.phonIdx = tok.phonIdx + 1
+					nt.stateIdx = 1
+					nt.history = tok.history
+					nextTokens = append(nextTokens, nt)
+					if s > bestNextScore {
+						bestNextScore = s
 					}
 				} else {
 					// Word boundary
@@ -275,8 +295,6 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 
 					if silWordIdx >= 0 && tok.wordIdx == silWordIdx {
 						// === Silence completed ===
-						// Don't push sil to history; use pre-sil LM context.
-						// Build LM history from existing (pre-sil) history.
 						lmHistBuf = lmHistBuf[:0]
 						cur := tok.history
 						for cur != nil {
@@ -287,13 +305,11 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 							lmHistBuf[i], lmHistBuf[j] = lmHistBuf[j], lmHistBuf[i]
 						}
 
-						// Expand to all non-silence words
 						for nwi, ninfo := range wordInfos {
 							if nwi == silWordIdx {
-								continue // prevent sil→sil
+								continue
 							}
-							nextPhon := ninfo.phonemes[0]
-							if _, ok := am.Phonemes[nextPhon]; !ok {
+							if ninfo.hmms[0] == nil {
 								continue
 							}
 							var lmScore float64
@@ -302,14 +318,14 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 							} else {
 								lmScore = lm.LogProb([]string{"<s>"}, ninfo.word) * cfg.LMWeight
 							}
-							acScore := cachedEmit(nextPhon, 1, t)
+							acScore := cachedEmit(ninfo.hmmOrds[0], 1, t)
 							s := baseScore + lmScore + acScore + cfg.WordInsertionPenalty
 							nt := nextPool.get()
 							nt.score = s
 							nt.wordIdx = nwi
 							nt.phonIdx = 0
 							nt.stateIdx = 1
-							nt.history = tok.history // pass through, don't push sil
+							nt.history = tok.history
 							nextTokens = append(nextTokens, nt)
 							if s > bestNextScore {
 								bestNextScore = s
@@ -328,7 +344,6 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 							newNode.length = 1
 						}
 
-						// Build LM history
 						lmHistBuf = lmHistBuf[:0]
 						cur := tok.history
 						for cur != nil {
@@ -341,13 +356,11 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 						lmHistBuf = append(lmHistBuf, info.word)
 
 						for nwi, ninfo := range wordInfos {
-							nextPhon := ninfo.phonemes[0]
-							if _, ok := am.Phonemes[nextPhon]; !ok {
+							if ninfo.hmms[0] == nil {
 								continue
 							}
-							acScore := cachedEmit(nextPhon, 1, t)
+							acScore := cachedEmit(ninfo.hmmOrds[0], 1, t)
 							if silWordIdx >= 0 && nwi == silWordIdx {
-								// Transition to silence: acoustic only, no LM / penalty
 								s := baseScore + acScore
 								nt := nextPool.get()
 								nt.score = s

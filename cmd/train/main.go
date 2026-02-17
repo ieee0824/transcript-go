@@ -15,8 +15,9 @@ import (
 )
 
 type uttData struct {
-	features [][]float64
-	phonemes []acoustic.Phoneme
+	features  [][]float64
+	phonemes  []acoustic.Phoneme
+	wordPhons [][]acoustic.Phoneme // per-word phoneme sequences (for triphone training)
 }
 
 func main() {
@@ -26,6 +27,9 @@ func main() {
 	numMix := flag.Int("mix", 1, "number of GMM components per state")
 	maxIter := flag.Int("iter", 20, "max Baum-Welch iterations")
 	alignIter := flag.Int("align-iter", 0, "number of forced alignment re-training iterations (0=uniform only)")
+	triphoneFlag := flag.Bool("triphone", false, "enable triphone training after monophone")
+	minTriSeg := flag.Int("min-tri-seg", 10, "minimum segments to train a triphone HMM")
+	triMixFlag := flag.Int("tri-mix", 0, "GMM components for triphone HMMs (0=min(mix,4))")
 	flag.Parse()
 
 	// Load dictionary
@@ -118,7 +122,14 @@ func main() {
 			continue
 		}
 
-		allUtts = append(allUtts, uttData{features: features, phonemes: utt.phonemes})
+		// Collect per-word phoneme sequences for triphone training
+		var wordPhons [][]acoustic.Phoneme
+		for _, w := range utt.words {
+			ph, _ := dict.PhonemeSequence(w)
+			wordPhons = append(wordPhons, ph)
+		}
+
+		allUtts = append(allUtts, uttData{features: features, phonemes: utt.phonemes, wordPhons: wordPhons})
 	}
 	fmt.Fprintf(os.Stderr, "Valid utterances with features: %d\n", len(allUtts))
 
@@ -138,6 +149,97 @@ func main() {
 		phonemeData = segmentAligned(am, allUtts)
 		reportCoverage(phonemeData)
 		trainModel(am, phonemeData, trainCfg)
+	}
+
+	// Triphone training phase
+	if *triphoneFlag {
+		fmt.Fprintln(os.Stderr, "\n=== Triphone training ===")
+
+		triMix := *triMixFlag
+		if triMix <= 0 {
+			triMix = *numMix
+			if triMix > 4 {
+				triMix = 4
+			}
+		}
+		fmt.Fprintf(os.Stderr, "  tri-mix=%d, min-tri-seg=%d\n", triMix, *minTriSeg)
+
+		// Forced-align all utterances with the monophone model and collect triphone segments
+		triphoneData := make(map[acoustic.Triphone][][][]float64)
+		alignOK, alignFail := 0, 0
+
+		for _, u := range allUtts {
+			alignments, err := acoustic.ForcedAlign(am, u.phonemes, u.features)
+			if err != nil {
+				alignFail++
+				continue
+			}
+			alignOK++
+
+			// Map aligned phonemes to triphones.
+			// Phoneme layout: [sil] + word1_phons + word2_phons + ... + [sil]
+			// Alignment indices match 1:1 with u.phonemes.
+			alignIdx := 1 // skip leading sil
+			for _, wPhons := range u.wordPhons {
+				triphones := acoustic.WordToTriphones(wPhons)
+				for ti, tri := range triphones {
+					ai := alignIdx + ti
+					if ai >= len(alignments) {
+						break
+					}
+					a := alignments[ai]
+					segLen := a.EndFrame - a.StartFrame
+					if segLen < 3 {
+						continue
+					}
+					triphoneData[tri] = append(triphoneData[tri], u.features[a.StartFrame:a.EndFrame])
+				}
+				alignIdx += len(wPhons)
+			}
+		}
+
+		fmt.Fprintf(os.Stderr, "  Alignment: %d ok, %d fail\n", alignOK, alignFail)
+		fmt.Fprintf(os.Stderr, "  Unique triphones seen: %d\n", len(triphoneData))
+
+		// Train triphone HMMs for triphones with sufficient data
+		am.Triphones = make(map[acoustic.Triphone]*acoustic.PhonemeHMM)
+		triTrainCfg := acoustic.DefaultTrainingConfig()
+		triTrainCfg.MaxIterations = *maxIter
+
+		trained, skipped := 0, 0
+		for tri, segs := range triphoneData {
+			if len(segs) < *minTriSeg {
+				skipped++
+				continue
+			}
+			center := tri.CenterPhoneme()
+			monoHMM := am.Phonemes[center]
+			if monoHMM == nil {
+				skipped++
+				continue
+			}
+
+			// Initialize triphone HMM from monophone
+			var triHMM *acoustic.PhonemeHMM
+			if triMix == *numMix {
+				// Same mix count: clone monophone HMM as starting point
+				triHMM = acoustic.ClonePhonemeHMM(monoHMM)
+			} else {
+				// Different mix count: create fresh HMM
+				triHMM = acoustic.NewPhonemeHMM(center, am.FeatureDim, triMix)
+			}
+
+			if err := acoustic.TrainPhoneme(triHMM, segs, triTrainCfg); err != nil {
+				fmt.Fprintf(os.Stderr, "  train %s error: %v\n", tri, err)
+				skipped++
+				continue
+			}
+			am.Triphones[tri] = triHMM
+			trained++
+			fmt.Fprintf(os.Stderr, "  trained %s (%d segs)\n", tri, len(segs))
+		}
+
+		fmt.Fprintf(os.Stderr, "  Triphones trained: %d, skipped: %d\n", trained, skipped)
 	}
 
 	// Save model
