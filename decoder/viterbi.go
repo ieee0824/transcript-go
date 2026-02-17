@@ -17,6 +17,7 @@ type Config struct {
 	MaxActiveTokens      int     // maximum number of active hypotheses
 	LMWeight             float64 // language model scaling factor
 	WordInsertionPenalty float64 // penalty to control insertion rate
+	LMInterpolation      float64 // uniform interpolation weight (0=pure LM, 0.5=half LM half uniform)
 }
 
 // DefaultConfig returns reasonable default parameters.
@@ -26,6 +27,7 @@ func DefaultConfig() Config {
 		MaxActiveTokens:      1000,
 		LMWeight:             10.0,
 		WordInsertionPenalty: 0.0,
+		LMInterpolation:     0.0,
 	}
 }
 
@@ -52,12 +54,26 @@ func (n *wordHistoryNode) toSlice() ([]string, []int) {
 	return words, frames
 }
 
+// trieNode represents a node in the phoneme prefix trie.
+type trieNode struct {
+	phoneme  acoustic.Phoneme
+	hmm      *acoustic.PhonemeHMM
+	hmmOrd   int // index into uniqueHMMs for emission cache
+	children []trieChild
+	wordEnds []string // words ending at this node
+}
+
+// trieChild is a (phoneme, nodeIdx) pair for trie children.
+type trieChild struct {
+	phoneme acoustic.Phoneme
+	nodeIdx int
+}
+
 // token represents an active hypothesis in beam search.
 type token struct {
 	score    float64
-	wordIdx  int
-	phonIdx  int
-	stateIdx int
+	nodeIdx  int // trie node index; -1 = silence
+	stateIdx int // HMM state (1-3)
 	history  *wordHistoryNode
 }
 
@@ -73,7 +89,6 @@ func newTokenPool(cap int) *tokenPool {
 
 func (p *tokenPool) get() *token {
 	if p.pos >= len(p.buf) {
-		// Grow
 		p.buf = append(p.buf, make([]token, len(p.buf))...)
 	}
 	t := &p.buf[p.pos]
@@ -88,7 +103,14 @@ func (p *tokenPool) reset() {
 // silWord is the special silence word that can appear between real words.
 const silWord = "<sil>"
 
-// Decode performs Viterbi beam search decoding on a sequence of feature frames.
+// recomKey is used for token recombination within the trie.
+type recomKey struct {
+	nodeIdx  int
+	stateIdx int
+	lastWord string
+}
+
+// Decode performs Viterbi beam search decoding using a lexicon prefix trie.
 func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGramModel, dict *lexicon.Dictionary, cfg Config) *Result {
 	T := len(features)
 	if T == 0 {
@@ -100,70 +122,145 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 		return &Result{}
 	}
 
-	// Build phoneme sequences and resolve HMMs for each word
-	type wordInfo struct {
-		word     string
-		phonemes []acoustic.Phoneme
-		hmms     []*acoustic.PhonemeHMM // resolved HMM per phoneme position
-		hmmOrds  []int                  // index into uniqueHMMs for emission cache
-	}
-	wordInfos := make([]wordInfo, 0, len(vocab))
+	// Build phoneme prefix trie from dictionary (monophone HMMs)
+	nodes := []trieNode{{}} // nodes[0] = root (no phoneme, no HMM)
+	hmmSet := make(map[*acoustic.PhonemeHMM]int)
+	var uniqueHMMs []*acoustic.PhonemeHMM
+
+	hasSil := false
 	for _, w := range vocab {
+		if w == silWord {
+			hasSil = true
+			continue
+		}
 		phonemes, ok := dict.PhonemeSequence(w)
 		if !ok || len(phonemes) == 0 {
 			continue
 		}
-		info := wordInfo{word: w, phonemes: phonemes}
-		// Resolve HMMs: triphone if available, else monophone
-		if am.HasTriphones() {
-			triphones := acoustic.WordToTriphones(phonemes)
-			info.hmms = make([]*acoustic.PhonemeHMM, len(phonemes))
-			for i, tri := range triphones {
-				info.hmms[i] = am.ResolveHMM(tri)
+		cur := 0
+		for _, ph := range phonemes {
+			found := -1
+			for _, c := range nodes[cur].children {
+				if c.phoneme == ph {
+					found = c.nodeIdx
+					break
+				}
 			}
-		} else {
-			info.hmms = make([]*acoustic.PhonemeHMM, len(phonemes))
-			for i, ph := range phonemes {
-				info.hmms[i] = am.Phonemes[ph]
+			if found >= 0 {
+				cur = found
+			} else {
+				hmm := am.Phonemes[ph]
+				if hmm == nil {
+					cur = -1
+					break
+				}
+				ord, exists := hmmSet[hmm]
+				if !exists {
+					ord = len(uniqueHMMs)
+					hmmSet[hmm] = ord
+					uniqueHMMs = append(uniqueHMMs, hmm)
+				}
+				newIdx := len(nodes)
+				nodes = append(nodes, trieNode{
+					phoneme: ph,
+					hmm:     hmm,
+					hmmOrd:  ord,
+				})
+				nodes[cur].children = append(nodes[cur].children, trieChild{phoneme: ph, nodeIdx: newIdx})
+				cur = newIdx
 			}
 		}
-		// Check first phoneme has valid HMM
-		if info.hmms[0] == nil {
-			continue
+		if cur > 0 {
+			nodes[cur].wordEnds = append(nodes[cur].wordEnds, w)
 		}
-		wordInfos = append(wordInfos, info)
 	}
 
-	if len(wordInfos) == 0 {
+	// Resolve silence HMM
+	var silHMM *acoustic.PhonemeHMM
+	silHMMOrd := -1
+	if hasSil {
+		silPhons, ok := dict.PhonemeSequence(silWord)
+		if ok && len(silPhons) > 0 {
+			silHMM = am.Phonemes[silPhons[0]]
+			if silHMM != nil {
+				ord, exists := hmmSet[silHMM]
+				if !exists {
+					ord = len(uniqueHMMs)
+					hmmSet[silHMM] = ord
+					uniqueHMMs = append(uniqueHMMs, silHMM)
+				}
+				silHMMOrd = ord
+			}
+		}
+	}
+
+	if len(uniqueHMMs) == 0 {
 		return &Result{}
 	}
 
-	// Locate silence word index (-1 if not in dictionary)
-	silWordIdx := -1
-	for wi, info := range wordInfos {
-		if info.word == silWord {
-			silWordIdx = wi
-			break
-		}
+	rootChildren := nodes[0].children
+	if len(rootChildren) == 0 && silHMM == nil {
+		return &Result{}
 	}
 
-	// Build unique HMM set for emission cache
-	hmmSet := make(map[*acoustic.PhonemeHMM]int)
-	var uniqueHMMs []*acoustic.PhonemeHMM
-	for i := range wordInfos {
-		wordInfos[i].hmmOrds = make([]int, len(wordInfos[i].phonemes))
-		for j, hmm := range wordInfos[i].hmms {
-			ord, exists := hmmSet[hmm]
-			if !exists {
-				ord = len(uniqueHMMs)
-				hmmSet[hmm] = ord
-				uniqueHMMs = append(uniqueHMMs, hmm)
+	// Compute LM look-ahead: best (maximum) unigram log probability.
+	// Applied when entering the trie, corrected at word completion.
+	// This prevents mid-trie tokens from having an unfair advantage over
+	// completed-word tokens that have been penalized by LM scores.
+	bestUniLM := math.Inf(-1)
+	for _, v := range lm.Vocab() {
+		s := lm.LogProb([]string{"<s>"}, v)
+		if s > bestUniLM {
+			bestUniLM = s
+		}
+	}
+	if math.IsInf(bestUniLM, -1) {
+		bestUniLM = 0
+	}
+	// Context-aware LM scoring: adaptive weight based on LM coverage.
+	// - Word in LM vocab with known bigram context → full LMWeight
+	// - Word in LM vocab but OOV context → LMWeight * (1-interpolation)
+	// - OOV word → LMWeight * (1-interpolation)^2
+	// When LMInterpolation=0, all cases use full LMWeight (original behavior).
+	oovScale := 1.0 - cfg.LMInterpolation    // scale factor for OOV words
+	ctxScale := 1.0 - cfg.LMInterpolation*0.5 // scale factor for known word with OOV context
+
+	scoreLM := func(history []string, word string) float64 {
+		rawLP := lm.LogProb(history, word)
+		w := cfg.LMWeight
+		if cfg.LMInterpolation > 0 {
+			_, inVocab := lm.Unigrams[word]
+			if !inVocab {
+				// OOV word: LM has no knowledge, minimize its influence
+				w *= oovScale
+			} else if len(history) > 0 {
+				lastWord := history[len(history)-1]
+				if lastWord != "<s>" {
+					if _, ok := lm.Unigrams[lastWord]; !ok {
+						// Known word but OOV context: LM bigram unreliable
+						w *= ctxScale
+					}
+				}
 			}
-			wordInfos[i].hmmOrds[j] = ord
 		}
+		return rawLP * w
 	}
 
-	// Pre-compute emission log-likelihoods for all unique HMMs
+	// LM look-ahead: use full weight (maximum possible LM contribution)
+	// This is correct because adaptive scaling only reduces the weight.
+	bestUniLM = math.Inf(-1)
+	for _, v := range lm.Vocab() {
+		s := lm.LogProb([]string{"<s>"}, v)
+		if s > bestUniLM {
+			bestUniLM = s
+		}
+	}
+	if math.IsInf(bestUniLM, -1) {
+		bestUniLM = 0
+	}
+	lmLookAhead := bestUniLM * cfg.LMWeight
+
+	// Pre-compute emission log-likelihoods for all unique monophone HMMs
 	emitCols := len(uniqueHMMs) * acoustic.NumEmittingStates
 	emitCache := mathutil.NewMat(T, emitCols)
 	for hi, hmm := range uniqueHMMs {
@@ -180,7 +277,7 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 	}
 
 	// Pre-allocate token pools (double-buffer)
-	estimatedTokens := len(wordInfos) * 4
+	estimatedTokens := len(nodes) * 3
 	if estimatedTokens < 256 {
 		estimatedTokens = 256
 	}
@@ -189,32 +286,32 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 	currentPool := pool1
 	nextPool := pool2
 
-	// Pre-allocate pointer slices
 	activeTokens := make([]*token, 0, estimatedTokens)
 	nextTokens := make([]*token, 0, estimatedTokens*2)
-
-	// Reusable LM history buffer
 	lmHistBuf := make([]string, 0, 16)
 
-	// Initialize tokens: silence gets no LM score / penalty
-	for wi, info := range wordInfos {
-		if info.hmms[0] == nil {
-			continue
-		}
-		acScore := cachedEmit(info.hmmOrds[0], 1, 0)
+	// Initialize tokens at t=0: root children (with look-ahead LM) + silence
+	for _, c := range rootChildren {
+		nd := &nodes[c.nodeIdx]
+		acScore := cachedEmit(nd.hmmOrd, 1, 0)
 		tok := currentPool.get()
-		if wi == silWordIdx {
-			tok.score = acScore
-		} else {
-			lmScore := lm.LogProb([]string{"<s>"}, info.word) * cfg.LMWeight
-			tok.score = acScore + lmScore + cfg.WordInsertionPenalty
-		}
-		tok.wordIdx = wi
-		tok.phonIdx = 0
+		tok.score = acScore + lmLookAhead
+		tok.nodeIdx = c.nodeIdx
 		tok.stateIdx = 1
 		tok.history = nil
 		activeTokens = append(activeTokens, tok)
 	}
+	if silHMM != nil {
+		tok := currentPool.get()
+		tok.score = cachedEmit(silHMMOrd, 1, 0)
+		tok.nodeIdx = -1
+		tok.stateIdx = 1
+		tok.history = nil
+		activeTokens = append(activeTokens, tok)
+	}
+
+	// Token recombination map (reused each frame)
+	recom := make(map[recomKey]int, estimatedTokens)
 
 	// Frame-synchronous beam search
 	for t := 1; t < T; t++ {
@@ -222,119 +319,135 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 		nextTokens = nextTokens[:0]
 		bestNextScore := math.Inf(-1)
 
-		for _, tok := range activeTokens {
-			info := wordInfos[tok.wordIdx]
-			hmm := info.hmms[tok.phonIdx]
-			hmmOrd := info.hmmOrds[tok.phonIdx]
+		for k := range recom {
+			delete(recom, k)
+		}
 
-			// Self-loop: stay in same state
+		for _, tok := range activeTokens {
+			if tok.nodeIdx == -1 {
+				// === Silence token ===
+				hmm := silHMM
+				hmmOrd := silHMMOrd
+
+				// Self-loop
+				selfTrans := hmm.TransLog[tok.stateIdx][tok.stateIdx]
+				if selfTrans > mathutil.LogZero+1 {
+					acScore := cachedEmit(hmmOrd, tok.stateIdx, t)
+					s := tok.score + selfTrans + acScore
+					addOrRecombine(&nextTokens, nextPool, recom, -1, tok.stateIdx, tok.history, s)
+					if s > bestNextScore {
+						bestNextScore = s
+					}
+				}
+
+				// Forward
+				nextState := tok.stateIdx + 1
+				if nextState <= acoustic.NumEmittingStates {
+					fwdTrans := hmm.TransLog[tok.stateIdx][nextState]
+					if fwdTrans > mathutil.LogZero+1 {
+						acScore := cachedEmit(hmmOrd, nextState, t)
+						s := tok.score + fwdTrans + acScore
+						addOrRecombine(&nextTokens, nextPool, recom, -1, nextState, tok.history, s)
+						if s > bestNextScore {
+							bestNextScore = s
+						}
+					}
+				}
+
+				// Exit → silence completed, expand to root children with look-ahead
+				exitState := acoustic.NumStatesPerPhoneme - 1
+				exitTrans := hmm.TransLog[tok.stateIdx][exitState]
+				if exitTrans <= mathutil.LogZero+1 {
+					exitTrans = math.Log(0.5)
+				}
+				if exitTrans > mathutil.LogZero+1 {
+					baseScore := tok.score + exitTrans
+					if bestNextScore > math.Inf(-1) && baseScore < bestNextScore-cfg.BeamWidth {
+						continue
+					}
+
+					for _, c := range rootChildren {
+						nd := &nodes[c.nodeIdx]
+						acScore := cachedEmit(nd.hmmOrd, 1, t)
+						s := baseScore + acScore + lmLookAhead
+						addOrRecombine(&nextTokens, nextPool, recom, c.nodeIdx, 1, tok.history, s)
+						if s > bestNextScore {
+							bestNextScore = s
+						}
+					}
+
+					// Re-enter silence
+					{
+						acScore := cachedEmit(silHMMOrd, 1, t)
+						s := baseScore + acScore
+						addOrRecombine(&nextTokens, nextPool, recom, -1, 1, tok.history, s)
+						if s > bestNextScore {
+							bestNextScore = s
+						}
+					}
+				}
+				continue
+			}
+
+			// === Trie token ===
+			nd := &nodes[tok.nodeIdx]
+			hmm := nd.hmm
+			hmmOrd := nd.hmmOrd
+
+			// Self-loop
 			selfTrans := hmm.TransLog[tok.stateIdx][tok.stateIdx]
 			if selfTrans > mathutil.LogZero+1 {
 				acScore := cachedEmit(hmmOrd, tok.stateIdx, t)
 				s := tok.score + selfTrans + acScore
-				nt := nextPool.get()
-				nt.score = s
-				nt.wordIdx = tok.wordIdx
-				nt.phonIdx = tok.phonIdx
-				nt.stateIdx = tok.stateIdx
-				nt.history = tok.history
-				nextTokens = append(nextTokens, nt)
+				addOrRecombine(&nextTokens, nextPool, recom, tok.nodeIdx, tok.stateIdx, tok.history, s)
 				if s > bestNextScore {
 					bestNextScore = s
 				}
 			}
 
-			// Forward transition within phoneme HMM
+			// Forward
 			nextState := tok.stateIdx + 1
 			if nextState <= acoustic.NumEmittingStates {
 				fwdTrans := hmm.TransLog[tok.stateIdx][nextState]
 				if fwdTrans > mathutil.LogZero+1 {
 					acScore := cachedEmit(hmmOrd, nextState, t)
 					s := tok.score + fwdTrans + acScore
-					nt := nextPool.get()
-					nt.score = s
-					nt.wordIdx = tok.wordIdx
-					nt.phonIdx = tok.phonIdx
-					nt.stateIdx = nextState
-					nt.history = tok.history
-					nextTokens = append(nextTokens, nt)
+					addOrRecombine(&nextTokens, nextPool, recom, tok.nodeIdx, nextState, tok.history, s)
 					if s > bestNextScore {
 						bestNextScore = s
 					}
 				}
 			}
 
-			// Transition to exit state -> next phoneme or word boundary
+			// Exit: phoneme completed
 			exitState := acoustic.NumStatesPerPhoneme - 1
 			exitTrans := hmm.TransLog[tok.stateIdx][exitState]
 			if exitTrans <= mathutil.LogZero+1 {
 				exitTrans = math.Log(0.5)
 			}
 			if exitTrans > mathutil.LogZero+1 {
-				if tok.phonIdx+1 < len(info.phonemes) {
-					// Next phoneme in current word
-					nextHmmOrd := info.hmmOrds[tok.phonIdx+1]
-					acScore := cachedEmit(nextHmmOrd, 1, t)
-					s := tok.score + exitTrans + acScore
-					nt := nextPool.get()
-					nt.score = s
-					nt.wordIdx = tok.wordIdx
-					nt.phonIdx = tok.phonIdx + 1
-					nt.stateIdx = 1
-					nt.history = tok.history
-					nextTokens = append(nextTokens, nt)
+				baseScore := tok.score + exitTrans
+
+				// Transition to child nodes (next phoneme within a word)
+				for _, c := range nd.children {
+					childNd := &nodes[c.nodeIdx]
+					acScore := cachedEmit(childNd.hmmOrd, 1, t)
+					s := baseScore + acScore
+					addOrRecombine(&nextTokens, nextPool, recom, c.nodeIdx, 1, tok.history, s)
 					if s > bestNextScore {
 						bestNextScore = s
 					}
-				} else {
-					// Word boundary
-					baseScore := tok.score + exitTrans
+				}
+
+				// Word-end: this node completes one or more words
+				if len(nd.wordEnds) > 0 {
 					if bestNextScore > math.Inf(-1) && baseScore < bestNextScore-cfg.BeamWidth {
 						continue
 					}
 
-					if silWordIdx >= 0 && tok.wordIdx == silWordIdx {
-						// === Silence completed ===
-						lmHistBuf = lmHistBuf[:0]
-						cur := tok.history
-						for cur != nil {
-							lmHistBuf = append(lmHistBuf, cur.word)
-							cur = cur.prev
-						}
-						for i, j := 0, len(lmHistBuf)-1; i < j; i, j = i+1, j-1 {
-							lmHistBuf[i], lmHistBuf[j] = lmHistBuf[j], lmHistBuf[i]
-						}
-
-						for nwi, ninfo := range wordInfos {
-							if nwi == silWordIdx {
-								continue
-							}
-							if ninfo.hmms[0] == nil {
-								continue
-							}
-							var lmScore float64
-							if len(lmHistBuf) > 0 {
-								lmScore = lm.LogProb(lmHistBuf, ninfo.word) * cfg.LMWeight
-							} else {
-								lmScore = lm.LogProb([]string{"<s>"}, ninfo.word) * cfg.LMWeight
-							}
-							acScore := cachedEmit(ninfo.hmmOrds[0], 1, t)
-							s := baseScore + lmScore + acScore + cfg.WordInsertionPenalty
-							nt := nextPool.get()
-							nt.score = s
-							nt.wordIdx = nwi
-							nt.phonIdx = 0
-							nt.stateIdx = 1
-							nt.history = tok.history
-							nextTokens = append(nextTokens, nt)
-							if s > bestNextScore {
-								bestNextScore = s
-							}
-						}
-					} else {
-						// === Regular word completed ===
+					for _, word := range nd.wordEnds {
 						newNode := &wordHistoryNode{
-							word:  info.word,
+							word:  word,
 							frame: t,
 							prev:  tok.history,
 						}
@@ -344,47 +457,35 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 							newNode.length = 1
 						}
 
-						lmHistBuf = lmHistBuf[:0]
-						cur := tok.history
-						for cur != nil {
-							lmHistBuf = append(lmHistBuf, cur.word)
-							cur = cur.prev
+						// Compute actual LM score, subtract look-ahead that was applied at trie entry
+						lmHistBuf = buildLMHist(tok.history, lmHistBuf[:0])
+						var lmScore float64
+						if len(lmHistBuf) == 0 {
+							lmScore = scoreLM([]string{"<s>"}, word)
+						} else {
+							lmScore = scoreLM(lmHistBuf, word)
 						}
-						for i, j := 0, len(lmHistBuf)-1; i < j; i, j = i+1, j-1 {
-							lmHistBuf[i], lmHistBuf[j] = lmHistBuf[j], lmHistBuf[i]
-						}
-						lmHistBuf = append(lmHistBuf, info.word)
+						// baseScore includes lmLookAhead from trie entry; replace with actual LM
+						wordBaseScore := baseScore - lmLookAhead + lmScore + cfg.WordInsertionPenalty
 
-						for nwi, ninfo := range wordInfos {
-							if ninfo.hmms[0] == nil {
-								continue
+						// Start new words: expand root children with look-ahead
+						for _, c := range rootChildren {
+							childNd := &nodes[c.nodeIdx]
+							acScore := cachedEmit(childNd.hmmOrd, 1, t)
+							s := wordBaseScore + acScore + lmLookAhead
+							addOrRecombine(&nextTokens, nextPool, recom, c.nodeIdx, 1, newNode, s)
+							if s > bestNextScore {
+								bestNextScore = s
 							}
-							acScore := cachedEmit(ninfo.hmmOrds[0], 1, t)
-							if silWordIdx >= 0 && nwi == silWordIdx {
-								s := baseScore + acScore
-								nt := nextPool.get()
-								nt.score = s
-								nt.wordIdx = nwi
-								nt.phonIdx = 0
-								nt.stateIdx = 1
-								nt.history = newNode
-								nextTokens = append(nextTokens, nt)
-								if s > bestNextScore {
-									bestNextScore = s
-								}
-							} else {
-								lmScore := lm.LogProb(lmHistBuf, ninfo.word) * cfg.LMWeight
-								s := baseScore + lmScore + acScore + cfg.WordInsertionPenalty
-								nt := nextPool.get()
-								nt.score = s
-								nt.wordIdx = nwi
-								nt.phonIdx = 0
-								nt.stateIdx = 1
-								nt.history = newNode
-								nextTokens = append(nextTokens, nt)
-								if s > bestNextScore {
-									bestNextScore = s
-								}
+						}
+
+						// Enter silence (no look-ahead for silence)
+						if silHMM != nil {
+							acScore := cachedEmit(silHMMOrd, 1, t)
+							s := wordBaseScore + acScore
+							addOrRecombine(&nextTokens, nextPool, recom, -1, 1, newNode, s)
+							if s > bestNextScore {
+								bestNextScore = s
 							}
 						}
 					}
@@ -392,7 +493,7 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 			}
 		}
 
-		// Beam pruning (in-place into activeTokens)
+		// Beam pruning
 		activeTokens = pruneTokens(nextTokens, activeTokens[:0], cfg.BeamWidth, cfg.MaxActiveTokens)
 
 		// Swap pools
@@ -411,19 +512,45 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 		}
 	}
 
-	// Build result: if final word is silence, use history as-is
+	// Build result: for trie tokens at word-end nodes, apply actual LM scoring
 	var finalNode *wordHistoryNode
-	if silWordIdx >= 0 && best.wordIdx == silWordIdx {
+	if best.nodeIdx == -1 {
 		finalNode = best.history
 	} else {
-		finalNode = &wordHistoryNode{
-			word: wordInfos[best.wordIdx].word,
-			prev: best.history,
-		}
-		if best.history != nil {
-			finalNode.length = best.history.length + 1
+		nd := &nodes[best.nodeIdx]
+		if len(nd.wordEnds) > 0 {
+			// Try each word-end with LM scoring
+			lmHistBuf = buildLMHist(best.history, lmHistBuf[:0])
+			bestWordScore := math.Inf(-1)
+			bestWord := ""
+			for _, w := range nd.wordEnds {
+				var lmScore float64
+				if len(lmHistBuf) == 0 {
+					lmScore = scoreLM([]string{"<s>"}, w)
+				} else {
+					lmScore = scoreLM(lmHistBuf, w)
+				}
+				s := best.score - lmLookAhead + lmScore + cfg.WordInsertionPenalty
+				if s > bestWordScore {
+					bestWordScore = s
+					bestWord = w
+				}
+			}
+			if bestWord != "" && bestWordScore > best.score-cfg.BeamWidth {
+				finalNode = &wordHistoryNode{
+					word: bestWord,
+					prev: best.history,
+				}
+				if best.history != nil {
+					finalNode.length = best.history.length + 1
+				} else {
+					finalNode.length = 1
+				}
+			} else {
+				finalNode = best.history
+			}
 		} else {
-			finalNode.length = 1
+			finalNode = best.history
 		}
 	}
 
@@ -453,12 +580,50 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 	return result
 }
 
+// addOrRecombine adds a token or replaces an existing one at the same (nodeIdx, stateIdx, lastWord).
+func addOrRecombine(tokens *[]*token, pool *tokenPool, recom map[recomKey]int, nodeIdx, stateIdx int, history *wordHistoryNode, score float64) {
+	lw := ""
+	if history != nil {
+		lw = history.word
+	}
+	key := recomKey{nodeIdx: nodeIdx, stateIdx: stateIdx, lastWord: lw}
+	if idx, exists := recom[key]; exists {
+		if score > (*tokens)[idx].score {
+			(*tokens)[idx].score = score
+			(*tokens)[idx].history = history
+		}
+		return
+	}
+	nt := pool.get()
+	nt.score = score
+	nt.nodeIdx = nodeIdx
+	nt.stateIdx = stateIdx
+	nt.history = history
+	recom[key] = len(*tokens)
+	*tokens = append(*tokens, nt)
+}
+
+// buildLMHist builds the LM history from a wordHistoryNode chain into the provided buffer.
+func buildLMHist(n *wordHistoryNode, buf []string) []string {
+	if n == nil {
+		return buf
+	}
+	cur := n
+	for cur != nil {
+		buf = append(buf, cur.word)
+		cur = cur.prev
+	}
+	for i, j := 0, len(buf)-1; i < j; i, j = i+1, j-1 {
+		buf[i], buf[j] = buf[j], buf[i]
+	}
+	return buf
+}
+
 func pruneTokens(src []*token, dst []*token, beamWidth float64, maxActive int) []*token {
 	if len(src) == 0 {
 		return dst
 	}
 
-	// Find best score
 	bestScore := src[0].score
 	for _, tok := range src[1:] {
 		if tok.score > bestScore {
@@ -466,7 +631,6 @@ func pruneTokens(src []*token, dst []*token, beamWidth float64, maxActive int) [
 		}
 	}
 
-	// Beam pruning: reuse dst slice
 	threshold := bestScore - beamWidth
 	for _, tok := range src {
 		if tok.score >= threshold {
@@ -474,7 +638,6 @@ func pruneTokens(src []*token, dst []*token, beamWidth float64, maxActive int) [
 		}
 	}
 
-	// Max active pruning
 	if len(dst) > maxActive {
 		sort.Slice(dst, func(i, j int) bool {
 			return dst[i].score > dst[j].score

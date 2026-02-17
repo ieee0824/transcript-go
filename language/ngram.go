@@ -4,10 +4,11 @@ import "github.com/ieee0824/transcript-go/internal/mathutil"
 
 // NGramModel represents an n-gram language model.
 type NGramModel struct {
-	Order    int                    // 2 for bigram, 3 for trigram
-	Unigrams map[string]ngramEntry  // word -> entry
-	Bigrams  map[[2]string]ngramEntry
-	Trigrams map[[3]string]ngramEntry
+	Order      int                    // 2 for bigram, 3 for trigram
+	Unigrams   map[string]ngramEntry  // word -> entry
+	Bigrams    map[[2]string]ngramEntry
+	Trigrams   map[[3]string]ngramEntry
+	OOVLogProb float64 // log probability for OOV words (natural log). 0 = use LogZero.
 }
 
 type ngramEntry struct {
@@ -62,6 +63,9 @@ func (m *NGramModel) logProbBigram(prev, word string) float64 {
 func (m *NGramModel) logProbUnigram(word string) float64 {
 	if e, ok := m.Unigrams[word]; ok {
 		return e.LogProb
+	}
+	if m.OOVLogProb != 0 {
+		return m.OOVLogProb
 	}
 	return mathutil.LogZero
 }

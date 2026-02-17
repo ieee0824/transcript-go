@@ -2,6 +2,7 @@ package transcript
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"github.com/ieee0824/transcript-go/acoustic"
 	"github.com/ieee0824/transcript-go/audio"
@@ -13,11 +14,12 @@ import (
 
 // Recognizer is the top-level speech recognizer.
 type Recognizer struct {
-	AM      *acoustic.AcousticModel
-	LM      *language.NGramModel
-	Dict    *lexicon.Dictionary
-	FeatCfg feature.Config
-	DecCfg  decoder.Config
+	AM         *acoustic.AcousticModel
+	LM         *language.NGramModel
+	Dict       *lexicon.Dictionary
+	FeatCfg    feature.Config
+	DecCfg     decoder.Config
+	OOVLogProb float64 // OOV unigram log10 probability (e.g. -5.0). 0 = disable.
 }
 
 // Option configures a Recognizer.
@@ -34,6 +36,13 @@ func WithFeatureConfig(cfg feature.Config) Option {
 func WithDecoderConfig(cfg decoder.Config) Option {
 	return func(r *Recognizer) {
 		r.DecCfg = cfg
+	}
+}
+
+// WithOOVLogProb sets the OOV unigram probability in log10 (e.g. -5.0).
+func WithOOVLogProb(log10prob float64) Option {
+	return func(r *Recognizer) {
+		r.OOVLogProb = log10prob
 	}
 }
 
@@ -73,6 +82,11 @@ func NewRecognizer(amPath, lmPath, dictPath string, opts ...Option) (*Recognizer
 	r.Dict, err = lexicon.LoadFile(dictPath)
 	if err != nil {
 		return nil, fmt.Errorf("load dictionary: %w", err)
+	}
+
+	// Apply OOV log probability to LM
+	if r.OOVLogProb != 0 {
+		r.LM.OOVLogProb = r.OOVLogProb * math.Ln10 // convert log10 to natural log
 	}
 
 	return r, nil
