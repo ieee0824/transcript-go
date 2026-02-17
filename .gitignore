@@ -33,3 +33,6 @@ Thumbs.db
 
 # Generated dictionary data (run `go run ./cmd/dictconv` to generate)
 data/
+
+# Development tools
+develop/
