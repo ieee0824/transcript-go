@@ -9,28 +9,57 @@ HMM-GMM音響モデルとN-gram言語モデルによる古典的な音声認識�
 - **トライフォン対応HMM-GMM音響モデル** — 日本語29音素、5状態left-to-right HMM、対角共分散GMM、文脈依存トライフォンHMMによる高精度認識
 - **N-gram言語モデル** — ARPA形式の読み込み、Witten-Bellスムージング付きbigram/trigram対応、OOV処理
 - **MFCC特徴量抽出** — 39次元 (13 MFCC + 13 Δ + 13 ΔΔ)、ケプストラム平均正規化 (CMN)
-- **レキシコンプレフィックスツリーデコーダ** — LMルックアヘッド、トークン再結合、発射キャッシュによる高速ビームサーチ
-- **Baum-Welch (EM) 訓練** — 強制アラインメント、モノフォン→トライフォン段階訓練
+- **レキシコンプレフィックスツリーデコーダ** — LMルックアヘッド、トライグラム再結合、発射キャッシュによる高速ビームサーチ
+- **Baum-Welch (EM) 訓練** — 強制アラインメント、モノフォン→トライフォン段階訓練、goroutine並列化
 - **言語モデルビルダー** — コーパスからWitten-Bellスムージング付きARPA形式を自動生成
+- **自然言語テキストフィルタ** — MeCab + 辞書照合でWikipedia等からLM学習用コーパスを自動生成
+
+## 学習済みモデル
+
+`models/v10/` に学習済みモデルが同梱されています。
+
+| ファイル | 内容 |
+|---|---|
+| `models/v10/am.gob` | 音響モデル (30話者TTS, 2,469発話, 5-way speed augment, 4-mix GMM, トライフォン) |
+| `models/v10/lm.arpa` | 言語モデル (トライグラム, テンプレート14,250文 + Wikipedia抽出393文) |
+| `models/v10/dict.txt` | 発音辞書 (1,176語) |
+
+### クイックスタート
+
+```bash
+go build -o /tmp/transcript ./cmd/transcript/
+
+/tmp/transcript \
+    -am models/v10/am.gob \
+    -lm models/v10/lm.arpa \
+    -dict models/v10/dict.txt \
+    -wav input.wav \
+    -oov-prob -5.0 -lm-weight 10.0 -max-tokens 5000
+```
 
 ## 認識精度
 
-6話者 × 3セット (873発話) での評価:
+### v10 (最新)
 
-| 構成 | 精度 |
+| テスト条件 | 精度 |
 |---|---|
-| モノフォン + 大辞書 (341K語) | 83.3% |
-| トライフォン + LM語彙辞書 (649語) + LMW=20 | **93.9%** |
+| 学習データ (2,469発話 × 5-way augment, TTS 30話者) | 98.4% |
+| コーパス内文 × 外部TTS話者 | 80% |
+| コーパス外文 × 未知TTS話者 (3話者平均) | 43% |
 
 ## プロジェクト構成
 
 ```
 transcript/
 ├── transcript.go          トップレベルAPI (Recognizer)
+├── models/v10/            学習済みモデル (AM + LM + 辞書)
 ├── cmd/
 │   ├── transcript/        音声認識CLI
 │   ├── train/             音響モデル訓練CLI
 │   ├── lmbuild/           言語モデルビルダー
+│   ├── lmtext/            自然言語テキストフィルタ (MeCab + 辞書照合)
+│   ├── wikitext/          MediaWiki XMLダンプからテキスト抽出
+│   ├── corpusgen/         テンプレートベースコーパス生成
 │   ├── dictconv/          辞書変換 (MeCab辞書 → 発音辞書)
 │   └── dictfilter/        辞書フィルタリング
 ├── acoustic/              音響モデル (HMM + GMM, トライフォン, Baum-Welch訓練)
@@ -64,7 +93,7 @@ go test ./... -timeout 60s
 ### 音声認識
 
 ```bash
-transcript -am model.gob -lm lm.arpa -dict dict.txt -wav input.wav
+transcript -am models/v10/am.gob -lm models/v10/lm.arpa -dict models/v10/dict.txt -wav input.wav
 ```
 
 | フラグ | デフォルト | 説明 |
@@ -85,8 +114,8 @@ transcript -am model.gob -lm lm.arpa -dict dict.txt -wav input.wav
 
 ```bash
 go run ./cmd/train -manifest data/manifest.tsv -dict data/dict.txt \
-    -output model.gob -mix 16 -iter 20 -align-iter 5 \
-    -triphone -min-tri-seg 10
+    -output model.gob -mix 4 -iter 20 -align-iter 2 \
+    -triphone -augment
 ```
 
 | フラグ | デフォルト | 説明 |
@@ -98,12 +127,32 @@ go run ./cmd/train -manifest data/manifest.tsv -dict data/dict.txt \
 | `-iter` | 20 | Baum-Welchイテレーション数 |
 | `-align-iter` | 0 | 強制アラインメント再訓練数 |
 | `-triphone` | false | トライフォン訓練を有効化 |
+| `-augment` | false | 5-way速度変換データ拡張 |
 | `-min-tri-seg` | 10 | トライフォンHMMの最小セグメント数 |
 
 ### 言語モデル構築
 
 ```bash
+# バイグラム
 go run ./cmd/lmbuild -output lm.arpa corpus1.txt corpus2.txt
+
+# トライグラム
+go run ./cmd/lmbuild -order 3 -output lm.arpa corpus1.txt corpus2.txt
+```
+
+### 自然言語テキストフィルタ
+
+Wikipedia等の自然言語テキストから辞書収録語のみで構成される文を抽出し、LM学習用コーパスを生成します。MeCabが必要です。
+
+```bash
+# MediaWiki XMLダンプからテキスト抽出
+go run ./cmd/wikitext jawiki-latest-pages-articles.xml.bz2 > wiki_sentences.txt
+
+# 辞書フィルタリング
+go run ./cmd/lmtext -dict models/v10/dict.txt < wiki_sentences.txt > nlp_corpus.txt
+
+# テンプレートコーパスと統合してトライグラムLM構築
+go run ./cmd/lmbuild -order 3 -output lm.arpa training/corpus8_expanded.txt nlp_corpus.txt
 ```
 
 ## ライブラリとしての使い方
@@ -111,10 +160,10 @@ go run ./cmd/lmbuild -output lm.arpa corpus1.txt corpus2.txt
 ### ファイルから認識
 
 ```go
-rec, err := transcript.NewRecognizer("model.gob", "lm.arpa", "dict.txt",
+rec, err := transcript.NewRecognizer("models/v10/am.gob", "models/v10/lm.arpa", "models/v10/dict.txt",
     transcript.WithDecoderConfig(decoder.Config{
         BeamWidth:       200.0,
-        LMWeight:        20.0,
+        LMWeight:        10.0,
         MaxActiveTokens: 5000,
     }),
     transcript.WithOOVLogProb(-5.0),
@@ -136,7 +185,7 @@ fmt.Println(result.Text)
 rec := transcript.NewRecognizerFromModels(am, lm, dict,
     transcript.WithDecoderConfig(decoder.Config{
         BeamWidth:   300.0,
-        LMWeight:    20.0,
+        LMWeight:    10.0,
     }),
 )
 
@@ -190,7 +239,7 @@ ngram 2=2
 
 - **レキシコンプレフィックスツリー**: 辞書全体をトライ構造に展開。トライフォン文脈でノード分岐
 - **LMルックアヘッド**: ツリー内の各ノードで到達可能な最良LMスコアを事前計算
-- **トークン再結合**: `(nodeIdx, stateIdx, lastWord)` をキーにした重複トークンの統合
+- **トライグラム再結合**: `(nodeIdx, stateIdx, lastWord, prevWord)` をキーにした重複トークンの統合
 - **発射キャッシュ**: HMMポインタ同一性に基づくGMM計算結果のキャッシュ
 
 ### 特徴量
@@ -242,11 +291,14 @@ go run ./cmd/dictconv -mecab /path/to/mecab-dict -output data/dict.txt
 # 2. 辞書フィルタリング (オプション)
 go run ./cmd/dictfilter data/dict.txt data/smalldict.txt 4000 > data/dict_filtered.txt
 
-# 3. 音響モデル訓練 (トライフォン)
-go run ./cmd/train -manifest data/manifest.tsv -dict data/dict.txt \
-    -output data/am.gob -mix 16 -iter 20 -align-iter 5 \
-    -triphone -min-tri-seg 10
+# 3. コーパス生成
+go run ./cmd/corpusgen > training/corpus.txt
 
-# 4. 言語モデル構築
-go run ./cmd/lmbuild -output data/lm.arpa training/corpus*.txt
+# 4. 音響モデル訓練 (トライフォン)
+go run ./cmd/train -manifest data/manifest.tsv -dict data/dict.txt \
+    -output data/am.gob -mix 4 -iter 20 -align-iter 2 \
+    -triphone -augment
+
+# 5. 言語モデル構築 (トライグラム)
+go run ./cmd/lmbuild -order 3 -output data/lm.arpa training/corpus.txt
 ```
