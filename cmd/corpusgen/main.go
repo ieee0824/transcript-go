@@ -21,6 +21,7 @@ var (
 		"美術館", "体育館", "プール", "庭", "台所",
 		"東京", "大阪", "京都", "北海道",
 		"窓", "玄関", "屋上", "地下",
+		"大学", "食堂", "工場",
 	}
 
 	things = []string{
@@ -81,6 +82,91 @@ var (
 
 	vehicles = []string{
 		"電車", "バス", "自転車", "タクシー",
+	}
+
+	// === 大学・工学カテゴリ ===
+
+	// 学科・科目
+	subjects = []string{
+		"数学", "物理", "化学", "英語", "情報",
+	}
+
+	// 大学で扱う対象物
+	academicThings = []string{
+		"レポート", "論文", "課題", "宿題", "卒論",
+		"プログラム", "データ", "グラフ", "スライド",
+		"教科書", "成績", "単位",
+	}
+
+	// 工学系の対象物
+	engineeringThings = []string{
+		"回路", "基板", "ロボット", "センサー", "モーター",
+		"装置", "機械", "材料", "配線", "電池",
+		"ケーブル", "電源", "信号",
+	}
+
+	// 研究室・実験室の機器（パソコン・スイッチは一般文との偽マッチ回避のため除外）
+	equipment = []string{
+		"プリンター", "モニター",
+		"キーボード", "マウス", "黒板",
+	}
+
+	// 工学・学術活動が行われる場所（窓・玄関等の一般場所を含めない）
+	labPlaces = []string{
+		"大学", "教室", "図書館", "会社", "工場",
+	}
+
+	// 大学の人物
+	academicPeople = []string{
+		"教授", "先輩", "後輩", "学生", "院生",
+	}
+
+	// する動詞の名詞部分
+	suruNouns = []string{
+		"勉強", "研究", "実験", "計算", "測定",
+		"分析", "設計", "観察", "記録", "報告",
+		"発表", "提出", "製作", "比較", "調整",
+	}
+
+	// 工学系の他動詞（書く・読むはverbTransitiveと重複するため除外、動かすは偽マッチ回避）
+	verbAcademic = []string{
+		"解く", "調べる", "試す",
+		"確かめる", "組み立てる", "組む", "繋ぐ",
+		"直す", "測る",
+	}
+
+	// 工学系の自動詞（止まる・始まる・終わるはverbIntransitiveと重複、壊れるは偽マッチ回避）
+	verbAcademicI = []string{
+		"動く", "光る", "繋がる",
+	}
+
+	// === ビジネスカテゴリ ===
+
+	// ビジネスで扱う対象物
+	businessThings = []string{
+		"資料", "書類", "名刺", "メール", "契約",
+		"予算", "企画", "提案", "商品", "見積",
+		"スケジュール", "プロジェクト", "マニュアル",
+	}
+
+	// ビジネスの人物（上司・部下は既存personsと重複しないよう注意）
+	businessPeople = []string{
+		"上司", "部下", "同僚", "社長", "課長",
+		"部長", "担当",
+	}
+
+	// ビジネスする動詞の名詞部分
+	businessSuru = []string{
+		"確認", "準備", "報告", "連絡", "相談",
+		"説明", "検討", "決定", "承認", "申請",
+		"登録", "作成", "修正", "変更", "対応",
+		"管理", "計画", "実行", "完了",
+	}
+
+	// 勤怠関連する動詞
+	workSuru = []string{
+		"出勤", "退勤", "出張", "残業", "休憩",
+		"出席", "欠席",
 	}
 )
 
@@ -154,6 +240,71 @@ func main() {
 		{"%s から %s に 乗る", [][]string{places, vehicles}},
 		// PLACE で VEHICLE に 乗る
 		{"%s で %s に 乗る", [][]string{places, vehicles}},
+
+		// === 大学・工学テンプレート ===
+
+		// SUBJECT を 勉強 する
+		{"%s を 勉強 する", [][]string{subjects}},
+		// SUBJECT を 研究 する
+		{"%s を 研究 する", [][]string{subjects}},
+		// ACADEMIC_THING を VERB_ACADEMIC (レポート を 書く, 課題 を 解く)
+		{"%s を %s", [][]string{academicThings, verbAcademic}},
+		// ACADEMIC_THING を SURU する (データ を 分析 する)
+		{"%s を %s する", [][]string{academicThings, suruNouns}},
+		// ENGINEERING_THING を SURU する (回路 を 設計 する)
+		{"%s を %s する", [][]string{engineeringThings, suruNouns}},
+		// ENGINEERING_THING を VERB_ACADEMIC (回路 を 組む)
+		{"%s を %s", [][]string{engineeringThings, verbAcademic}},
+		// ENGINEERING_THING が VERB_ACADEMIC_I (機械 が 動く)
+		{"%s が %s", [][]string{engineeringThings, verbAcademicI}},
+		// EQUIPMENT を 使う
+		{"%s を 使う", [][]string{equipment}},
+		// EQUIPMENT を VERB_ACADEMIC
+		{"%s を %s", [][]string{equipment, verbAcademic}},
+		// EQUIPMENT が VERB_ACADEMIC_I
+		{"%s が %s", [][]string{equipment, verbAcademicI}},
+		// ACADEMIC_PERSON と SURU する (教授 と 研究 する)
+		{"%s と %s する", [][]string{academicPeople, suruNouns}},
+		// ACADEMIC_PERSON と ACADEMIC_THING を VERB_ACADEMIC
+		{"%s と %s を %s", [][]string{academicPeople, academicThings, verbAcademic}},
+		// ACADEMIC_PERSON が SURU する (教授 が 発表 する)
+		{"%s が %s する", [][]string{academicPeople, suruNouns}},
+		// SUBJECT の ACADEMIC_THING を VERB_ACADEMIC (数学 の 課題 を 解く)
+		{"%s の %s を %s", [][]string{subjects, academicThings, verbAcademic}},
+		// SUBJECT の ACADEMIC_THING を SURU する (物理 の 実験 を 記録 する)
+		{"%s の %s を %s する", [][]string{subjects, academicThings, suruNouns}},
+		// TIME に ACADEMIC_THING を SURU する
+		{"%s に %s を %s する", [][]string{times, academicThings, suruNouns}},
+		// TIME に ACADEMIC_THING を VERB_ACADEMIC
+		{"%s に %s を %s", [][]string{times, academicThings, verbAcademic}},
+		// ACADEMIC_PERSON に SURU する (教授 に 報告 する)
+		{"%s に %s する", [][]string{academicPeople, suruNouns}},
+		// ACADEMIC_PERSON も SURU する
+		{"%s も %s する", [][]string{academicPeople, suruNouns}},
+
+		// === ビジネステンプレート ===
+
+		// BUSINESS_THING を BUSINESS_SURU する (資料 を 作成 する)
+		{"%s を %s する", [][]string{businessThings, businessSuru}},
+		// BUSINESS_THING を VERB_T (書類 を 読む, メール を 送る)
+		{"%s を %s", [][]string{businessThings, verbTransitive}},
+		// BUSINESS_PERSON と BUSINESS_SURU する (上司 と 相談 する)
+		{"%s と %s する", [][]string{businessPeople, businessSuru}},
+		// BUSINESS_PERSON に BUSINESS_SURU する (部長 に 報告 する)
+		{"%s に %s する", [][]string{businessPeople, businessSuru}},
+		// BUSINESS_PERSON が BUSINESS_SURU する (課長 が 承認 する)
+		{"%s が %s する", [][]string{businessPeople, businessSuru}},
+		// BUSINESS_PERSON と BUSINESS_THING を BUSINESS_SURU する
+		{"%s と %s を %s する", [][]string{businessPeople, businessThings, businessSuru}},
+		// TIME に BUSINESS_SURU する (明日 に 出張 する)
+		{"%s に %s する", [][]string{times, workSuru}},
+		// TIME BUSINESS_SURU する (今日 残業 する)
+		{"%s %s する", [][]string{times, workSuru}},
+		// BUSINESS_THING の BUSINESS_SURU する (予算 の 確認 する... → 予算 を 確認 する is better)
+		// BUSINESS_PERSON も BUSINESS_SURU する
+		{"%s も %s する", [][]string{businessPeople, businessSuru}},
+		// ADVERB BUSINESS_THING を BUSINESS_SURU する
+		{"%s %s を %s する", [][]string{adverbs, businessThings, businessSuru}},
 	}
 
 	seen := make(map[string]bool)
