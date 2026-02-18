@@ -63,9 +63,11 @@ type trieNode struct {
 	wordEnds []string // words ending at this node
 }
 
-// trieChild is a (phoneme, nodeIdx) pair for trie children.
+// trieChild is a (phoneme, hmm, nodeIdx) tuple for trie children.
+// hmm is used during trie building to match nodes with the same triphone HMM.
 type trieChild struct {
 	phoneme acoustic.Phoneme
+	hmm     *acoustic.PhonemeHMM
 	nodeIdx int
 }
 
@@ -122,7 +124,7 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 		return &Result{}
 	}
 
-	// Build phoneme prefix trie from dictionary (monophone HMMs)
+	// Build phoneme prefix trie from dictionary (triphone HMMs when available, monophone fallback)
 	nodes := []trieNode{{}} // nodes[0] = root (no phoneme, no HMM)
 	hmmSet := make(map[*acoustic.PhonemeHMM]int)
 	var uniqueHMMs []*acoustic.PhonemeHMM
@@ -137,11 +139,20 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 		if !ok || len(phonemes) == 0 {
 			continue
 		}
+		// Compute triphone sequence for context-dependent HMM resolution
+		triphones := acoustic.WordToTriphones(phonemes)
+
 		cur := 0
-		for _, ph := range phonemes {
+		for i, ph := range phonemes {
+			hmm := am.ResolveHMM(triphones[i])
+			if hmm == nil {
+				cur = -1
+				break
+			}
+			// Find existing child matching both phoneme and HMM pointer
 			found := -1
 			for _, c := range nodes[cur].children {
-				if c.phoneme == ph {
+				if c.phoneme == ph && c.hmm == hmm {
 					found = c.nodeIdx
 					break
 				}
@@ -149,11 +160,6 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 			if found >= 0 {
 				cur = found
 			} else {
-				hmm := am.Phonemes[ph]
-				if hmm == nil {
-					cur = -1
-					break
-				}
 				ord, exists := hmmSet[hmm]
 				if !exists {
 					ord = len(uniqueHMMs)
@@ -166,7 +172,7 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 					hmm:     hmm,
 					hmmOrd:  ord,
 				})
-				nodes[cur].children = append(nodes[cur].children, trieChild{phoneme: ph, nodeIdx: newIdx})
+				nodes[cur].children = append(nodes[cur].children, trieChild{phoneme: ph, hmm: hmm, nodeIdx: newIdx})
 				cur = newIdx
 			}
 		}
@@ -260,7 +266,7 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 	}
 	lmLookAhead := bestUniLM * cfg.LMWeight
 
-	// Pre-compute emission log-likelihoods for all unique monophone HMMs
+	// Pre-compute emission log-likelihoods for all unique HMMs (triphone or monophone)
 	emitCols := len(uniqueHMMs) * acoustic.NumEmittingStates
 	emitCache := mathutil.NewMat(T, emitCols)
 	for hi, hmm := range uniqueHMMs {
