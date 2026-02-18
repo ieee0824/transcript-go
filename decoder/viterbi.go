@@ -577,7 +577,7 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 
 	words, starts := finalNode.toSlice()
 	result := &Result{
-		Text:     strings.Join(words, ""),
+		Text:     strings.Join(words, " "),
 		LogScore: best.score,
 	}
 

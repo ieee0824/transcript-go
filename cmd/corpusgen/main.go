@@ -33,6 +33,7 @@ var (
 		"服", "帽子", "眼鏡", "時計", "鞄",
 		"紙", "ペン", "電話", "薬",
 		"ピアノ", "ギター",
+		"目標", "食材", "忘れ物", "仕事",
 	}
 
 	animals = []string{
@@ -49,6 +50,18 @@ var (
 	times = []string{
 		"朝", "昼", "夜", "夕方", "今日",
 		"明日", "昨日", "毎日", "毎朝", "毎晩",
+		"午前", "午後",
+	}
+
+	// 「V-stem に 行く」パターン用の動詞語幹
+	verbStems = []string{
+		"買い", "取り", "食べ", "見", "遊び",
+		"飲み", "泳ぎ", "撮り",
+	}
+
+	// 体の部分・抽象名詞（「が VERB_I」パターン用）
+	bodyAbstract = []string{
+		"お腹", "頭", "体", "気持ち", "準備",
 	}
 
 	verbTransitive = []string{
@@ -56,6 +69,7 @@ var (
 		"作る", "買う", "撮る", "聴く", "洗う",
 		"開ける", "閉める", "使う", "持つ", "送る",
 		"運ぶ", "切る", "焼く", "弾く", "描く",
+		"着る", "決める",
 	}
 
 	verbIntransitive = []string{
@@ -63,6 +77,7 @@ var (
 		"飛ぶ", "寝る", "降る", "咲く", "鳴く",
 		"遊ぶ", "笑う", "泣く", "座る", "立つ",
 		"始まる", "終わる", "帰る", "起きる", "止まる",
+		"空く",
 	}
 
 	verbMotion = []string{
@@ -72,7 +87,11 @@ var (
 	adjectives = []string{
 		"いい", "青い", "赤い", "大きい", "小さい",
 		"おいしい", "暑い", "寒い", "高い", "安い",
-		"新しい", "古い", "広い", "長い", "綺麗",
+		"新しい", "古い", "広い", "長い", "きれい",
+	}
+
+	naAdj = []string{
+		"きれい", "元気", "静か", "有名",
 	}
 
 	adverbs = []string{
@@ -240,6 +259,34 @@ func main() {
 		{"%s から %s に 乗る", [][]string{places, vehicles}},
 		// PLACE で VEHICLE に 乗る
 		{"%s で %s に 乗る", [][]string{places, vehicles}},
+
+		// === 日常生活テンプレート ===
+
+		// PERSON が THING を VERB_T (妹 が ピアノ を 弾く)
+		{"%s が %s を %s", [][]string{persons, things, verbTransitive}},
+		// PERSON に THING を VERB_T (お母さん に 電話 を かける)
+		{"%s に %s を %s", [][]string{persons, things, verbTransitive}},
+		// PERSON と PLACE を VERB_MOTION (お父さん と 公園 を 歩く)
+		{"%s と %s を %s", [][]string{persons, places, verbMotion}},
+		// ADJ NATURE が VERB_I (赤い 花 が 咲く)
+		{"%s %s が %s", [][]string{adjectives, nature, verbIntransitive}},
+		// NATURE/THING が ADJ です (空 が きれい です)
+		{"%s が %s です", [][]string{nature, naAdj}},
+		{"%s が %s です", [][]string{things, naAdj}},
+		// BODY/ABSTRACT が VERB_I (お腹 が 空く)
+		{"%s が %s", [][]string{bodyAbstract, verbIntransitive}},
+		// THING を VERB_STEM に VERB_MOTION (忘れ物 を 取り に 行く)
+		{"%s を %s に %s", [][]string{things, verbStems, verbMotion}},
+		// TIME から THING を VERB_T (午後 から 仕事 を する)
+		{"%s から %s を %s", [][]string{times, things, verbTransitive}},
+		// PERSON が ADVERB に VERB_I (子供 が 元気 に 遊ぶ)
+		{"%s が 元気 に %s", [][]string{persons, verbIntransitive}},
+		// PERSON が PLACE で SURU する (学生 が 教室 で 勉強 する)
+		{"%s が %s で %s する", [][]string{academicPeople, labPlaces, suruNouns}},
+		// PERSON に SURU する (先生 に 説明 する) -- also persons
+		{"%s に %s する", [][]string{persons, businessSuru}},
+		// BUSINESS_SURU が BUSINESS_SURU する (準備 が 完了 する)
+		{"%s が %s する", [][]string{businessSuru, businessSuru}},
 
 		// === 大学・工学テンプレート ===
 
