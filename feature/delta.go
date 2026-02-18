@@ -17,8 +17,9 @@ func Delta(features [][]float64, N int) [][]float64 {
 	}
 	denom *= 2.0
 
+	buf := make([]float64, T*dim)
 	for t := 0; t < T; t++ {
-		deltas[t] = make([]float64, dim)
+		deltas[t] = buf[t*dim : (t+1)*dim]
 		for d := 0; d < dim; d++ {
 			num := 0.0
 			for n := 1; n <= N; n++ {
@@ -48,8 +49,9 @@ func AppendDeltas(features [][]float64) [][]float64 {
 	T := len(features)
 	dim := len(features[0])
 	out := make([][]float64, T)
+	rowBuf := make([]float64, T*dim*3)
 	for t := 0; t < T; t++ {
-		row := make([]float64, dim*3)
+		row := rowBuf[t*dim*3 : (t+1)*dim*3]
 		copy(row[:dim], features[t])
 		copy(row[dim:dim*2], d1[t])
 		copy(row[dim*2:], d2[t])

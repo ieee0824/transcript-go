@@ -80,13 +80,15 @@ func Extract(samples []float64, cfg Config) ([][]float64, error) {
 		liftTbl = newLifterTable(cfg.NumCepstra, cfg.CepLifter)
 	}
 
-	// 4. For each frame: window -> FFT -> power spectrum -> Mel -> DCT -> lifter
-	mfccs := make([][]float64, len(frames))
+	// 4. For each frame: window+FFT -> power spectrum -> Mel -> DCT -> lifter
+	nFrames := len(frames)
+	mfccs := make([][]float64, nFrames)
+	cepAll := make([]float64, nFrames*cfg.NumCepstra)
+	hammWin := getHammingWindow(frameLen)
 	for i, frame := range frames {
-		HammingWindow(frame)
-		fftWS.computePowerSpectrum(frame)
+		fftWS.computePowerSpectrum(frame, hammWin)
 		melFB.applyInto(fftWS.power, melBuf)
-		cepstra := make([]float64, cfg.NumCepstra)
+		cepstra := cepAll[i*cfg.NumCepstra : (i+1)*cfg.NumCepstra]
 		dctTbl.applyInto(melBuf, cepstra)
 		if liftTbl != nil {
 			liftTbl.apply(cepstra)

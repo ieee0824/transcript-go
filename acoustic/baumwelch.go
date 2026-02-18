@@ -280,25 +280,33 @@ func TrainPhoneme(hmm *PhonemeHMM, sequences [][][]float64, cfg TrainingConfig) 
 
 			// Accumulate GMM statistics (using cached gmmLP from emit)
 			for t := 0; t < T; t++ {
+				ot := obs[t]
+				gammaT := gamma[t]
+				emitT := emit[t]
 				for s := 1; s <= NumEmittingStates; s++ {
-					if gamma[t][s] <= mathutil.LogZero+1 {
+					if gammaT[s] <= mathutil.LogZero+1 {
 						continue
 					}
 					sIdx := s - 1
+					acc := &stateAcc[sIdx]
 					gmm := hmm.States[s].GMM
-					gmmLP := emit[t][sIdx] // cached total GMM log prob
+					gmmLP := emitT[sIdx]
 
 					for m := range gmm.Components {
-						compLP := gmm.Components[m].LogWeight + gmm.Components[m].LogProb(obs[t])
-						compPost := gamma[t][s] + compLP - gmmLP
+						compLP := gmm.Components[m].LogWeight + gmm.Components[m].LogProb(ot)
+						compPost := gammaT[s] + compLP - gmmLP
 
-						stateAcc[sIdx].weightAcc[m] = mathutil.LogAdd(stateAcc[sIdx].weightAcc[m], compPost)
-						stateAcc[sIdx].totalOcc = mathutil.LogAdd(stateAcc[sIdx].totalOcc, compPost)
+						acc.weightAcc[m] = mathutil.LogAdd(acc.weightAcc[m], compPost)
+						acc.totalOcc = mathutil.LogAdd(acc.totalOcc, compPost)
 
 						postLin := math.Exp(compPost)
+						meanRow := acc.meanAcc[m]
+						varRow := acc.varAcc[m]
 						for d := 0; d < dim; d++ {
-							stateAcc[sIdx].meanAcc[m][d] += postLin * obs[t][d]
-							stateAcc[sIdx].varAcc[m][d] += postLin * obs[t][d] * obs[t][d]
+							xd := ot[d]
+							scaled := postLin * xd
+							meanRow[d] += scaled
+							varRow[d] += scaled * xd
 						}
 					}
 				}

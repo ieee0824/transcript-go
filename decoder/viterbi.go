@@ -2,7 +2,6 @@ package decoder
 
 import (
 	"math"
-	"sort"
 	"strings"
 
 	"github.com/ieee0824/transcript-go/acoustic"
@@ -34,6 +33,7 @@ func DefaultConfig() Config {
 // wordHistoryNode is a linked list node to avoid copying word history slices.
 type wordHistoryNode struct {
 	word   string
+	wordID int // numeric ID for fast map key hashing
 	frame  int // start frame of this word
 	prev   *wordHistoryNode
 	length int
@@ -56,11 +56,12 @@ func (n *wordHistoryNode) toSlice() ([]string, []int) {
 
 // trieNode represents a node in the phoneme prefix trie.
 type trieNode struct {
-	phoneme  acoustic.Phoneme
-	hmm      *acoustic.PhonemeHMM
-	hmmOrd   int // index into uniqueHMMs for emission cache
-	children []trieChild
-	wordEnds []string // words ending at this node
+	phoneme    acoustic.Phoneme
+	hmm        *acoustic.PhonemeHMM
+	hmmOrd     int // index into uniqueHMMs for emission cache
+	children   []trieChild
+	wordEnds   []string // words ending at this node
+	wordEndIDs []int    // numeric IDs parallel to wordEnds
 }
 
 // trieChild is a (phoneme, hmm, nodeIdx) tuple for trie children.
@@ -106,10 +107,11 @@ func (p *tokenPool) reset() {
 const silWord = "<sil>"
 
 // recomKey is used for token recombination within the trie.
+// Uses numeric wordID instead of string for fast map hashing.
 type recomKey struct {
-	nodeIdx  int
-	stateIdx int
-	lastWord string
+	nodeIdx    int
+	stateIdx   int
+	lastWordID int
 }
 
 // Decode performs Viterbi beam search decoding using a lexicon prefix trie.
@@ -122,6 +124,12 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 	vocab := dict.Words()
 	if len(vocab) == 0 {
 		return &Result{}
+	}
+
+	// Build word-to-ID mapping for fast recomKey hashing (0 = nil history)
+	wordIDs := make(map[string]int, len(vocab)+1)
+	for i, w := range vocab {
+		wordIDs[w] = i + 1
 	}
 
 	// Build phoneme prefix trie from dictionary (triphone HMMs when available, monophone fallback)
@@ -178,6 +186,7 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 		}
 		if cur > 0 {
 			nodes[cur].wordEnds = append(nodes[cur].wordEnds, w)
+			nodes[cur].wordEndIDs = append(nodes[cur].wordEndIDs, wordIDs[w])
 		}
 	}
 
@@ -451,11 +460,12 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 						continue
 					}
 
-					for _, word := range nd.wordEnds {
+					for wi, word := range nd.wordEnds {
 						newNode := &wordHistoryNode{
-							word:  word,
-							frame: t,
-							prev:  tok.history,
+							word:   word,
+							wordID: nd.wordEndIDs[wi],
+							frame:  t,
+							prev:   tok.history,
 						}
 						if tok.history != nil {
 							newNode.length = tok.history.length + 1
@@ -544,8 +554,9 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 			}
 			if bestWord != "" && bestWordScore > best.score-cfg.BeamWidth {
 				finalNode = &wordHistoryNode{
-					word: bestWord,
-					prev: best.history,
+					word:   bestWord,
+					wordID: wordIDs[bestWord],
+					prev:   best.history,
 				}
 				if best.history != nil {
 					finalNode.length = best.history.length + 1
@@ -588,11 +599,11 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 
 // addOrRecombine adds a token or replaces an existing one at the same (nodeIdx, stateIdx, lastWord).
 func addOrRecombine(tokens *[]*token, pool *tokenPool, recom map[recomKey]int, nodeIdx, stateIdx int, history *wordHistoryNode, score float64) {
-	lw := ""
+	lwID := 0
 	if history != nil {
-		lw = history.word
+		lwID = history.wordID
 	}
-	key := recomKey{nodeIdx: nodeIdx, stateIdx: stateIdx, lastWord: lw}
+	key := recomKey{nodeIdx: nodeIdx, stateIdx: stateIdx, lastWordID: lwID}
 	if idx, exists := recom[key]; exists {
 		if score > (*tokens)[idx].score {
 			(*tokens)[idx].score = score
@@ -645,11 +656,35 @@ func pruneTokens(src []*token, dst []*token, beamWidth float64, maxActive int) [
 	}
 
 	if len(dst) > maxActive {
-		sort.Slice(dst, func(i, j int) bool {
-			return dst[i].score > dst[j].score
-		})
+		quickselectTokens(dst, maxActive)
 		dst = dst[:maxActive]
 	}
 
 	return dst
+}
+
+// quickselectTokens partially reorders tokens so that the top k highest-scoring
+// tokens are in positions [0, k). Average O(n), no allocations.
+func quickselectTokens(tokens []*token, k int) {
+	left, right := 0, len(tokens)-1
+	for left < right {
+		pivotIdx := left + (right-left)/2
+		pivotVal := tokens[pivotIdx].score
+		tokens[pivotIdx], tokens[right] = tokens[right], tokens[pivotIdx]
+		storeIdx := left
+		for i := left; i < right; i++ {
+			if tokens[i].score > pivotVal {
+				tokens[storeIdx], tokens[i] = tokens[i], tokens[storeIdx]
+				storeIdx++
+			}
+		}
+		tokens[storeIdx], tokens[right] = tokens[right], tokens[storeIdx]
+		if storeIdx == k-1 {
+			return
+		} else if storeIdx < k-1 {
+			left = storeIdx + 1
+		} else {
+			right = storeIdx - 1
+		}
+	}
 }

@@ -54,9 +54,11 @@ func bitReverse(x, bits int) int {
 
 // fftWorkspace holds reusable buffers for FFT computation.
 type fftWorkspace struct {
-	buf   []complex128 // [fftSize]
-	power []float64    // [fftSize/2+1]
-	bits  int
+	buf      []complex128   // [fftSize]
+	power    []float64      // [fftSize/2+1]
+	bits     int
+	perm     []int            // bit-reversal permutation table
+	twiddles [][]complex128   // twiddle factors per butterfly stage
 }
 
 func newFFTWorkspace(fftSize int) *fftWorkspace {
@@ -64,46 +66,79 @@ func newFFTWorkspace(fftSize int) *fftWorkspace {
 	for v := fftSize; v > 1; v >>= 1 {
 		bits++
 	}
+
+	// Pre-compute bit-reversal permutation
+	perm := make([]int, fftSize)
+	for i := 0; i < fftSize; i++ {
+		perm[i] = bitReverse(i, bits)
+	}
+
+	// Pre-compute twiddle factors for each butterfly stage
+	var twiddles [][]complex128
+	for size := 2; size <= fftSize; size *= 2 {
+		halfSize := size / 2
+		tw := make([]complex128, halfSize)
+		w := cmplx.Exp(complex(0, -2*math.Pi/float64(size)))
+		wn := complex(1, 0)
+		for k := 0; k < halfSize; k++ {
+			tw[k] = wn
+			wn *= w
+		}
+		twiddles = append(twiddles, tw)
+	}
+
 	return &fftWorkspace{
-		buf:   make([]complex128, fftSize),
-		power: make([]float64, fftSize/2+1),
-		bits:  bits,
+		buf:      make([]complex128, fftSize),
+		power:    make([]float64, fftSize/2+1),
+		bits:     bits,
+		perm:     perm,
+		twiddles: twiddles,
 	}
 }
 
-// computePowerSpectrum loads frame into buffer, performs in-place FFT,
-// and writes power spectrum into ws.power. No allocations.
-func (ws *fftWorkspace) computePowerSpectrum(frame []float64) {
+// computePowerSpectrum loads frame into buffer with optional windowing,
+// performs in-place FFT, and writes power spectrum into ws.power. No allocations.
+// If window is non-nil, it is applied during loading (fused window+load).
+func (ws *fftWorkspace) computePowerSpectrum(frame []float64, window []float64) {
 	n := len(ws.buf)
-	// Load frame, zero-pad
-	for i := range ws.buf {
-		if i < len(frame) {
-			ws.buf[i] = complex(frame[i], 0)
-		} else {
-			ws.buf[i] = 0
+	frameLen := len(frame)
+	// Load frame with optional windowing, zero-pad
+	if window != nil {
+		for i := range ws.buf {
+			if i < frameLen {
+				ws.buf[i] = complex(frame[i]*window[i], 0)
+			} else {
+				ws.buf[i] = 0
+			}
+		}
+	} else {
+		for i := range ws.buf {
+			if i < frameLen {
+				ws.buf[i] = complex(frame[i], 0)
+			} else {
+				ws.buf[i] = 0
+			}
 		}
 	}
 
-	// In-place bit-reversal
+	// In-place bit-reversal using pre-computed permutation
 	for i := 0; i < n; i++ {
-		j := bitReverse(i, ws.bits)
+		j := ws.perm[i]
 		if i < j {
 			ws.buf[i], ws.buf[j] = ws.buf[j], ws.buf[i]
 		}
 	}
 
-	// In-place butterfly
-	for size := 2; size <= n; size *= 2 {
+	// In-place butterfly with pre-computed twiddle factors
+	for stage, size := 0, 2; size <= n; stage, size = stage+1, size*2 {
 		halfSize := size / 2
-		w := cmplx.Exp(complex(0, -2*math.Pi/float64(size)))
+		tw := ws.twiddles[stage]
 		for start := 0; start < n; start += size {
-			wn := complex(1, 0)
 			for k := 0; k < halfSize; k++ {
 				u := ws.buf[start+k]
-				t := wn * ws.buf[start+k+halfSize]
+				t := tw[k] * ws.buf[start+k+halfSize]
 				ws.buf[start+k] = u + t
 				ws.buf[start+k+halfSize] = u - t
-				wn *= w
 			}
 		}
 	}
