@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/ieee0824/transcript-go/acoustic"
 	"github.com/ieee0824/transcript-go/audio"
@@ -32,6 +34,8 @@ func main() {
 	triMixFlag := flag.Int("tri-mix", 0, "GMM components for triphone HMMs (0=min(mix,4))")
 	augmentFlag := flag.Bool("augment", false, "enable 3-way speed perturbation (1.0x, 0.9x, 1.1x)")
 	flag.Parse()
+
+	workers := runtime.NumCPU()
 
 	// Load dictionary
 	dict, err := lexicon.LoadFile(*dictPath)
@@ -96,7 +100,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Extract features for all utterances
+	// Extract features for all utterances (parallel)
 	cfg := feature.DefaultConfig()
 	featureDim := cfg.FeatureDim()
 
@@ -106,48 +110,74 @@ func main() {
 		factors = []float64{1.0, 0.9, 0.95, 1.05, 1.1}
 	}
 
-	var allUtts []uttData
+	type indexedUttData struct {
+		idx  int
+		data []uttData
+	}
+	resultCh := make(chan indexedUttData, len(utts))
+	sem := make(chan struct{}, workers)
+	var wgFeat sync.WaitGroup
+
 	for i, utt := range utts {
-		fmt.Fprintf(os.Stderr, "[%d/%d] %s\n", i+1, len(utts), utt.wavPath)
+		wgFeat.Add(1)
+		sem <- struct{}{}
+		go func(idx int, utt utterance) {
+			defer wgFeat.Done()
+			defer func() { <-sem }()
 
-		samples, _, err := audio.ReadWAVFile(utt.wavPath)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "  read WAV: %v, skipping\n", err)
-			continue
-		}
+			samples, _, err := audio.ReadWAVFile(utt.wavPath)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "  read WAV: %v, skipping\n", err)
+				return
+			}
 
-		// Collect per-word phoneme sequences once (independent of speed factor)
-		var wordPhons [][]acoustic.Phoneme
-		for _, w := range utt.words {
-			ph, _ := dict.PhonemeSequence(w)
-			wordPhons = append(wordPhons, ph)
-		}
+			// Collect per-word phoneme sequences once
+			var wordPhons [][]acoustic.Phoneme
+			for _, w := range utt.words {
+				ph, _ := dict.PhonemeSequence(w)
+				wordPhons = append(wordPhons, ph)
+			}
 
-		for _, factor := range factors {
-			augSamples := samples
-			if factor != 1.0 {
-				augSamples = audio.SpeedPerturb(samples, factor)
-				if augSamples == nil {
+			var results []uttData
+			for _, factor := range factors {
+				augSamples := samples
+				if factor != 1.0 {
+					augSamples = audio.SpeedPerturb(samples, factor)
+					if augSamples == nil {
+						continue
+					}
+				}
+
+				features, err := feature.Extract(augSamples, cfg)
+				if err != nil {
 					continue
 				}
-			}
 
-			features, err := feature.Extract(augSamples, cfg)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "  extract features (%.1fx): %v, skipping\n", factor, err)
-				continue
-			}
+				T := len(features)
+				N := len(utt.phonemes)
+				if T < N {
+					continue
+				}
 
-			T := len(features)
-			N := len(utt.phonemes)
-			if T < N {
-				fmt.Fprintf(os.Stderr, "  too few frames (%d) for %d phonemes (%.1fx), skipping\n", T, N, factor)
-				continue
+				results = append(results, uttData{features: features, phonemes: utt.phonemes, wordPhons: wordPhons})
 			}
-
-			allUtts = append(allUtts, uttData{features: features, phonemes: utt.phonemes, wordPhons: wordPhons})
-		}
+			if len(results) > 0 {
+				resultCh <- indexedUttData{idx: idx, data: results}
+			}
+		}(i, utt)
 	}
+
+	go func() {
+		wgFeat.Wait()
+		close(resultCh)
+	}()
+
+	var allUtts []uttData
+	for r := range resultCh {
+		allUtts = append(allUtts, r.data...)
+	}
+	fmt.Fprintf(os.Stderr, "Features extracted: %d utterances (%d workers)\n", len(allUtts), workers)
+
 	if *augmentFlag {
 		fmt.Fprintf(os.Stderr, "Valid utterances with features: %d (augmented from %d originals)\n", len(allUtts), len(utts))
 	} else {
@@ -162,14 +192,14 @@ func main() {
 	am := acoustic.NewAcousticModel(featureDim, *numMix)
 	trainCfg := acoustic.DefaultTrainingConfig()
 	trainCfg.MaxIterations = *maxIter
-	trainModel(am, phonemeData, trainCfg)
+	trainModelParallel(am, phonemeData, trainCfg, workers)
 
 	// Iterative forced alignment re-training
 	for iter := 0; iter < *alignIter; iter++ {
 		fmt.Fprintf(os.Stderr, "\n=== Alignment iteration %d/%d ===\n", iter+1, *alignIter)
-		phonemeData = segmentAligned(am, allUtts)
+		phonemeData = segmentAlignedParallel(am, allUtts, workers)
 		reportCoverage(phonemeData)
-		trainModel(am, phonemeData, trainCfg)
+		trainModelParallel(am, phonemeData, trainCfg, workers)
 	}
 
 	// Triphone training phase
@@ -185,79 +215,141 @@ func main() {
 		}
 		fmt.Fprintf(os.Stderr, "  tri-mix=%d, min-tri-seg=%d\n", triMix, *minTriSeg)
 
-		// Forced-align all utterances with the monophone model and collect triphone segments
-		triphoneData := make(map[acoustic.Triphone][][][]float64)
-		alignOK, alignFail := 0, 0
+		// Forced-align all utterances with the monophone model and collect triphone segments (parallel)
+		type triAlignResult struct {
+			data map[acoustic.Triphone][][][]float64
+			ok   bool
+		}
+		triResultCh := make(chan triAlignResult, len(allUtts))
+		triSem := make(chan struct{}, workers)
+		var wgTriAlign sync.WaitGroup
 
 		for _, u := range allUtts {
-			alignments, err := acoustic.ForcedAlign(am, u.phonemes, u.features)
-			if err != nil {
+			wgTriAlign.Add(1)
+			triSem <- struct{}{}
+			go func(u uttData) {
+				defer wgTriAlign.Done()
+				defer func() { <-triSem }()
+
+				alignments, err := acoustic.ForcedAlign(am, u.phonemes, u.features)
+				if err != nil {
+					triResultCh <- triAlignResult{ok: false}
+					return
+				}
+
+				local := make(map[acoustic.Triphone][][][]float64)
+				alignIdx := 1 // skip leading sil
+				for _, wPhons := range u.wordPhons {
+					triphones := acoustic.WordToTriphones(wPhons)
+					for ti, tri := range triphones {
+						ai := alignIdx + ti
+						if ai >= len(alignments) {
+							break
+						}
+						a := alignments[ai]
+						segLen := a.EndFrame - a.StartFrame
+						if segLen < 3 {
+							continue
+						}
+						local[tri] = append(local[tri], u.features[a.StartFrame:a.EndFrame])
+					}
+					alignIdx += len(wPhons)
+				}
+				triResultCh <- triAlignResult{data: local, ok: true}
+			}(u)
+		}
+
+		go func() {
+			wgTriAlign.Wait()
+			close(triResultCh)
+		}()
+
+		triphoneData := make(map[acoustic.Triphone][][][]float64)
+		alignOK, alignFail := 0, 0
+		for r := range triResultCh {
+			if !r.ok {
 				alignFail++
 				continue
 			}
 			alignOK++
-
-			// Map aligned phonemes to triphones.
-			// Phoneme layout: [sil] + word1_phons + word2_phons + ... + [sil]
-			// Alignment indices match 1:1 with u.phonemes.
-			alignIdx := 1 // skip leading sil
-			for _, wPhons := range u.wordPhons {
-				triphones := acoustic.WordToTriphones(wPhons)
-				for ti, tri := range triphones {
-					ai := alignIdx + ti
-					if ai >= len(alignments) {
-						break
-					}
-					a := alignments[ai]
-					segLen := a.EndFrame - a.StartFrame
-					if segLen < 3 {
-						continue
-					}
-					triphoneData[tri] = append(triphoneData[tri], u.features[a.StartFrame:a.EndFrame])
-				}
-				alignIdx += len(wPhons)
+			for tri, segs := range r.data {
+				triphoneData[tri] = append(triphoneData[tri], segs...)
 			}
 		}
 
 		fmt.Fprintf(os.Stderr, "  Alignment: %d ok, %d fail\n", alignOK, alignFail)
 		fmt.Fprintf(os.Stderr, "  Unique triphones seen: %d\n", len(triphoneData))
 
-		// Train triphone HMMs for triphones with sufficient data
+		// Train triphone HMMs (parallel)
 		am.Triphones = make(map[acoustic.Triphone]*acoustic.PhonemeHMM)
 		triTrainCfg := acoustic.DefaultTrainingConfig()
 		triTrainCfg.MaxIterations = *maxIter
 
-		trained, skipped := 0, 0
+		type triTrainItem struct {
+			tri    acoustic.Triphone
+			segs   [][][]float64
+			center acoustic.Phoneme
+		}
+		var triItems []triTrainItem
+		skipped := 0
 		for tri, segs := range triphoneData {
 			if len(segs) < *minTriSeg {
 				skipped++
 				continue
 			}
 			center := tri.CenterPhoneme()
-			monoHMM := am.Phonemes[center]
-			if monoHMM == nil {
+			if am.Phonemes[center] == nil {
 				skipped++
 				continue
 			}
+			triItems = append(triItems, triTrainItem{tri: tri, segs: segs, center: center})
+		}
 
-			// Initialize triphone HMM from monophone
-			var triHMM *acoustic.PhonemeHMM
-			if triMix == *numMix {
-				// Same mix count: clone monophone HMM as starting point
-				triHMM = acoustic.ClonePhonemeHMM(monoHMM)
-			} else {
-				// Different mix count: create fresh HMM
-				triHMM = acoustic.NewPhonemeHMM(center, am.FeatureDim, triMix)
-			}
+		type triTrainResult struct {
+			tri acoustic.Triphone
+			hmm *acoustic.PhonemeHMM
+			err error
+			n   int
+		}
+		triTrainCh := make(chan triTrainResult, len(triItems))
+		triTrainSem := make(chan struct{}, workers)
+		var wgTriTrain sync.WaitGroup
 
-			if err := acoustic.TrainPhoneme(triHMM, segs, triTrainCfg); err != nil {
-				fmt.Fprintf(os.Stderr, "  train %s error: %v\n", tri, err)
+		for _, item := range triItems {
+			wgTriTrain.Add(1)
+			triTrainSem <- struct{}{}
+			go func(item triTrainItem) {
+				defer wgTriTrain.Done()
+				defer func() { <-triTrainSem }()
+
+				monoHMM := am.Phonemes[item.center]
+				var triHMM *acoustic.PhonemeHMM
+				if triMix == *numMix {
+					triHMM = acoustic.ClonePhonemeHMM(monoHMM)
+				} else {
+					triHMM = acoustic.NewPhonemeHMM(item.center, am.FeatureDim, triMix)
+				}
+
+				err := acoustic.TrainPhoneme(triHMM, item.segs, triTrainCfg)
+				triTrainCh <- triTrainResult{tri: item.tri, hmm: triHMM, err: err, n: len(item.segs)}
+			}(item)
+		}
+
+		go func() {
+			wgTriTrain.Wait()
+			close(triTrainCh)
+		}()
+
+		trained := 0
+		for r := range triTrainCh {
+			if r.err != nil {
+				fmt.Fprintf(os.Stderr, "  train %s error: %v\n", r.tri, r.err)
 				skipped++
 				continue
 			}
-			am.Triphones[tri] = triHMM
+			am.Triphones[r.tri] = r.hmm
 			trained++
-			fmt.Fprintf(os.Stderr, "  trained %s (%d segs)\n", tri, len(segs))
+			fmt.Fprintf(os.Stderr, "  trained %s (%d segs)\n", r.tri, r.n)
 		}
 
 		fmt.Fprintf(os.Stderr, "  Triphones trained: %d, skipped: %d\n", trained, skipped)
@@ -414,16 +506,47 @@ func segmentUniform(utts []uttData) map[acoustic.Phoneme][][][]float64 {
 	return phonemeData
 }
 
-// segmentAligned uses forced alignment with the current model.
-func segmentAligned(am *acoustic.AcousticModel, utts []uttData) map[acoustic.Phoneme][][][]float64 {
+// segmentAlignedParallel uses forced alignment with the current model, processing utterances in parallel.
+func segmentAlignedParallel(am *acoustic.AcousticModel, utts []uttData, workers int) map[acoustic.Phoneme][][][]float64 {
+	type alignResult struct {
+		alignments []acoustic.PhonemeAlignment
+		utt        uttData
+		ok         bool
+	}
+
+	resultCh := make(chan alignResult, len(utts))
+	sem := make(chan struct{}, workers)
+	var wg sync.WaitGroup
+
+	for _, u := range utts {
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(u uttData) {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			alignments, err := acoustic.ForcedAlign(am, u.phonemes, u.features)
+			if err != nil {
+				resultCh <- alignResult{utt: u, ok: false}
+				return
+			}
+			resultCh <- alignResult{alignments: alignments, utt: u, ok: true}
+		}(u)
+	}
+
+	go func() {
+		wg.Wait()
+		close(resultCh)
+	}()
+
 	phonemeData := make(map[acoustic.Phoneme][][][]float64)
 	alignOK := 0
 	alignFail := 0
-	for _, u := range utts {
-		alignments, err := acoustic.ForcedAlign(am, u.phonemes, u.features)
-		if err != nil {
+	for r := range resultCh {
+		if !r.ok {
 			// Fall back to uniform segmentation for this utterance
 			alignFail++
+			u := r.utt
 			T := len(u.features)
 			N := len(u.phonemes)
 			framesPerPhone := T / N
@@ -443,12 +566,12 @@ func segmentAligned(am *acoustic.AcousticModel, utts []uttData) map[acoustic.Pho
 			continue
 		}
 		alignOK++
-		for _, a := range alignments {
+		for _, a := range r.alignments {
 			segLen := a.EndFrame - a.StartFrame
 			if segLen < 3 {
 				continue
 			}
-			phonemeData[a.Phoneme] = append(phonemeData[a.Phoneme], u.features[a.StartFrame:a.EndFrame])
+			phonemeData[a.Phoneme] = append(phonemeData[a.Phoneme], r.utt.features[a.StartFrame:a.EndFrame])
 		}
 	}
 	fmt.Fprintf(os.Stderr, "  Aligned: %d, Fallback: %d\n", alignOK, alignFail)
@@ -471,18 +594,39 @@ func reportCoverage(phonemeData map[acoustic.Phoneme][][][]float64) {
 	fmt.Fprintf(os.Stderr, "Phoneme coverage: %d/%d\n", covered, len(allPhonemes))
 }
 
-// trainModel trains all phoneme HMMs with the given segment data.
-func trainModel(am *acoustic.AcousticModel, phonemeData map[acoustic.Phoneme][][][]float64, cfg acoustic.TrainingConfig) {
+// trainModelParallel trains all phoneme HMMs in parallel with the given segment data.
+func trainModelParallel(am *acoustic.AcousticModel, phonemeData map[acoustic.Phoneme][][][]float64, cfg acoustic.TrainingConfig, workers int) {
+	type trainItem struct {
+		ph   acoustic.Phoneme
+		segs [][][]float64
+		hmm  *acoustic.PhonemeHMM
+	}
+
+	var items []trainItem
 	for _, ph := range acoustic.AllPhonemes() {
 		segs := phonemeData[ph]
 		if len(segs) == 0 {
 			fmt.Fprintf(os.Stderr, "  skipping %s (no data)\n", ph)
 			continue
 		}
-		fmt.Fprintf(os.Stderr, "  training %s (%d segments)...\n", ph, len(segs))
-		hmm := am.Phonemes[ph]
-		if err := acoustic.TrainPhoneme(hmm, segs, cfg); err != nil {
-			fmt.Fprintf(os.Stderr, "  train %s error: %v\n", ph, err)
-		}
+		items = append(items, trainItem{ph: ph, segs: segs, hmm: am.Phonemes[ph]})
 	}
+
+	sem := make(chan struct{}, workers)
+	var wg sync.WaitGroup
+
+	for _, item := range items {
+		wg.Add(1)
+		sem <- struct{}{}
+		go func(item trainItem) {
+			defer wg.Done()
+			defer func() { <-sem }()
+
+			if err := acoustic.TrainPhoneme(item.hmm, item.segs, cfg); err != nil {
+				fmt.Fprintf(os.Stderr, "  train %s error: %v\n", item.ph, err)
+			}
+			fmt.Fprintf(os.Stderr, "  trained %s (%d segments)\n", item.ph, len(item.segs))
+		}(item)
+	}
+	wg.Wait()
 }
