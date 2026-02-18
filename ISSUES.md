@@ -67,31 +67,47 @@
 | 中 | コーパスのさらなる拡張（医療・IT等の新ドメイン） | 未知文カバレッジ向上 |
 | ~~低~~ | ~~感情パラメータ付きデータの追加学習~~ | ~~感情変動への耐性~~ → v8で解決済み |
 
-## パフォーマンス最適化
+## ~~パフォーマンス最適化~~ → 全9件対応済み
 
-### 特徴量抽出（毎フレーム実行・高効果）
+### 特徴量抽出: Extract **-48%**, allocs **-99.3%**
 
-| # | 場所 | 問題 | 修正 | 難度 |
-|---|---|---|---|---|
-| 1 | `feature/frame.go:34-39` | Hamming窓: `math.Cos`を毎サンプル計算 | 窓係数テーブルを事前計算 | 低 |
-| 2 | `feature/fft.go:31,98` | FFT twiddle factor: `cmplx.Exp`を毎FFT計算 | テーブル事前計算 | 低 |
-| 3 | `feature/mfcc.go:89` | cepstra: 毎フレーム`make([]float64, 13)` | バッファ再利用 | 低 |
-| 4 | `feature/delta.go:20-38` | delta: 毎フレームalloc + delta-deltaで2回呼び出し | バッファ再利用 | 低 |
-| 5 | `feature/fft.go:87-93` | bit-reversal: 毎フレーム再計算 | permutationテーブル化 | 低 |
-| 6 | `feature/frame.go:17-31` | フレーム分割: 重複区間もcopy | slice viewに変更 | 中 |
+| ベンチマーク | Before | After | 速度 | メモリ | allocs |
+|---|---|---|---|---|---|
+| Extract_1sec | 1,150,000 ns / 574 allocs | 597,000 ns / 104 allocs | **-48%** | **-50%** | **-82%** |
+| Extract_5sec | 5,800,000 ns / 2,574 allocs | 3,020,000 ns / 104 allocs | **-48%** | **-58%** | **-96%** |
+| Extract_30sec | 34,470,000 ns / 15,074 allocs | 17,807,000 ns / 104 allocs | **-48%** | **-61%** | **-99.3%** |
 
-### 学習（Baum-Welch）
+| # | 施策 | 状態 |
+|---|---|---|
+| 1 | Hamming窓係数テーブル事前計算 | ✅ |
+| 2 | FFT twiddle factorテーブル事前計算 | ✅ |
+| 3 | cepstraバッファ一括確保 | ✅ |
+| 4 | deltaバッファ一括確保 | ✅ |
+| 5 | bit-reversal permutationテーブル化 | ✅ |
+| 6 | フレーム分割をslice viewに変更、窓適用をFFTバッファロードに融合 | ✅ |
 
-| # | 場所 | 問題 | 修正 | 難度 |
-|---|---|---|---|---|
-| 7 | `acoustic/baumwelch.go:281-305` | E-step統計量蓄積: 4重ループ (T×S×M×D) | 次元ループのベクトル化・キャッシュ最適化 | 中 |
+### 学習: BaumWelch **-15%**
 
-### デコーダ
+| ベンチマーク | Before | After | 速度 |
+|---|---|---|---|
+| BaumWelch_10seq_50frames | 2,050,000 ns | 1,744,000 ns | **-15%** |
 
-| # | 場所 | 問題 | 修正 | 難度 |
-|---|---|---|---|---|
-| 8 | `decoder/viterbi.go:589-610` | トークン再結合: stringキーのmap lookup | 数値hashに変更 | 中 |
-| 9 | `decoder/viterbi.go:648-651` | 毎フレームsort: O(n log n) | partial sort (top-k) | 中 |
+| # | 施策 | 状態 |
+|---|---|---|
+| 7 | E-step統計量蓄積のポインタチェイシング削減・乗算最適化 | ✅ |
+
+### デコーダ: Decode **-17%**
+
+| ベンチマーク | Before | After | 速度 |
+|---|---|---|---|
+| Decode_5vocab_50frames | 1,044,000 ns | 909,000 ns | **-13%** |
+| Decode_10vocab_100frames | 6,068,000 ns | 5,365,000 ns | **-12%** |
+| Decode_20vocab_200frames | 44,122,000 ns | 36,428,000 ns | **-17%** |
+
+| # | 施策 | 状態 |
+|---|---|---|
+| 8 | トークン再結合キーをstring→数値IDに変更 | ✅ |
+| 9 | ビームプルーニングをsort.Slice→quickselectに変更 | ✅ |
 
 ## 現在の推奨構成
 
