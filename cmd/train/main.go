@@ -30,6 +30,7 @@ func main() {
 	triphoneFlag := flag.Bool("triphone", false, "enable triphone training after monophone")
 	minTriSeg := flag.Int("min-tri-seg", 10, "minimum segments to train a triphone HMM")
 	triMixFlag := flag.Int("tri-mix", 0, "GMM components for triphone HMMs (0=min(mix,4))")
+	augmentFlag := flag.Bool("augment", false, "enable 3-way speed perturbation (1.0x, 0.9x, 1.1x)")
 	flag.Parse()
 
 	// Load dictionary
@@ -99,6 +100,12 @@ func main() {
 	cfg := feature.DefaultConfig()
 	featureDim := cfg.FeatureDim()
 
+	// Speed perturbation factors
+	factors := []float64{1.0}
+	if *augmentFlag {
+		factors = []float64{1.0, 0.9, 0.95, 1.05, 1.1}
+	}
+
 	var allUtts []uttData
 	for i, utt := range utts {
 		fmt.Fprintf(os.Stderr, "[%d/%d] %s\n", i+1, len(utts), utt.wavPath)
@@ -109,29 +116,43 @@ func main() {
 			continue
 		}
 
-		features, err := feature.Extract(samples, cfg)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "  extract features: %v, skipping\n", err)
-			continue
-		}
-
-		T := len(features)
-		N := len(utt.phonemes)
-		if T < N {
-			fmt.Fprintf(os.Stderr, "  too few frames (%d) for %d phonemes, skipping\n", T, N)
-			continue
-		}
-
-		// Collect per-word phoneme sequences for triphone training
+		// Collect per-word phoneme sequences once (independent of speed factor)
 		var wordPhons [][]acoustic.Phoneme
 		for _, w := range utt.words {
 			ph, _ := dict.PhonemeSequence(w)
 			wordPhons = append(wordPhons, ph)
 		}
 
-		allUtts = append(allUtts, uttData{features: features, phonemes: utt.phonemes, wordPhons: wordPhons})
+		for _, factor := range factors {
+			augSamples := samples
+			if factor != 1.0 {
+				augSamples = audio.SpeedPerturb(samples, factor)
+				if augSamples == nil {
+					continue
+				}
+			}
+
+			features, err := feature.Extract(augSamples, cfg)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "  extract features (%.1fx): %v, skipping\n", factor, err)
+				continue
+			}
+
+			T := len(features)
+			N := len(utt.phonemes)
+			if T < N {
+				fmt.Fprintf(os.Stderr, "  too few frames (%d) for %d phonemes (%.1fx), skipping\n", T, N, factor)
+				continue
+			}
+
+			allUtts = append(allUtts, uttData{features: features, phonemes: utt.phonemes, wordPhons: wordPhons})
+		}
 	}
-	fmt.Fprintf(os.Stderr, "Valid utterances with features: %d\n", len(allUtts))
+	if *augmentFlag {
+		fmt.Fprintf(os.Stderr, "Valid utterances with features: %d (augmented from %d originals)\n", len(allUtts), len(utts))
+	} else {
+		fmt.Fprintf(os.Stderr, "Valid utterances with features: %d\n", len(allUtts))
+	}
 
 	// Initial training with uniform segmentation
 	fmt.Fprintln(os.Stderr, "=== Initial training (uniform segmentation) ===")
