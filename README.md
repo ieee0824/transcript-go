@@ -1,30 +1,46 @@
 # transcript
 
 Go言語によるフルスクラッチ日本語音声認識ライブラリ。
-HMM-GMM音響モデルとn-gram言語モデルによる古典的な音声認識パイプラインを純粋なGoで実装しています。
+HMM-GMM音響モデルとN-gram言語モデルによる古典的な音声認識パイプラインを純粋なGoで実装しています。
 
 ## 特徴
 
 - **純粋Go実装** — CGo依存なし、クロスプラットフォーム対応
-- **HMM-GMM音響モデル** — 日本語29音素、5状態left-to-right HMM、対角共分散GMM
-- **n-gram言語モデル** — ARPA形式の読み込み、バックオフ付きbigram/trigram対応
-- **MFCC特徴量抽出** — 39次元 (13 MFCC + 13 Δ + 13 ΔΔ)
-- **Viterbiビームサーチデコーダ**
-- **Baum-Welch (EM) 訓練**
+- **トライフォン対応HMM-GMM音響モデル** — 日本語29音素、5状態left-to-right HMM、対角共分散GMM、文脈依存トライフォンHMMによる高精度認識
+- **N-gram言語モデル** — ARPA形式の読み込み、Witten-Bellスムージング付きbigram/trigram対応、OOV処理
+- **MFCC特徴量抽出** — 39次元 (13 MFCC + 13 Δ + 13 ΔΔ)、ケプストラム平均正規化 (CMN)
+- **レキシコンプレフィックスツリーデコーダ** — LMルックアヘッド、トークン再結合、発射キャッシュによる高速ビームサーチ
+- **Baum-Welch (EM) 訓練** — 強制アラインメント、モノフォン→トライフォン段階訓練
+- **言語モデルビルダー** — コーパスからWitten-Bellスムージング付きARPA形式を自動生成
+
+## 認識精度
+
+6話者 × 3セット (873発話) での評価:
+
+| 構成 | 精度 |
+|---|---|
+| モノフォン + 大辞書 (341K語) | 83.3% |
+| トライフォン + LM語彙辞書 (649語) + LMW=20 | **93.9%** |
 
 ## プロジェクト構成
 
 ```
 transcript/
-├── cmd/transcript/        CLI
-├── internal/mathutil/     ログ域算術、ベクトル/行列演算
+├── transcript.go          トップレベルAPI (Recognizer)
+├── cmd/
+│   ├── transcript/        音声認識CLI
+│   ├── train/             音響モデル訓練CLI
+│   ├── lmbuild/           言語モデルビルダー
+│   ├── dictconv/          辞書変換 (MeCab辞書 → 発音辞書)
+│   └── dictfilter/        辞書フィルタリング
+├── acoustic/              音響モデル (HMM + GMM, トライフォン, Baum-Welch訓練)
 ├── audio/                 WAVファイル読み込み (16bit PCM, mono, 16kHz)
-├── feature/               MFCC特徴量抽出 (FFT, Melフィルタバンク, DCT, デルタ)
-├── acoustic/              音響モデル (HMM + GMM, Baum-Welch訓練, シリアライズ)
-├── language/              言語モデル (n-gram, ARPA形式パーサ)
+├── feature/               MFCC特徴量抽出 (FFT, Melフィルタバンク, DCT, デルタ, CMN)
+├── language/              言語モデル (N-gram, ARPA形式パーサ, ビルダー)
 ├── lexicon/               発音辞書 (単語 → 音素列)
-├── decoder/               Viterbiビームサーチデコーダ
-└── transcript.go          トップレベルAPI (Recognizer)
+├── decoder/               レキシコンプレフィックスツリーデコーダ
+├── internal/mathutil/     ログ域算術、ベクトル/行列演算
+└── training/              訓練用コーパス
 ```
 
 ## 必要条件
@@ -45,11 +61,11 @@ go test ./... -timeout 60s
 
 ## CLI の使い方
 
+### 音声認識
+
 ```bash
 transcript -am model.gob -lm lm.arpa -dict dict.txt -wav input.wav
 ```
-
-### オプション
 
 | フラグ | デフォルト | 説明 |
 |---|---|---|
@@ -61,14 +77,48 @@ transcript -am model.gob -lm lm.arpa -dict dict.txt -wav input.wav
 | `-lm-weight` | 10.0 | 言語モデルの重み |
 | `-word-penalty` | 0.0 | 単語挿入ペナルティ |
 | `-max-tokens` | 1000 | 最大アクティブトークン数 |
+| `-oov-prob` | 0 | OOV語のunigram log10確率 (例: -5.0) |
+| `-lm-interp` | 0.0 | LM補間重み (0=純LM, 0.5=半均一) |
 | `-v` | false | 詳細出力 (スコア、単語タイミング) |
+
+### 音響モデル訓練
+
+```bash
+go run ./cmd/train -manifest data/manifest.tsv -dict data/dict.txt \
+    -output model.gob -mix 16 -iter 20 -align-iter 5 \
+    -triphone -min-tri-seg 10
+```
+
+| フラグ | デフォルト | 説明 |
+|---|---|---|
+| `-manifest` | data/training/manifest.tsv | 訓練マニフェスト (wav_path\<TAB\>words) |
+| `-dict` | data/dict.txt | 発音辞書 |
+| `-output` | data/am.gob | 出力モデルパス |
+| `-mix` | 1 | GMMコンポーネント数 |
+| `-iter` | 20 | Baum-Welchイテレーション数 |
+| `-align-iter` | 0 | 強制アラインメント再訓練数 |
+| `-triphone` | false | トライフォン訓練を有効化 |
+| `-min-tri-seg` | 10 | トライフォンHMMの最小セグメント数 |
+
+### 言語モデル構築
+
+```bash
+go run ./cmd/lmbuild -output lm.arpa corpus1.txt corpus2.txt
+```
 
 ## ライブラリとしての使い方
 
 ### ファイルから認識
 
 ```go
-rec, err := transcript.NewRecognizer("model.gob", "lm.arpa", "dict.txt")
+rec, err := transcript.NewRecognizer("model.gob", "lm.arpa", "dict.txt",
+    transcript.WithDecoderConfig(decoder.Config{
+        BeamWidth:       200.0,
+        LMWeight:        20.0,
+        MaxActiveTokens: 5000,
+    }),
+    transcript.WithOOVLogProb(-5.0),
+)
 if err != nil {
     log.Fatal(err)
 }
@@ -86,24 +136,11 @@ fmt.Println(result.Text)
 rec := transcript.NewRecognizerFromModels(am, lm, dict,
     transcript.WithDecoderConfig(decoder.Config{
         BeamWidth:   300.0,
-        LMWeight:    15.0,
+        LMWeight:    20.0,
     }),
 )
 
 result, err := rec.RecognizeSamples(samples)
-```
-
-### 音響モデルの訓練
-
-```go
-// HMMの作成と訓練
-hmm := acoustic.NewPhonemeHMM(acoustic.PhonA, 39, 4)
-err := acoustic.TrainPhoneme(hmm, trainingSequences, acoustic.DefaultTrainingConfig())
-
-// モデルの保存
-am := acoustic.NewAcousticModel(39, 4)
-am.Phonemes[acoustic.PhonA] = hmm
-am.Save(file)
 ```
 
 ## 入力ファイル形式
@@ -139,6 +176,29 @@ ngram 2=2
 \end\
 ```
 
+## アーキテクチャ
+
+### 音響モデル
+
+- **モノフォンHMM**: 29音素 × 5状態 (入口・出口 + 3発射状態) のleft-to-right HMM
+- **トライフォンHMM**: `left-center+right` 形式の文脈依存モデル。単語境界は `#` で表現 (例: `#-i+k`, `i-k+u`, `k-u+#`)
+- **GMM**: 対角共分散ガウス混合モデル。各発射状態にMコンポーネント
+- **ResolveHMM**: トライフォンHMM → モノフォンHMMへのフォールバック解決
+- **訓練**: Baum-Welch → 強制アラインメント → トライフォン分割の段階的訓練
+
+### デコーダ
+
+- **レキシコンプレフィックスツリー**: 辞書全体をトライ構造に展開。トライフォン文脈でノード分岐
+- **LMルックアヘッド**: ツリー内の各ノードで到達可能な最良LMスコアを事前計算
+- **トークン再結合**: `(nodeIdx, stateIdx, lastWord)` をキーにした重複トークンの統合
+- **発射キャッシュ**: HMMポインタ同一性に基づくGMM計算結果のキャッシュ
+
+### 特徴量
+
+- 39次元MFCC (13 MFCC + 13 Δ + 13 ΔΔ)
+- プリエンファシス → ハミング窓 → FFT → Melフィルタバンク → DCT → デルタ
+- ケプストラム平均正規化 (CMN) による話者/チャンネル正規化
+
 ## 日本語音素セット (29音素)
 
 | カテゴリ | 音素 |
@@ -153,3 +213,40 @@ ngram 2=2
 | 半母音 | y, w |
 | 歯擦音 | sh |
 | 特殊 | q (促音っ), long (長音ー) |
+
+## 訓練データの準備
+
+### マニフェスト (TSV)
+
+```
+/path/to/0000.wav	東京 タワー に 行く
+/path/to/0001.wav	今日 は いい 天気 です
+```
+
+### コーパス (言語モデル用)
+
+1行1文、スペース区切り:
+
+```
+東京 タワー に 行く
+魚 を 焼く
+友達 と 遊ぶ
+```
+
+### 訓練パイプライン
+
+```bash
+# 1. 発音辞書の生成 (MeCab辞書から)
+go run ./cmd/dictconv -mecab /path/to/mecab-dict -output data/dict.txt
+
+# 2. 辞書フィルタリング (オプション)
+go run ./cmd/dictfilter data/dict.txt data/smalldict.txt 4000 > data/dict_filtered.txt
+
+# 3. 音響モデル訓練 (トライフォン)
+go run ./cmd/train -manifest data/manifest.tsv -dict data/dict.txt \
+    -output data/am.gob -mix 16 -iter 20 -align-iter 5 \
+    -triphone -min-tri-seg 10
+
+# 4. 言語モデル構築
+go run ./cmd/lmbuild -output data/lm.arpa training/corpus*.txt
+```
