@@ -108,10 +108,12 @@ const silWord = "<sil>"
 
 // recomKey is used for token recombination within the trie.
 // Uses numeric wordID instead of string for fast map hashing.
+// prevWordID enables trigram-level recombination (two-word history).
 type recomKey struct {
 	nodeIdx    int
 	stateIdx   int
 	lastWordID int
+	prevWordID int
 }
 
 // Decode performs Viterbi beam search decoding using a lexicon prefix trie.
@@ -597,13 +599,17 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 	return result
 }
 
-// addOrRecombine adds a token or replaces an existing one at the same (nodeIdx, stateIdx, lastWord).
+// addOrRecombine adds a token or replaces an existing one at the same (nodeIdx, stateIdx, lastWord, prevWord).
 func addOrRecombine(tokens *[]*token, pool *tokenPool, recom map[recomKey]int, nodeIdx, stateIdx int, history *wordHistoryNode, score float64) {
 	lwID := 0
+	pwID := 0
 	if history != nil {
 		lwID = history.wordID
+		if history.prev != nil {
+			pwID = history.prev.wordID
+		}
 	}
-	key := recomKey{nodeIdx: nodeIdx, stateIdx: stateIdx, lastWordID: lwID}
+	key := recomKey{nodeIdx: nodeIdx, stateIdx: stateIdx, lastWordID: lwID, prevWordID: pwID}
 	if idx, exists := recom[key]; exists {
 		if score > (*tokens)[idx].score {
 			(*tokens)[idx].score = score

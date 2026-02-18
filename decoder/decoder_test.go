@@ -158,3 +158,83 @@ func TestDecode_ScoreFinite(t *testing.T) {
 		t.Errorf("LogScore = %f (not finite)", result.LogScore)
 	}
 }
+
+// buildTinyTrigramModel creates a model with a trigram LM for testing trigram recombination.
+func buildTinyTrigramModel() (*acoustic.AcousticModel, *language.NGramModel, *lexicon.Dictionary) {
+	dim := 1
+	numMix := 1
+
+	am := &acoustic.AcousticModel{
+		Phonemes:   make(map[acoustic.Phoneme]*acoustic.PhonemeHMM),
+		FeatureDim: dim,
+		NumMix:     numMix,
+	}
+	am.Phonemes[acoustic.PhonA] = acoustic.NewPhonemeHMM(acoustic.PhonA, dim, numMix)
+	setHMMGMM(am.Phonemes[acoustic.PhonA], 0.0)
+	am.Phonemes[acoustic.PhonI] = acoustic.NewPhonemeHMM(acoustic.PhonI, dim, numMix)
+	setHMMGMM(am.Phonemes[acoustic.PhonI], 5.0)
+
+	arpa := `\data\
+ngram 1=4
+ngram 2=4
+ngram 3=2
+
+\1-grams:
+-1.0	</s>
+-1.0	<s>	0.0
+-0.5	あ	0.0
+-0.5	い	0.0
+
+\2-grams:
+-0.3	<s>	あ	0.0
+-0.3	<s>	い	0.0
+-0.3	あ	い	0.0
+-0.3	い	あ	0.0
+
+\3-grams:
+-0.1	<s>	あ	い
+-0.8	<s>	い	あ
+
+\end\
+`
+	lm, _ := language.LoadARPA(strings.NewReader(arpa))
+
+	dict := lexicon.NewDictionary()
+	dict.Add("あ", "ア", []acoustic.Phoneme{acoustic.PhonA})
+	dict.Add("い", "イ", []acoustic.Phoneme{acoustic.PhonI})
+	return am, lm, dict
+}
+
+// TestDecode_Trigram verifies decoder works with a trigram LM.
+func TestDecode_Trigram(t *testing.T) {
+	am, lm, dict := buildTinyTrigramModel()
+	cfg := Config{
+		BeamWidth:            300.0,
+		MaxActiveTokens:      500,
+		LMWeight:             5.0,
+		WordInsertionPenalty: -2.0,
+	}
+
+	// First half near 0 ("あ"), second half near 5 ("い")
+	features := make([][]float64, 12)
+	for i := 0; i < 6; i++ {
+		features[i] = []float64{0.1}
+	}
+	for i := 6; i < 12; i++ {
+		features[i] = []float64{4.9}
+	}
+
+	result := Decode(features, am, lm, dict, cfg)
+	if result == nil {
+		t.Fatal("result is nil")
+	}
+
+	hasA := strings.Contains(result.Text, "あ")
+	hasI := strings.Contains(result.Text, "い")
+	if !hasA || !hasI {
+		t.Errorf("expected text with あ and い, got %q", result.Text)
+	}
+	if math.IsNaN(result.LogScore) || math.IsInf(result.LogScore, 0) {
+		t.Errorf("LogScore = %f (not finite)", result.LogScore)
+	}
+}
