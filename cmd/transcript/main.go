@@ -20,6 +20,7 @@ func main() {
 	oovProb := flag.Float64("oov-prob", 0, "OOV unigram log10 probability (e.g. -5.0, 0=disable)")
 	lmInterp := flag.Float64("lm-interp", 0.0, "LM interpolation weight with uniform prior (0=pure LM, 0.5=half uniform)")
 	vtln := flag.Bool("vtln", false, "enable VTLN speaker normalization")
+	dnnPath := flag.String("dnn", "", "path to DNN model file (enables DNN-HMM hybrid)")
 	verbose := flag.Bool("v", false, "verbose output")
 
 	flag.Parse()
@@ -40,6 +41,7 @@ func main() {
 		}),
 		transcript.WithOOVLogProb(*oovProb),
 		transcript.WithVTLN(*vtln),
+		transcript.WithDNN(*dnnPath),
 	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)

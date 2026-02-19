@@ -280,12 +280,33 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 	// Pre-compute emission log-likelihoods for all unique HMMs (triphone or monophone)
 	emitCols := len(uniqueHMMs) * acoustic.NumEmittingStates
 	emitCache := mathutil.NewMat(T, emitCols)
-	for hi, hmm := range uniqueHMMs {
-		for s := 1; s <= acoustic.NumEmittingStates; s++ {
-			col := hi*acoustic.NumEmittingStates + (s - 1)
-			gmm := hmm.States[s].GMM
-			for t := 0; t < T; t++ {
-				emitCache[t][col] = gmm.LogProb(features[t])
+	if am.DNN != nil {
+		// DNN path: compute all state posteriors per frame, then map to HMMs
+		dnnLogLikes := am.DNN.ForwardFrames(features)
+		for t := range dnnLogLikes {
+			am.DNN.SubtractPrior(dnnLogLikes[t])
+		}
+		for hi, hmm := range uniqueHMMs {
+			for s := 1; s <= acoustic.NumEmittingStates; s++ {
+				col := hi*acoustic.NumEmittingStates + (s - 1)
+				ci := am.DNN.StateClassIndex(hmm.Phoneme, s)
+				if ci < 0 {
+					continue
+				}
+				for t := 0; t < T; t++ {
+					emitCache[t][col] = dnnLogLikes[t][ci]
+				}
+			}
+		}
+	} else {
+		// GMM path (original)
+		for hi, hmm := range uniqueHMMs {
+			for s := 1; s <= acoustic.NumEmittingStates; s++ {
+				col := hi*acoustic.NumEmittingStates + (s - 1)
+				gmm := hmm.States[s].GMM
+				for t := 0; t < T; t++ {
+					emitCache[t][col] = gmm.LogProb(features[t])
+				}
 			}
 		}
 	}

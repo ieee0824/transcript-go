@@ -11,6 +11,7 @@ type AcousticModel struct {
 	Triphones  map[Triphone]*PhonemeHMM // context-dependent HMMs (nil for monophone-only models)
 	FeatureDim int
 	NumMix     int
+	DNN        *DNN // optional DNN for emission scoring (nil = use GMM)
 }
 
 // ResolveHMM returns the best HMM for a triphone: the triphone-specific HMM if it exists,

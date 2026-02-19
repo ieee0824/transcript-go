@@ -186,3 +186,151 @@ func ForcedAlignHMMs(hmms []*PhonemeHMM, phonemes []Phoneme, features [][]float6
 
 	return result, nil
 }
+
+// StateAlignment holds per-frame HMM state assignment from forced alignment.
+type StateAlignment struct {
+	Phoneme  Phoneme
+	StateIdx int // emitting state 1, 2, or 3
+}
+
+// ForcedAlignStates performs forced alignment and returns per-frame state assignments.
+// Returns []StateAlignment of length T, where result[t] is the (phoneme, state) at frame t.
+func ForcedAlignStates(am *AcousticModel, phonemes []Phoneme, features [][]float64) ([]StateAlignment, error) {
+	N := len(phonemes)
+	hmms := make([]*PhonemeHMM, N)
+	for i, ph := range phonemes {
+		h, ok := am.Phonemes[ph]
+		if !ok {
+			return nil, fmt.Errorf("phoneme %q not in acoustic model", ph)
+		}
+		hmms[i] = h
+	}
+	return ForcedAlignStatesHMMs(hmms, phonemes, features)
+}
+
+// ForcedAlignStatesHMMs performs forced alignment with explicit HMMs and returns
+// per-frame state assignments. Reuses the same Viterbi logic as ForcedAlignHMMs.
+func ForcedAlignStatesHMMs(hmms []*PhonemeHMM, phonemes []Phoneme, features [][]float64) ([]StateAlignment, error) {
+	T := len(features)
+	N := len(hmms)
+	if N == 0 {
+		return nil, fmt.Errorf("empty phoneme sequence")
+	}
+	if len(phonemes) != N {
+		return nil, fmt.Errorf("phonemes length (%d) != hmms length (%d)", len(phonemes), N)
+	}
+	if T < N {
+		return nil, fmt.Errorf("too few frames (%d) for %d phonemes", T, N)
+	}
+	for i, h := range hmms {
+		if h.States[1] == nil {
+			return nil, fmt.Errorf("phoneme %q has no trained emitting states", phonemes[i])
+		}
+	}
+
+	S := N * NumEmittingStates
+
+	emit := mathutil.NewMat(T, S)
+	for p := 0; p < N; p++ {
+		hmm := hmms[p]
+		for s := 1; s <= NumEmittingStates; s++ {
+			j := p*NumEmittingStates + (s - 1)
+			gmm := hmm.States[s].GMM
+			for t := 0; t < T; t++ {
+				emit[t][j] = gmm.LogProb(features[t])
+			}
+		}
+	}
+
+	prev := mathutil.NewVecFill(S, mathutil.LogZero)
+	curr := mathutil.NewVecFill(S, mathutil.LogZero)
+
+	bp := make([][]int32, T)
+	for t := range bp {
+		bp[t] = make([]int32, S)
+	}
+
+	exitTrans := make([]float64, N)
+	defaultExit := math.Log(0.5)
+	for p := 0; p < N; p++ {
+		et := hmms[p].TransLog[NumEmittingStates][NumStatesPerPhoneme-1]
+		if et <= mathutil.LogZero+1 {
+			et = defaultExit
+		}
+		exitTrans[p] = et
+	}
+
+	prev[0] = hmms[0].TransLog[0][1] + emit[0][0]
+
+	for t := 1; t < T; t++ {
+		mathutil.FillVec(curr, mathutil.LogZero)
+		for j := 0; j < S; j++ {
+			p := j / NumEmittingStates
+			s := j%NumEmittingStates + 1
+			hmm := hmms[p]
+
+			bestScore := mathutil.LogZero
+			bestPrev := int32(0)
+
+			score := prev[j] + hmm.TransLog[s][s]
+			if score > bestScore {
+				bestScore = score
+				bestPrev = int32(j)
+			}
+
+			if s >= 2 {
+				prevJ := p*NumEmittingStates + (s - 2)
+				score = prev[prevJ] + hmm.TransLog[s-1][s]
+				if score > bestScore {
+					bestScore = score
+					bestPrev = int32(prevJ)
+				}
+			}
+
+			if s == 1 && p >= 1 {
+				prevJ := (p-1)*NumEmittingStates + (NumEmittingStates - 1)
+				score = prev[prevJ] + exitTrans[p-1]
+				if score > bestScore {
+					bestScore = score
+					bestPrev = int32(prevJ)
+				}
+			}
+
+			if bestScore > mathutil.LogZero+1 {
+				curr[j] = bestScore + emit[t][j]
+			}
+			bp[t][j] = bestPrev
+		}
+		prev, curr = curr, prev
+	}
+
+	bestJ := -1
+	bestScore := mathutil.LogZero
+	for s := 0; s < NumEmittingStates; s++ {
+		j := (N-1)*NumEmittingStates + s
+		if prev[j] > bestScore {
+			bestScore = prev[j]
+			bestJ = j
+		}
+	}
+	if bestJ < 0 || bestScore <= mathutil.LogZero+1 {
+		return nil, fmt.Errorf("forced alignment failed: no valid path")
+	}
+
+	path := make([]int, T)
+	path[T-1] = bestJ
+	for t := T - 1; t > 0; t-- {
+		path[t-1] = int(bp[t][path[t]])
+	}
+
+	result := make([]StateAlignment, T)
+	for t := 0; t < T; t++ {
+		p := path[t] / NumEmittingStates
+		s := path[t]%NumEmittingStates + 1
+		result[t] = StateAlignment{
+			Phoneme:  phonemes[p],
+			StateIdx: s,
+		}
+	}
+	return result, nil
+}

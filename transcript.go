@@ -21,6 +21,7 @@ type Recognizer struct {
 	DecCfg     decoder.Config
 	OOVLogProb float64 // OOV unigram log10 probability (e.g. -5.0). 0 = disable.
 	UseVTLN    bool    // enable VTLN speaker normalization
+	dnnPending *acoustic.DNN // set by WithDNN, applied after AM load
 }
 
 // Option configures a Recognizer.
@@ -51,6 +52,27 @@ func WithOOVLogProb(log10prob float64) Option {
 func WithVTLN(enabled bool) Option {
 	return func(r *Recognizer) {
 		r.UseVTLN = enabled
+	}
+}
+
+// WithDNN loads a DNN model and attaches it to the acoustic model.
+func WithDNN(dnnPath string) Option {
+	return func(r *Recognizer) {
+		if dnnPath == "" {
+			return
+		}
+		f, err := os.Open(dnnPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "warning: open DNN: %v\n", err)
+			return
+		}
+		defer f.Close()
+		dnn, err := acoustic.LoadDNN(f)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "warning: load DNN: %v\n", err)
+			return
+		}
+		r.dnnPending = dnn
 	}
 }
 
@@ -95,6 +117,12 @@ func NewRecognizer(amPath, lmPath, dictPath string, opts ...Option) (*Recognizer
 	// Apply OOV log probability to LM
 	if r.OOVLogProb != 0 {
 		r.LM.OOVLogProb = r.OOVLogProb * math.Ln10 // convert log10 to natural log
+	}
+
+	// Attach DNN to AM if loaded
+	if r.dnnPending != nil {
+		r.AM.DNN = r.dnnPending
+		r.dnnPending = nil
 	}
 
 	return r, nil
