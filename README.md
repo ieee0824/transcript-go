@@ -83,6 +83,7 @@ transcript/
 │   ├── lmtext/            自然言語テキストフィルタ (MeCab + 辞書照合)
 │   ├── wikitext/          MediaWiki XMLダンプからテキスト抽出
 │   ├── cvimport/          Common Voice日本語コーパスインポート
+│   ├── jsutimport/        JSUTコーパスインポート
 │   ├── corpusgen/         テンプレートベースコーパス生成
 │   ├── dictconv/          辞書変換 (MeCab辞書 → 発音辞書)
 │   └── dictfilter/        辞書フィルタリング
@@ -194,6 +195,19 @@ go run ./cmd/cvimport \
   -output data/cv_manifest.tsv \
   -wav-dir data/cv_wav \
   -min-words 3 -min-votes 2
+```
+
+### JSUTコーパスインポート
+
+JSUT日本語音声コーパスから辞書収録語のみで構成される発話を抽出し、WAVを16kHzにリサンプリングしてマニフェストを生成します。MeCabとffmpegが必要です。
+
+```bash
+go run ./cmd/jsutimport \
+  -jsut-dir /path/to/jsut_ver1.1 \
+  -dict models/v11/dict.txt \
+  -output data/jsut_manifest.tsv \
+  -wav-dir data/jsut_wav \
+  -min-words 3
 ```
 
 ## ライブラリとしての使い方
