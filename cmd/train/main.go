@@ -32,7 +32,8 @@ func main() {
 	triphoneFlag := flag.Bool("triphone", false, "enable triphone training after monophone")
 	minTriSeg := flag.Int("min-tri-seg", 10, "minimum segments to train a triphone HMM")
 	triMixFlag := flag.Int("tri-mix", 0, "GMM components for triphone HMMs (0=min(mix,4))")
-	augmentFlag := flag.Bool("augment", false, "enable 3-way speed perturbation (1.0x, 0.9x, 1.1x)")
+	augmentFlag := flag.Bool("augment", false, "enable 5-way speed perturbation (1.0x, 0.9x, 0.95x, 1.05x, 1.1x)")
+	manifestNoAug := flag.String("manifest-noaug", "", "additional manifest (no augmentation applied)")
 	flag.Parse()
 
 	workers := runtime.NumCPU()
@@ -54,9 +55,10 @@ func main() {
 	defer mf.Close()
 
 	type utterance struct {
-		wavPath  string
-		words    []string
-		phonemes []acoustic.Phoneme
+		wavPath    string
+		words      []string
+		phonemes   []acoustic.Phoneme
+		noAugment  bool
 	}
 
 	var utts []utterance
@@ -91,8 +93,50 @@ func main() {
 		}
 		phonemes = append(phonemes, acoustic.PhonSil) // trailing silence
 
-		utts = append(utts, utterance{wavPath, words, phonemes})
+		utts = append(utts, utterance{wavPath: wavPath, words: words, phonemes: phonemes})
 	}
+	// Read additional manifest (no augmentation)
+	if *manifestNoAug != "" {
+		mf2, err := os.Open(*manifestNoAug)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "open manifest-noaug: %v\n", err)
+			os.Exit(1)
+		}
+		scanner2 := bufio.NewScanner(mf2)
+		for scanner2.Scan() {
+			line := strings.TrimSpace(scanner2.Text())
+			if line == "" {
+				continue
+			}
+			parts := strings.SplitN(line, "\t", 2)
+			if len(parts) != 2 {
+				continue
+			}
+			wavPath := parts[0]
+			words := strings.Fields(parts[1])
+
+			var phonemes []acoustic.Phoneme
+			phonemes = append(phonemes, acoustic.PhonSil)
+			allFound := true
+			for _, w := range words {
+				ph, ok := dict.PhonemeSequence(w)
+				if !ok {
+					fmt.Fprintf(os.Stderr, "  word %q not in dict, skipping utterance\n", w)
+					allFound = false
+					break
+				}
+				phonemes = append(phonemes, ph...)
+			}
+			if !allFound || len(phonemes) <= 1 {
+				continue
+			}
+			phonemes = append(phonemes, acoustic.PhonSil)
+
+			utts = append(utts, utterance{wavPath: wavPath, words: words, phonemes: phonemes, noAugment: true})
+		}
+		mf2.Close()
+	}
+
 	fmt.Fprintf(os.Stderr, "Utterances: %d\n", len(utts))
 
 	if len(utts) == 0 {
@@ -138,8 +182,13 @@ func main() {
 				wordPhons = append(wordPhons, ph)
 			}
 
+			uttFactors := factors
+			if utt.noAugment {
+				uttFactors = []float64{1.0}
+			}
+
 			var results []uttData
-			for _, factor := range factors {
+			for _, factor := range uttFactors {
 				augSamples := samples
 				if factor != 1.0 {
 					augSamples = audio.SpeedPerturb(samples, factor)

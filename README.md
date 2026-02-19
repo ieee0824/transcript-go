@@ -69,6 +69,7 @@ transcript/
 │   ├── lmbuild/           言語モデルビルダー
 │   ├── lmtext/            自然言語テキストフィルタ (MeCab + 辞書照合)
 │   ├── wikitext/          MediaWiki XMLダンプからテキスト抽出
+│   ├── cvimport/          Common Voice日本語コーパスインポート
 │   ├── corpusgen/         テンプレートベースコーパス生成
 │   ├── dictconv/          辞書変換 (MeCab辞書 → 発音辞書)
 │   └── dictfilter/        辞書フィルタリング
@@ -141,6 +142,7 @@ go run ./cmd/train -manifest data/manifest.tsv -dict data/dict.txt \
 | `-align-iter` | 0 | 強制アラインメント再訓練数 |
 | `-triphone` | false | トライフォン訓練を有効化 |
 | `-augment` | false | 5-way速度変換データ拡張 |
+| `-manifest-noaug` | "" | 追加マニフェスト (速度拡張なし) |
 | `-min-tri-seg` | 10 | トライフォンHMMの最小セグメント数 |
 
 ### 言語モデル構築
@@ -166,6 +168,19 @@ go run ./cmd/lmtext -dict models/v11/dict.txt < wiki_sentences.txt > nlp_corpus.
 
 # テンプレートコーパスと統合してトライグラムLM構築
 go run ./cmd/lmbuild -order 3 -output lm.arpa training/corpus8_expanded.txt nlp_corpus.txt
+```
+
+### Common Voiceコーパスインポート
+
+Mozilla Common Voice日本語コーパスから辞書収録語のみで構成される発話を抽出し、MP3→WAV変換してマニフェストを生成します。MeCabとffmpegが必要です。
+
+```bash
+go run ./cmd/cvimport \
+  -cv-dir /path/to/cv-corpus/ja \
+  -dict models/v11/dict.txt \
+  -output data/cv_manifest.tsv \
+  -wav-dir data/cv_wav \
+  -min-words 3 -min-votes 2
 ```
 
 ## ライブラリとしての使い方
