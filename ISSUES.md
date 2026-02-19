@@ -128,6 +128,19 @@ Wikipedia日本語ダンプ → `cmd/wikitext` + `cmd/lmtext` で辞書フィル
 
 ## パフォーマンス最適化
 
+### GMM: Apple Accelerate (cblas_dgemm) バッチ尤度計算 **2.1x**
+
+対角共分散GMMのMahalanobis距離を2回の行列積に分解し、Apple Accelerate (`cblas_dgemm`, AMXコプロセッサ) で T×K 個の尤度を一括計算。非darwin環境では純Goフォールバック。
+
+| ベンチマーク | Before | After | 速度 |
+|---|---|---|---|
+| GMM LogProbBatch 300f×4mix | 71,000 ns | 34,000 ns | **2.1x** |
+
+| # | 施策 | 状態 |
+|---|---|---|
+| 13 | `internal/blas/`: CGo Accelerate wrapper + 純Goフォールバック (ビルドタグ分離) | ✅ |
+| 14 | `acoustic/gmm_batch.go`: Mahalanobis分解 → 2×dgemm + logsumexp のバッチ計算 | ✅ |
+
 ### 特徴量抽出 第2弾: FFT SIMDアセンブリ + フレーム並列化 **-72%** (3.6x)
 
 FFTバタフライのsplit R/I化 + NEON/SSE2アセンブリ、および `runtime.NumCPU` goroutineによるフレーム並列化。

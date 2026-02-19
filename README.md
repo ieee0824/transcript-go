@@ -5,7 +5,7 @@ HMM-GMM音響モデルとN-gram言語モデルによる古典的な音声認識�
 
 ## 特徴
 
-- **純粋Go実装** — CGo依存なし、クロスプラットフォーム対応
+- **純粋Go実装** — クロスプラットフォーム対応 (macOSではApple Accelerate自動活用)
 - **トライフォン対応HMM-GMM音響モデル** — 日本語29音素、5状態left-to-right HMM、対角共分散GMM、文脈依存トライフォンHMMによる高精度認識
 - **N-gram言語モデル** — ARPA形式の読み込み、Witten-Bellスムージング付きbigram/trigram対応、OOV処理
 - **MFCC特徴量抽出** — 39次元 (13 MFCC + 13 Δ + 13 ΔΔ)、ケプストラム平均正規化 (CMN)、VTLN (声道長正規化)、FFT NEON/SSE2アセンブリ + マルチコア並列化
@@ -78,6 +78,7 @@ transcript/
 ├── language/              言語モデル (N-gram, ARPA形式パーサ, ビルダー)
 ├── lexicon/               発音辞書 (単語 → 音素列)
 ├── decoder/               レキシコンプレフィックスツリーデコーダ
+├── internal/blas/         Apple Accelerate cblas_dgemm wrapper + 純Goフォールバック
 ├── internal/simd/         NEON (arm64) / SSE2 (amd64) SIMDアセンブリ
 ├── internal/mathutil/     ログ域算術、ベクトル/行列演算
 └── training/              訓練用コーパス
@@ -243,7 +244,7 @@ ngram 2=2
 
 - **モノフォンHMM**: 29音素 × 5状態 (入口・出口 + 3発射状態) のleft-to-right HMM
 - **トライフォンHMM**: `left-center+right` 形式の文脈依存モデル。単語境界は `#` で表現 (例: `#-i+k`, `i-k+u`, `k-u+#`)
-- **GMM**: 対角共分散ガウス混合モデル。各発射状態にMコンポーネント
+- **GMM**: 対角共分散ガウス混合モデル。各発射状態にMコンポーネント。バッチ行列積 (macOS: Accelerate/AMX) による高速尤度計算
 - **ResolveHMM**: トライフォンHMM → モノフォンHMMへのフォールバック解決
 - **訓練**: Baum-Welch → 強制アラインメント → トライフォン分割の段階的訓練
 
