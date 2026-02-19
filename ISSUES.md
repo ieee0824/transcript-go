@@ -117,6 +117,7 @@ JSUT + Common Voiceコーパス (288,173文) をMeCab分かち書きし、未カ
 - **val_acc 69.9%の限界**: フレームレベル精度がまだ低く、改善余地あり。より深いネットワーク、より多くの学習データ、またはBatchNorm/Dropout等で改善可能
 - **AM非依存**: v11 AM でも 8-mix AM でも DNN-HMM の認識結果は同一 (DNN が emission を完全に置き換えるため、GMM は無関係)
 - **備考**: v13セクションのGMM評価値と本セクションの値が異なるのは、v13評価後のコード変更 (LogZero修正等) による再計測結果
+- **学習高速化**: 並列サブバッチ処理 (NumCPU個のワーカーで同時にforward/backward、gradient accumulation) により学習速度2.2x向上 (1,112ms→512ms/epoch, 100Kフレーム, M2)
 
 ### Common Voice実音声混合訓練実験 (v12/v12b)
 

@@ -410,3 +410,29 @@ func BenchmarkDNNForward_300frames(b *testing.B) {
 		d.ForwardFrames(features)
 	}
 }
+
+func BenchmarkDNNTraining(b *testing.B) {
+	rand.Seed(42)
+	d := NewDNN(39, 256, 5) // production-size DNN
+	N := 100000
+	inputDim := d.InputDim
+	inputs := make([]float64, N*inputDim)
+	targets := make([]int, N)
+	for i := 0; i < N; i++ {
+		targets[i] = i % d.OutputDim
+		for j := 0; j < inputDim; j++ {
+			inputs[i*inputDim+j] = rand.NormFloat64() * 0.1
+		}
+	}
+
+	cfg := DefaultDNNTrainConfig()
+	cfg.BatchSize = 256
+	cfg.MaxEpochs = 1
+	cfg.Patience = 0
+	cfg.HeldOutFrac = 0.01
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		TrainDNN(d, inputs, targets, cfg)
+	}
+}

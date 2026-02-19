@@ -5,6 +5,8 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"runtime"
+	"sync"
 
 	"github.com/ieee0824/transcript-go/internal/blas"
 )
@@ -73,6 +75,21 @@ func newDNNWorkspace(batchSize, inputDim, hiddenDim, outputDim int) *dnnWorkspac
 	}
 }
 
+// workerGrads holds per-worker gradient buffers.
+type workerGrads struct {
+	gW1, gB1 []float64
+	gW2, gB2 []float64
+	gW3, gB3 []float64
+}
+
+func newWorkerGrads(d *DNN) *workerGrads {
+	return &workerGrads{
+		gW1: make([]float64, len(d.W1)), gB1: make([]float64, len(d.B1)),
+		gW2: make([]float64, len(d.W2)), gB2: make([]float64, len(d.B2)),
+		gW3: make([]float64, len(d.W3)), gB3: make([]float64, len(d.B3)),
+	}
+}
+
 // adamState holds per-parameter momentum and variance for Adam optimizer.
 type adamState struct {
 	mW1, vW1, mB1, vB1 []float64
@@ -94,6 +111,7 @@ func newAdamState(d *DNN) *adamState {
 
 // TrainDNN trains the DNN on (input, target) sample pairs with mini-batch Adam.
 // inputs: flat [N × InputDim], targets: [N] class indices.
+// Uses parallel sub-batch processing with gradient accumulation for multi-core utilization.
 // Reports progress to stderr.
 func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) error {
 	N := len(targets)
@@ -113,19 +131,38 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 	trainIdx := perm[:trainN]
 	valIdx := perm[trainN:]
 
-	ws := newDNNWorkspace(cfg.BatchSize, dnn.InputDim, dnn.HiddenDim, dnn.OutputDim)
-	adam := newAdamState(dnn)
+	// Determine number of parallel workers
+	workers := runtime.NumCPU()
+	if workers > 8 {
+		workers = 8
+	}
+	if workers < 1 {
+		workers = 1
+	}
+	effectiveBatch := cfg.BatchSize * workers
 
-	// Gradient buffers
-	gW1 := make([]float64, len(dnn.W1))
-	gB1 := make([]float64, len(dnn.B1))
-	gW2 := make([]float64, len(dnn.W2))
-	gB2 := make([]float64, len(dnn.B2))
-	gW3 := make([]float64, len(dnn.W3))
-	gB3 := make([]float64, len(dnn.B3))
+	// Per-worker workspace and gradient buffers
+	workerWSList := make([]*dnnWorkspace, workers)
+	workerGradsList := make([]*workerGrads, workers)
+	for w := 0; w < workers; w++ {
+		workerWSList[w] = newDNNWorkspace(cfg.BatchSize, dnn.InputDim, dnn.HiddenDim, dnn.OutputDim)
+		workerGradsList[w] = newWorkerGrads(dnn)
+	}
+
+	// Total gradient accumulators
+	totalGrads := newWorkerGrads(dnn)
+
+	adam := newAdamState(dnn)
 
 	bestValLoss := math.Inf(1)
 	patience := 0
+
+	type workerResult struct {
+		loss    float64
+		correct int
+		samples int
+	}
+	results := make([]workerResult, workers)
 
 	for epoch := 0; epoch < cfg.MaxEpochs; epoch++ {
 		// Shuffle training indices
@@ -135,44 +172,84 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 
 		totalLoss := 0.0
 		totalCorrect := 0
-		nBatches := 0
+		totalSamples := 0
+		nSteps := 0
 
-		for start := 0; start < trainN; start += cfg.BatchSize {
-			end := start + cfg.BatchSize
-			if end > trainN {
-				end = trainN
+		for start := 0; start < trainN; start += effectiveBatch {
+			// Determine how many workers have data for this mega-batch
+			activeWorkers := 0
+			totalBS := 0
+
+			var wg sync.WaitGroup
+			for w := 0; w < workers; w++ {
+				subStart := start + w*cfg.BatchSize
+				if subStart >= trainN {
+					break
+				}
+				subEnd := subStart + cfg.BatchSize
+				if subEnd > trainN {
+					subEnd = trainN
+				}
+				bs := subEnd - subStart
+				activeWorkers++
+				totalBS += bs
+
+				wg.Add(1)
+				go func(w, subStart, bs int) {
+					defer wg.Done()
+					ws := workerWSList[w]
+					wg := workerGradsList[w]
+
+					// Fill batch
+					fillBatch(inputs, targets, trainIdx[subStart:subStart+bs], dnn.InputDim, ws.xBatch)
+					batchTargets := make([]int, bs)
+					for i := 0; i < bs; i++ {
+						batchTargets[i] = targets[trainIdx[subStart+i]]
+					}
+
+					loss, correct := backpropBatch(dnn, ws.xBatch, batchTargets, bs, ws,
+						wg.gW1, wg.gB1, wg.gW2, wg.gB2, wg.gW3, wg.gB3)
+					results[w] = workerResult{loss: loss, correct: correct, samples: bs}
+				}(w, subStart, bs)
 			}
-			bs := end - start
+			wg.Wait()
 
-			// Fill batch
-			fillBatch(inputs, targets, trainIdx[start:end], dnn.InputDim, ws.xBatch)
-			batchTargets := make([]int, bs)
-			for i := 0; i < bs; i++ {
-				batchTargets[i] = targets[trainIdx[start+i]]
+			// Accumulate gradients from all workers
+			clearSlice(totalGrads.gW1)
+			clearSlice(totalGrads.gB1)
+			clearSlice(totalGrads.gW2)
+			clearSlice(totalGrads.gB2)
+			clearSlice(totalGrads.gW3)
+			clearSlice(totalGrads.gB3)
+			for w := 0; w < activeWorkers; w++ {
+				addSlice(totalGrads.gW1, workerGradsList[w].gW1)
+				addSlice(totalGrads.gB1, workerGradsList[w].gB1)
+				addSlice(totalGrads.gW2, workerGradsList[w].gW2)
+				addSlice(totalGrads.gB2, workerGradsList[w].gB2)
+				addSlice(totalGrads.gW3, workerGradsList[w].gW3)
+				addSlice(totalGrads.gB3, workerGradsList[w].gB3)
+				totalLoss += results[w].loss * float64(results[w].samples)
+				totalCorrect += results[w].correct
+				totalSamples += results[w].samples
 			}
 
-			loss, correct := backpropBatch(dnn, ws.xBatch, batchTargets, bs, ws,
-				gW1, gB1, gW2, gB2, gW3, gB3)
-			totalLoss += loss
-			totalCorrect += correct
-			nBatches++
-
-			// Adam update
-			invBS := 1.0 / float64(bs)
+			// Adam update with total effective batch size
+			invBS := 1.0 / float64(totalBS)
 			adam.t++
-			adamUpdate(dnn.W1, gW1, adam.mW1, adam.vW1, cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
-			adamUpdate(dnn.B1, gB1, adam.mB1, adam.vB1, cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
-			adamUpdate(dnn.W2, gW2, adam.mW2, adam.vW2, cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
-			adamUpdate(dnn.B2, gB2, adam.mB2, adam.vB2, cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
-			adamUpdate(dnn.W3, gW3, adam.mW3, adam.vW3, cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
-			adamUpdate(dnn.B3, gB3, adam.mB3, adam.vB3, cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
+			adamUpdate(dnn.W1, totalGrads.gW1, adam.mW1, adam.vW1, cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
+			adamUpdate(dnn.B1, totalGrads.gB1, adam.mB1, adam.vB1, cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
+			adamUpdate(dnn.W2, totalGrads.gW2, adam.mW2, adam.vW2, cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
+			adamUpdate(dnn.B2, totalGrads.gB2, adam.mB2, adam.vB2, cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
+			adamUpdate(dnn.W3, totalGrads.gW3, adam.mW3, adam.vW3, cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
+			adamUpdate(dnn.B3, totalGrads.gB3, adam.mB3, adam.vB3, cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
+			nSteps++
 		}
 
-		trainLoss := totalLoss / float64(nBatches)
-		trainAcc := float64(totalCorrect) / float64(trainN) * 100
+		trainLoss := totalLoss / float64(totalSamples)
+		trainAcc := float64(totalCorrect) / float64(totalSamples) * 100
 
 		// Validation
-		valLoss, valAcc := evaluateDNN(dnn, inputs, targets, valIdx, cfg.BatchSize, ws)
+		valLoss, valAcc := evaluateDNN(dnn, inputs, targets, valIdx, cfg.BatchSize, workerWSList[0])
 
 		fmt.Fprintf(os.Stderr, "  Epoch %2d: train_loss=%.4f train_acc=%.1f%% val_loss=%.4f val_acc=%.1f%%\n",
 			epoch+1, trainLoss, trainAcc, valLoss, valAcc)
@@ -472,5 +549,11 @@ func evaluateDNN(dnn *DNN, inputs []float64, targets []int, indices []int, batch
 func clearSlice(s []float64) {
 	for i := range s {
 		s[i] = 0
+	}
+}
+
+func addSlice(dst, src []float64) {
+	for i := range dst {
+		dst[i] += src[i]
 	}
 }
