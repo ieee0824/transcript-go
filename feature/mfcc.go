@@ -3,6 +3,8 @@ package feature
 import (
 	"fmt"
 	"math"
+	"runtime"
+	"sync"
 )
 
 // Config holds all MFCC extraction parameters.
@@ -74,32 +76,52 @@ func Extract(samples []float64, cfg Config) ([][]float64, error) {
 		return nil, fmt.Errorf("audio too short for a single frame")
 	}
 
-	// 3. Build reusable workspace (once)
+	// 3. Build shared read-only workspace
 	melFB := NewMelFilterbank(cfg.NumMelFilters, cfg.FFTSize, cfg.SampleRate, cfg.LowFreq, cfg.HighFreq, cfg.Alpha)
-	fftWS := newFFTWorkspace(cfg.FFTSize)
 	dctTbl := newDCTTable(cfg.NumCepstra, cfg.NumMelFilters)
-	melBuf := make([]float64, cfg.NumMelFilters)
+	hammWin := getHammingWindow(frameLen)
 
 	var liftTbl *lifterTable
 	if cfg.CepLifter > 0 {
 		liftTbl = newLifterTable(cfg.NumCepstra, cfg.CepLifter)
 	}
 
-	// 4. For each frame: window+FFT -> power spectrum -> Mel -> DCT -> lifter
+	// 4. Parallel frame processing: FFT -> Mel -> DCT -> lifter
 	nFrames := len(frames)
 	mfccs := make([][]float64, nFrames)
 	cepAll := make([]float64, nFrames*cfg.NumCepstra)
-	hammWin := getHammingWindow(frameLen)
-	for i, frame := range frames {
-		fftWS.computePowerSpectrum(frame, hammWin)
-		melFB.applyInto(fftWS.power, melBuf)
-		cepstra := cepAll[i*cfg.NumCepstra : (i+1)*cfg.NumCepstra]
-		dctTbl.applyInto(melBuf, cepstra)
-		if liftTbl != nil {
-			liftTbl.apply(cepstra)
-		}
-		mfccs[i] = cepstra
+
+	nWorkers := runtime.NumCPU()
+	if nWorkers > nFrames {
+		nWorkers = nFrames
 	}
+
+	var wg sync.WaitGroup
+	chunkSize := (nFrames + nWorkers - 1) / nWorkers
+	for w := 0; w < nWorkers; w++ {
+		start := w * chunkSize
+		end := start + chunkSize
+		if end > nFrames {
+			end = nFrames
+		}
+		wg.Add(1)
+		go func(start, end int) {
+			defer wg.Done()
+			fftWS := newFFTWorkspace(cfg.FFTSize)
+			melBuf := make([]float64, cfg.NumMelFilters)
+			for i := start; i < end; i++ {
+				fftWS.computePowerSpectrum(frames[i], hammWin)
+				melFB.applyInto(fftWS.power, melBuf)
+				cepstra := cepAll[i*cfg.NumCepstra : (i+1)*cfg.NumCepstra]
+				dctTbl.applyInto(melBuf, cepstra)
+				if liftTbl != nil {
+					liftTbl.apply(cepstra)
+				}
+				mfccs[i] = cepstra
+			}
+		}(start, end)
+	}
+	wg.Wait()
 
 	// 4.5. Cepstral mean normalization (before delta)
 	if cfg.UseCMN {
@@ -136,16 +158,39 @@ func ExtractPowerSpectra(samples []float64, cfg Config) ([][]float64, error) {
 		return nil, fmt.Errorf("audio too short for a single frame")
 	}
 
-	fftWS := newFFTWorkspace(cfg.FFTSize)
 	nBins := cfg.FFTSize/2 + 1
 	hammWin := getHammingWindow(frameLen)
+	nF := len(frames)
 
-	spectra := make([][]float64, len(frames))
-	for i, frame := range frames {
-		fftWS.computePowerSpectrum(frame, hammWin)
-		spectra[i] = make([]float64, nBins)
-		copy(spectra[i], fftWS.power[:nBins])
+	spectraAll := make([]float64, nF*nBins)
+	spectra := make([][]float64, nF)
+
+	nWorkers := runtime.NumCPU()
+	if nWorkers > nF {
+		nWorkers = nF
 	}
+
+	var wg sync.WaitGroup
+	chunkSize := (nF + nWorkers - 1) / nWorkers
+	for w := 0; w < nWorkers; w++ {
+		start := w * chunkSize
+		end := start + chunkSize
+		if end > nF {
+			end = nF
+		}
+		wg.Add(1)
+		go func(start, end int) {
+			defer wg.Done()
+			ws := newFFTWorkspace(cfg.FFTSize)
+			for i := start; i < end; i++ {
+				ws.computePowerSpectrum(frames[i], hammWin)
+				s := spectraAll[i*nBins : (i+1)*nBins]
+				copy(s, ws.power[:nBins])
+				spectra[i] = s
+			}
+		}(start, end)
+	}
+	wg.Wait()
 	return spectra, nil
 }
 

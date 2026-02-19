@@ -3,6 +3,8 @@ package feature
 import (
 	"math"
 	"math/cmplx"
+
+	"github.com/ieee0824/transcript-go/internal/simd"
 )
 
 // FFT computes the radix-2 Cooley-Tukey FFT.
@@ -53,12 +55,15 @@ func bitReverse(x, bits int) int {
 }
 
 // fftWorkspace holds reusable buffers for FFT computation.
+// Uses split real/imaginary layout for SIMD-friendly butterfly operations.
 type fftWorkspace struct {
-	buf      []complex128   // [fftSize]
-	power    []float64      // [fftSize/2+1]
-	bits     int
-	perm     []int            // bit-reversal permutation table
-	twiddles [][]complex128   // twiddle factors per butterfly stage
+	bufRe []float64   // [fftSize] real part
+	bufIm []float64   // [fftSize] imaginary part
+	power []float64   // [fftSize/2+1]
+	bits  int
+	perm  []int         // bit-reversal permutation table
+	twRe  [][]float64   // twiddle factors real parts per stage
+	twIm  [][]float64   // twiddle factors imag parts per stage
 }
 
 func newFFTWorkspace(fftSize int) *fftWorkspace {
@@ -73,26 +78,31 @@ func newFFTWorkspace(fftSize int) *fftWorkspace {
 		perm[i] = bitReverse(i, bits)
 	}
 
-	// Pre-compute twiddle factors for each butterfly stage
-	var twiddles [][]complex128
+	// Pre-compute twiddle factors in split R/I layout
+	var twRe, twIm [][]float64
 	for size := 2; size <= fftSize; size *= 2 {
 		halfSize := size / 2
-		tw := make([]complex128, halfSize)
+		re := make([]float64, halfSize)
+		im := make([]float64, halfSize)
 		w := cmplx.Exp(complex(0, -2*math.Pi/float64(size)))
 		wn := complex(1, 0)
 		for k := 0; k < halfSize; k++ {
-			tw[k] = wn
+			re[k] = real(wn)
+			im[k] = imag(wn)
 			wn *= w
 		}
-		twiddles = append(twiddles, tw)
+		twRe = append(twRe, re)
+		twIm = append(twIm, im)
 	}
 
 	return &fftWorkspace{
-		buf:      make([]complex128, fftSize),
-		power:    make([]float64, fftSize/2+1),
-		bits:     bits,
-		perm:     perm,
-		twiddles: twiddles,
+		bufRe: make([]float64, fftSize),
+		bufIm: make([]float64, fftSize),
+		power: make([]float64, fftSize/2+1),
+		bits:  bits,
+		perm:  perm,
+		twRe:  twRe,
+		twIm:  twIm,
 	}
 }
 
@@ -100,46 +110,42 @@ func newFFTWorkspace(fftSize int) *fftWorkspace {
 // performs in-place FFT, and writes power spectrum into ws.power. No allocations.
 // If window is non-nil, it is applied during loading (fused window+load).
 func (ws *fftWorkspace) computePowerSpectrum(frame []float64, window []float64) {
-	n := len(ws.buf)
+	n := len(ws.bufRe)
 	frameLen := len(frame)
-	// Load frame with optional windowing, zero-pad
+
+	// Load real part with optional windowing, zero-pad; zero imaginary part
 	if window != nil {
-		for i := range ws.buf {
-			if i < frameLen {
-				ws.buf[i] = complex(frame[i]*window[i], 0)
-			} else {
-				ws.buf[i] = 0
-			}
+		for i := 0; i < frameLen; i++ {
+			ws.bufRe[i] = frame[i] * window[i]
 		}
 	} else {
-		for i := range ws.buf {
-			if i < frameLen {
-				ws.buf[i] = complex(frame[i], 0)
-			} else {
-				ws.buf[i] = 0
-			}
-		}
+		copy(ws.bufRe[:frameLen], frame)
 	}
+	for i := frameLen; i < n; i++ {
+		ws.bufRe[i] = 0
+	}
+	clear(ws.bufIm)
 
 	// In-place bit-reversal using pre-computed permutation
 	for i := 0; i < n; i++ {
 		j := ws.perm[i]
 		if i < j {
-			ws.buf[i], ws.buf[j] = ws.buf[j], ws.buf[i]
+			ws.bufRe[i], ws.bufRe[j] = ws.bufRe[j], ws.bufRe[i]
+			ws.bufIm[i], ws.bufIm[j] = ws.bufIm[j], ws.bufIm[i]
 		}
 	}
 
-	// In-place butterfly with pre-computed twiddle factors
+	// In-place butterfly with SIMD-accelerated block operations
 	for stage, size := 0, 2; size <= n; stage, size = stage+1, size*2 {
 		halfSize := size / 2
-		tw := ws.twiddles[stage]
 		for start := 0; start < n; start += size {
-			for k := 0; k < halfSize; k++ {
-				u := ws.buf[start+k]
-				t := tw[k] * ws.buf[start+k+halfSize]
-				ws.buf[start+k] = u + t
-				ws.buf[start+k+halfSize] = u - t
-			}
+			simd.ButterflyBlock(
+				ws.bufRe[start:start+halfSize],
+				ws.bufIm[start:start+halfSize],
+				ws.bufRe[start+halfSize:start+size],
+				ws.bufIm[start+halfSize:start+size],
+				ws.twRe[stage],
+				ws.twIm[stage])
 		}
 	}
 
@@ -147,8 +153,8 @@ func (ws *fftWorkspace) computePowerSpectrum(frame []float64, window []float64) 
 	nBins := n/2 + 1
 	fn := float64(n)
 	for i := 0; i < nBins; i++ {
-		r := real(ws.buf[i])
-		im := imag(ws.buf[i])
+		r := ws.bufRe[i]
+		im := ws.bufIm[i]
 		ws.power[i] = (r*r + im*im) / fn
 	}
 }
