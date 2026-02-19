@@ -16,13 +16,13 @@ HMM-GMM音響モデルとN-gram言語モデルによる古典的な音声認識�
 
 ## 学習済みモデル
 
-`models/v10/` に学習済みモデルが同梱されています。
+`models/v11/` に学習済みモデルが同梱されています。
 
 | ファイル | 内容 |
 |---|---|
-| `models/v10/am.gob` | 音響モデル (30話者TTS, 2,469発話, 5-way speed augment, 4-mix GMM, トライフォン) |
-| `models/v10/lm.arpa` | 言語モデル (トライグラム, テンプレート14,250文 + Wikipedia抽出393文) |
-| `models/v10/dict.txt` | 発音辞書 (1,176語) |
+| `models/v11/am.gob` | 音響モデル (55話者TTS, 5,794発話, 5-way speed augment, 4-mix GMM, トライフォン) |
+| `models/v11/lm.arpa` | 言語モデル (トライグラム, テンプレート14,250文 + Wikipedia抽出393文) |
+| `models/v11/dict.txt` | 発音辞書 (1,176語) |
 
 ### クイックスタート
 
@@ -30,16 +30,25 @@ HMM-GMM音響モデルとN-gram言語モデルによる古典的な音声認識�
 go build -o /tmp/transcript ./cmd/transcript/
 
 /tmp/transcript \
-    -am models/v10/am.gob \
-    -lm models/v10/lm.arpa \
-    -dict models/v10/dict.txt \
+    -am models/v11/am.gob \
+    -lm models/v11/lm.arpa \
+    -dict models/v11/dict.txt \
     -wav input.wav \
     -oov-prob -5.0 -lm-weight 10.0 -max-tokens 5000
 ```
 
 ## 認識精度
 
-### v10 (最新)
+### v11 (最新)
+
+| テスト条件 | 精度 |
+|---|---|
+| コーパス内文 × 外部話者 | 90% |
+| 感情音声 × 外部話者 | 90% |
+| 特定TTS話者 | 50% |
+| コーパス外文 × 未知TTS話者 (3話者平均) | 57% |
+
+### v10
 
 | テスト条件 | 精度 |
 |---|---|
@@ -53,7 +62,7 @@ go build -o /tmp/transcript ./cmd/transcript/
 ```
 transcript/
 ├── transcript.go          トップレベルAPI (Recognizer)
-├── models/v10/            学習済みモデル (AM + LM + 辞書)
+├── models/v11/            学習済みモデル (AM + LM + 辞書)
 ├── cmd/
 │   ├── transcript/        音声認識CLI
 │   ├── train/             音響モデル訓練CLI
@@ -95,7 +104,7 @@ go test ./... -timeout 60s
 ### 音声認識
 
 ```bash
-transcript -am models/v10/am.gob -lm models/v10/lm.arpa -dict models/v10/dict.txt -wav input.wav
+transcript -am models/v11/am.gob -lm models/v11/lm.arpa -dict models/v11/dict.txt -wav input.wav
 ```
 
 | フラグ | デフォルト | 説明 |
@@ -152,7 +161,7 @@ Wikipedia等の自然言語テキストから辞書収録語のみで構成さ�
 go run ./cmd/wikitext jawiki-latest-pages-articles.xml.bz2 > wiki_sentences.txt
 
 # 辞書フィルタリング
-go run ./cmd/lmtext -dict models/v10/dict.txt < wiki_sentences.txt > nlp_corpus.txt
+go run ./cmd/lmtext -dict models/v11/dict.txt < wiki_sentences.txt > nlp_corpus.txt
 
 # テンプレートコーパスと統合してトライグラムLM構築
 go run ./cmd/lmbuild -order 3 -output lm.arpa training/corpus8_expanded.txt nlp_corpus.txt
@@ -163,7 +172,7 @@ go run ./cmd/lmbuild -order 3 -output lm.arpa training/corpus8_expanded.txt nlp_
 ### ファイルから認識
 
 ```go
-rec, err := transcript.NewRecognizer("models/v10/am.gob", "models/v10/lm.arpa", "models/v10/dict.txt",
+rec, err := transcript.NewRecognizer("models/v11/am.gob", "models/v11/lm.arpa", "models/v11/dict.txt",
     transcript.WithDecoderConfig(decoder.Config{
         BeamWidth:       200.0,
         LMWeight:        10.0,

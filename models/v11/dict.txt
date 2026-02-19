@@ -1,0 +1,1200 @@
+<sil>	SIL	sil
+いい	イイ	i i
+いい	ユイ	y u i
+お茶	オチャ	o ch a
+かける	カケル	k a k e r u
+が	ガ	g a
+ごはん	ゴハン	g o h a ng
+する	スル	s u r u
+で	デ	d e
+です	デス	d e s u
+と	ト	t o
+に	ニ	n i
+は	ハ	h a
+は	ハ	w a
+まで	マデ	m a d e
+やる	ヤル	y a r u
+を	ヲ	o
+ジュース	ジュース	j u long s u
+タワー	タワー	t a w a long
+チャンネル	チャンネル	ch a ng n e r u
+パン	パン	p a ng
+ピアノ	ピアノ	p i a n o
+ファイル	ファイル	f a i r u
+乗る	ノル	n o r u
+今日	キョウ	k y o long
+今日	コンニチ	k o ng n i ch i
+仕事	シゴト	sh i g o t o
+会議	カイギ	k a i g i
+作る	ツクル	ts u k u r u
+入る	イル	i r u
+入る	ハイル	h a i r u
+公園	コウエン	k o long e ng
+写真	シャシン	sh a sh i ng
+切る	キル	k i r u
+勉強	ベンキョウ	b e ng k y o long
+友達	トモダチ	t o m o d a ch i
+咲く	サク	s a k u
+変える	カエル	k a e r u
+天気	テンキ	t e ng k i
+始まる	ハジマル	h a j i m a r u
+学校	ガッコウ	g a q k o long
+守る	マモル	m a m o r u
+宿題	シュクダイ	sh u k u d a i
+寝る	ネル	n e r u
+履く	ハク	h a k u
+山	サン	s a ng
+山	ヤマ	y a m a
+川	カワ	k a w a
+川	ガワ	g a w a
+弾く	ハジク	h a j i k u
+弾く	ヒク	h i k u
+手紙	テガミ	t e g a m i
+折る	オル	o r u
+掃除	ソウジ	s o long j i
+撮る	トル	t o r u
+散歩	サンポ	s a ng p o
+料理	リョウリ	r y o long r i
+新聞	シンブン	sh i ng b u ng
+旅行	リョコウ	r y o k o long
+日本語	ニッポンゴ	n i q p o ng g o
+日本語	ニホンゴ	n i h o ng g o
+映画	エイガ	e i g a
+書く	カク	k a k u
+朝	アサ	a s a
+朝	チョウ	ch o long
+本	ホン	h o ng
+本	モト	m o t o
+東京	トウキョウ	t o long k y o long
+歩く	アルク	a r u k u
+泳ぐ	オヨグ	o y o g u
+海	ウミ	u m i
+海	カイ	k a i
+焼く	ヤク	y a k u
+犬	イヌ	i n u
+犬	ケン	k e ng
+猫	ネコ	n e k o
+病院	ビョウイン	b y o long i ng
+登る	ノボル	n o b o r u
+積もる	ツモル	ts u m o r u
+空	カラ	k a r a
+空	クウ	k u long
+空	ソラ	s o r a
+窓	マド	m a d o
+約束	ヤクソク	y a k u s o k u
+紙	カミ	k a m i
+紙	シ	sh i
+終わる	オワル	o w a r u
+聴く	キク	k i k u
+自転車	ジテンシャ	j i t e ng sh a
+花	ハナ	h a n a
+荷物	ニモツ	n i m o ts u
+行く	イク	i k u
+行く	ユク	y u k u
+見る	ミル	m i r u
+話す	ハナス	h a n a s u
+読む	ヨム	y o m u
+買い物	カイモノ	k a i m o n o
+買う	カウ	k a u
+走る	ハシル	h a sh i r u
+遊ぶ	アソブ	a s o b u
+運ぶ	ハコブ	h a k o b u
+部屋	ヘヤ	h e y a
+野菜	ヤサイ	y a s a i
+釣る	ツル	ts u r u
+開く	アク	a k u
+開く	ヒラク	h i r a k u
+開ける	アケル	a k e r u
+開ける	ヒラケル	h i r a k e r u
+降る	クダル	k u d a r u
+降る	フル	f u r u
+雨	アメ	a m e
+雨	ウ	u
+雪	ススギ	s u s u g i
+雪	セツ	s e ts u
+雪	ユキ	y u k i
+電話	デンワ	d e ng w a
+電車	デンシャ	d e ng sh a
+青い	アオイ	a o i
+靴	クツ	k u ts u
+音楽	オンガク	o ng g a k u
+風呂	フロ	f u r o
+飛ぶ	トブ	t o b u
+食べる	タベル	t a b e r u
+飲む	ノム	n o m u
+駅	エキ	e k i
+魚	ウオ	u o
+魚	ギョ	g y o
+魚	サカナ	s a k a n a
+鳥	トリ	t o r i
+あっ	アッ	a q
+あの	アノ	a n o
+ありがとう	アリガトウ	a r i g a t o long
+ある	アル	a r u
+あれ	アレ	a r e
+い	イ	i
+いくら	イクラ	i k u r a
+いただき	イタダキ	i t a d a k i
+いつ	イツ	i ts u
+いる	イル	i r u
+うさぎ	ウサギ	u s a g i
+おいしい	オイシイ	o i sh i i
+おじいさん	オジイサン	o j i long s a ng
+おはよう	オハヨウ	o h a y o long
+おばあさん	オバアサン	o b a long s a ng
+おめでとう	オメデトウ	o m e d e t o long
+おやすみなさい	オヤスミナサイ	o y a s u m i n a s a i
+お参り	オマイリ	o m a i r i
+お客様	オキャクサマ	o k y a k u s a m a
+お寺	オテラ	o t e r a
+お正月	オショウガツ	o sh o long g a ts u
+お母さん	オカアサン	o k a long s a ng
+お父さん	オトウサン	o t o long s a ng
+お疲れ様	オツカレサマ	o ts u k a r e s a m a
+お祭り	オマツリ	o m a ts u r i
+お腹	オナカ	o n a k a
+お願い	オネガイ	o n e g a i
+か	カ	k a
+かかっ	カカッ	k a k a q
+から	カラ	k a r a
+き	キ	k i
+きれい	キレイ	k i r e i
+ください	クダサイ	k u d a s a i
+ここ	ココ	k o k o
+この	コノ	k o n o
+これ	コレ	k o r e
+こんにちは	コンニチハ	k o ng n i ch i w a
+こんばんは	コンバンハ	k o ng b a ng w a
+ごちそうさま	ゴチソウサマ	g o ch i s o long s a m a
+ごめんなさい	ゴメンナサイ	g o m e ng n a s a i
+ご飯	ゴハン	g o h a ng
+し	シ	sh i
+すぐ	スグ	s u g u
+すみません	スミマセン	s u m i m a s e ng
+た	タ	t a
+たくさん	タクサン	t a k u s a ng
+ただいま	タダイマ	t a d a i m a
+ちょっと	チョット	ch o q t o
+つける	ツケル	ts u k e r u
+つまらない	ツマラナイ	ts u m a r a n a i
+て	テ	t e
+とても	トテモ	t o t e m o
+どう	ドウ	d o long
+どうして	ドウシテ	d o long sh i t e
+どこ	ドコ	d o k o
+なっ	ナッ	n a q
+なる	ナル	n a r u
+ね	ネ	n e
+の	ノ	n o
+はじめまして	ハジメマシテ	h a j i m e m a sh i t e
+ひく	ヒク	h i k u
+へ	ヘ	h e
+ます	マス	m a s u
+まだ	マダ	m a d a
+まとめる	マトメル	m a t o m e r u
+みんな	ミンナ	m i ng n a
+も	モ	m o
+もう	モウ	m o long
+もらう	モラウ	m o r a u
+ゆっくり	ユックリ	y u q k u r i
+よかっ	ヨカッ	y o k a q
+よく	ヨク	y o k u
+よろしく	ヨロシク	y o r o sh i k u
+れる	レル	r e r u
+わかり	ワカリ	w a k a r i
+アップ	アップ	a q p u
+アレルギー	アレルギー	a r e r u g i long
+インターネット	インターネット	i ng t a long n e q t o
+カフェ	カフェ	k a f e
+カレー	カレー	k a r e long
+ガソリン	ガソリン	g a s o r i ng
+キャンセル	キャンセル	k y a ng s e r u
+キーボード	キーボード	k i long b o long d o
+ギター	ギター	g i t a long
+クリスマス	クリスマス	k u r i s u m a s u
+クリック	クリック	k u r i q k u
+グラフ	グラフ	g u r a f u
+ケーキ	ケーキ	k e long k i
+ケーブル	ケーブル	k e long b u r u
+ゲーム	ゲーム	g e long m u
+コピー	コピー	k o p i long
+コンサート	コンサート	k o ng s a long t o
+コンビニ	コンビニ	k o ng b i n i
+コーヒー	コーヒー	k o long h i long
+ゴミ	ゴミ	g o m i
+サッカー	サッカー	s a q k a long
+サラダ	サラダ	s a r a d a
+システム	システム	sh i s u t e m u
+ジョギング	ジョギング	j o g i ng g u
+スケジュール	スケジュール	s u k e j u long r u
+ストレッチ	ストレッチ	s u t o r e q ch i
+スライド	スライド	s u r a i d o
+スーパー	スーパー	s u long p a long
+センサー	センサー	s e ng s a long
+ソフトウェア	ソフトウェア	s o f u t o u a
+タクシー	タクシー	t a k u sh i long
+ダウンロード	ダウンロード	d a u ng r o long d o
+チーム	チーム	ch i long m u
+テスト	テスト	t e s u t o
+テニス	テニス	t e n i s u
+データ	データ	d e long t a
+トイレ	トイレ	t o i r e
+ノート	ノート	n o long t o
+バス	バス	b a s u
+バスケットボール	バスケットボール	b a s u k e q t o b o long r u
+バック	バック	b a q k u
+パスタ	パスタ	p a s u t a
+パスワード	パスワード	p a s u w a long d o
+パソコン	パソコン	p a s o k o ng
+ビール	ビール	b i long r u
+プリンター	プリンター	p u r i ng t a long
+プレゼン	プレゼン	p u r e z e ng
+プレゼント	プレゼント	p u r e z e ng t o
+プログラム	プログラム	p u r o g u r a m u
+プロジェクト	プロジェクト	p u r o j i k u t o
+プール	プール	p u long r u
+ペン	ペン	p e ng
+ホテル	ホテル	h o t e r u
+ホーム	ホーム	h o long m u
+マウス	マウス	m a u s u
+マニュアル	マニュアル	m a n y u a r u
+マラソン	マラソン	m a r a s o ng
+メール	メール	m e long r u
+モニター	モニター	m o n i t a long
+モーター	モーター	m o long t a long
+ヨガ	ヨガ	y o g a
+リスト	リスト	r i s u t o
+レストラン	レストラン	r e s u t o r a ng
+レポート	レポート	r e p o long t o
+ロボット	ロボット	r o b o q t o
+ワイン	ワイン	w a i ng
+一度	イチド	i ch i d o
+上司	カミツカサ	k a m i ts u k a s a
+乗り	ノリ	n o r i
+乗り換え	ノリカエ	n o r i k a e
+予定	ヨテイ	y o t e i
+予算	ヨサン	y o s a ng
+予約	ヨヤク	y o y a k u
+予防	ヨボウ	y o b o long
+交換	コウカン	k o long k a ng
+京都	キョウト	k y o long t o
+人	ジン	j i ng
+今	イマ	i m a
+今年	コトシ	k o t o sh i
+今月	コンゲツ	k o ng g e ts u
+企画	キカク	k i k a k u
+休み	ヤスミ	y a s u m i
+休む	ヤスム	y a s u m u
+休憩	キュウケイ	k y u long k e i
+会社	カイシャ	k a i sh a
+低い	ヒクイ	h i k u i
+住む	スム	s u m u
+体	カラダ	k a r a d a
+体操	タイソウ	t a i s o long
+体温	タイオン	t a i o ng
+体育館	タイイクカン	t a i i k u k a ng
+何	ナニ	n a n i
+何時	イツ	i ts u
+作っ	ツクッ	ts u k u q
+作成	サクセイ	s a k u s e i
+使う	ツカウ	ts u k a u
+保存	ホゾン	h o z o ng
+信号	シンゴウ	sh i ng g o long
+修正	シュウセイ	sh u long s e i
+借りる	カリル	k a r i r u
+停める	トメル	t o m e r u
+健康	ケンコウ	k e ng k o long
+傘	カサ	k a s a
+働く	ハタラク	h a t a r a k u
+元気	ゲンキ	g e ng k i
+兄	アニ	a n i
+充電	ジュウデン	j u long d e ng
+先生	センセイ	s e ng s e i
+先輩	センパイ	s e ng p a i
+先週	センシュウ	s e ng sh u long
+光る	ヒカル	h i k a r u
+入っ	イッ	i q
+入れる	イレル	i r e r u
+入学	ニュウガク	n y u long g a k u
+入院	ニュウイン	n y u long i ng
+内容	ナイヨウ	n a i y o long
+冬休み	フユヤスミ	f u y u y a s u m i
+出す	ダス	d a s u
+出る	デル	d e r u
+出勤	シュッキン	sh u q k i ng
+出席	シュッセキ	sh u q s e k i
+出張	シュッチョウ	sh u q ch o long
+出発	シュッパツ	sh u q p a ts u
+分析	ブンセキ	b u ng s e k i
+切符	キップ	k i q p u
+削除	サクジョ	s a k u j o
+動く	ウゴク	u g o k u
+動画	ドウガ	d o long g a
+勝つ	カツ	k a ts u
+化学	カガク	k a g a k u
+北海道	ホッカイドウ	h o q k a i d o long
+医者	イシャ	i sh a
+午前	ゴゼン	g o z e ng
+午後	ゴゴ	g o g o
+卒業	ソツギョウ	s o ts u g y o long
+卒論	ソツロン	s o ts u r o ng
+単位	タンイ	t a ng i
+博物館	ハクブツカン	h a k u b u ts u k a ng
+印刷	インサツ	i ng s a ts u
+卵	タマゴ	t a m a g o
+参加	サンカ	s a ng k a
+取り	トリ	t o r i
+取る	トル	t o r u
+受ける	ウケル	u k e r u
+古い	フルイ	f u r u i
+台所	ダイドコロ	d a i d o k o r o
+台風	タイフウ	t a i f u long
+合格	ゴウカク	g o long k a k u
+同僚	ドウリョウ	d o long r y o long
+名刺	メイシ	m e i sh i
+名前	ナマエ	n a m a e
+味噌汁	ミソシル	m i s o sh i r u
+呼ぶ	ヨブ	y o b u
+咲い	サイ	s a i
+咲き	サキ	s a k i
+咳	セキ	s e k i
+商品	ショウヒン	sh o long h i ng
+問題	モンダイ	m o ng d a i
+回路	カイロ	k a i r o
+図書館	トショカン	t o sh o k a ng
+地図	チズ	ch i z u
+基板	キバン	k i b a ng
+報告	ホウコク	h o long k o k u
+増え	フエ	f u e
+売上	ウリアゲ	u r i a g e
+変更	ヘンコウ	h e ng k o long
+夏休み	ナツヤスミ	n a ts u y a s u m i
+夕方	ユウガタ	y u long g a t a
+外国	ガイコク	g a i k o k u
+多い	オオイ	o long i
+夜	ヤ	y a
+夢	ユメ	y u m e
+大きい	オオキイ	o long k i i
+大丈夫	ダイジョウブ	d a i j o long b u
+大学	ダイガク	d a i g a k u
+大阪	オオサカ	o long s a k a
+太陽	タイヨウ	t a i y o long
+失礼	シツレイ	sh i ts u r e i
+契約	ケイヤク	k e i y a k u
+妹	イモウト	i m o long t o
+姉	アネ	a n e
+始まり	ハジマリ	h a j i m a r i
+子供	コドモ	k o d o m o
+学ぶ	マナブ	m a n a b u
+学生	ガクセイ	g a k u s e i
+安い	ヤスイ	y a s u i
+完了	カンリョウ	k a ng r y o long
+実行	ジッコウ	j i q k o long
+実験	ジッケン	j i q k e ng
+家	イエ	i e
+家族	カゾク	k a z o k u
+富士山	フジサン	f u j i s a ng
+寒い	サムイ	s a m u i
+対応	タイオウ	t a i o long
+将来	ショウライ	sh o long r a i
+小さい	チイサイ	ch i long s a i
+少し	スクナシ	s u k u n a sh i
+居酒屋	イザカヤ	i z a k a y a
+届い	トドイ	t o d o i
+届き	トドキ	t o d o k i
+届く	トドク	t o d o k u
+屋上	オクジョウ	o k u j o long
+工場	コウジョウ	k o long j o long
+巻き込ま	マキコマ	m a k i k o m a
+布団	フトン	f u t o ng
+帰る	カエル	k a e r u
+帰省	キセイ	k i s e i
+帽子	ボウシ	b o long sh i
+干す	ホス	h o s u
+広い	ヒロイ	h i r o i
+店	テン	t e ng
+座る	スワル	s u w a r u
+庭	ニワ	n i w a
+弁当	ベントウ	b e ng t o long
+引き分け	ヒキワケ	h i k i w a k e
+引っ越し	ヒッコシ	h i q k o sh i
+弟	オトウト	o t o long t o
+強い	シイ	sh i i
+役所	ヤクショ	y a k u sh o
+彼	カレ	k a r e
+彼女	カノジョ	k a n o j o
+待っ	マッ	m a q
+待つ	マツ	m a ts u
+後輩	コウハイ	k o long h a i
+忘れ	ワスレ	w a s u r e
+忘れ物	ワスレモノ	w a s u r e m o n o
+忙しい	イソガシイ	i s o g a sh i i
+悪い	ワルイ	w a r u i
+情報	ジョウホウ	j o long h o long
+成績	セイセキ	s e i s e k i
+手続き	テツヅキ	t e ts u z u k i
+手術	シュジュツ	sh u j u ts u
+打ち合わせ	ウチアワセ	u ch i a w a s e
+打つ	ウツ	u ts u
+承認	ショウニン	sh o long n i ng
+担当	タントウ	t a ng t o long
+持つ	モツ	m o ts u
+指示	シジ	sh i j i
+挨拶	アイサツ	a i s a ts u
+授業	ジュギョウ	j u g y o long
+接種	セッシュ	s e q sh u
+描く	エガク	e g a k u
+提出	テイシュツ	t e i sh u ts u
+提案	テイアン	t e i a ng
+撮り	トリ	t o r i
+改札	カイサツ	k a i s a ts u
+教え	オシエ	o sh i e
+教室	キョウシツ	k y o long sh i ts u
+教授	キョウジュ	k y o long j u
+教科書	キョウカショ	k y o long k a sh o
+数学	スウガク	s u long g a k u
+文化	ブンカ	b u ng k a
+新しい	アタラシイ	a t a r a sh i i
+新幹線	シンカンセン	sh i ng k a ng s e ng
+日本	ニッポン	n i q p o ng
+明日	アケビ	a k e b i
+星	ホシ	h o sh i
+映画館	エイガカン	e i g a k a ng
+昨日	キノウ	k i n o long
+昼	ヒル	h i r u
+時計	トケイ	t o k e i
+時間	ジカン	j i k a ng
+晩	バン	b a ng
+晴れ	ハレ	h a r e
+暇	イトマ	i t o m a
+暑い	アツイ	a ts u i
+暖かく	アタタカク	a t a t a k a k u
+更新	コウシン	k o long sh i ng
+書	カキ	k a k i
+書い	カイ	k a i
+書類	ショルイ	sh o r u i
+月	ガツ	g a ts u
+月曜日	ゲツヨウビ	g e ts u y o long b i
+有名	ユウメイ	y u long m e i
+有給	ユウキュウ	y u long k y u long
+服	フク	f u k u
+木	キ	k i
+材料	ザイリョウ	z a i r y o long
+来	キ	k i
+来る	キタル	k i t a r u
+来週	ライシュウ	r a i sh u long
+校庭	コウテイ	k o long t e i
+桜	サクラ	s a k u r a
+梅雨	ツユ	ts u y u
+森	モリ	m o r i
+検査	ケンサ	k e ng s a
+検討	ケントウ	k e ng t o long
+業務	ギョウム	g y o long m u
+機	キ	k i
+機械	キカイ	k i k a i
+欠席	ケッセキ	k e q s e k i
+止まる	トマル	t o m a r u
+歩い	アルイ	a r u i
+歩き	アルキ	a r u k i
+歯医者	ハイシャ	h a i sh a
+歴史	レキシ	r e k i sh i
+残業	ザンギョウ	z a ng g y o long
+毎日	マイニチ	m a i n i ch i
+毎晩	マイバン	m a i b a ng
+毎朝	マイアサ	m a i a s a
+比較	ヒカク	h i k a k u
+気	キ	k i
+気づい	キヅイ	k i z u i
+気持ち	キモチ	k i m o ch i
+気温	キオン	k i o ng
+水	スイ	s u i
+水族館	スイゾクカン	s u i z o k u k a ng
+水泳	スイエイ	s u i e i
+決める	キメル	k i m e r u
+決定	ケッテイ	k e q t e i
+沖縄	オキナワ	o k i n a w a
+治る	ナオル	n a o r u
+泣い	ナイ	n a i
+泣く	ナク	n a k u
+注射	チュウシャ	ch u long sh a
+泳ぎ	オヨギ	o y o g i
+洗う	アラウ	a r a u
+洗濯	センタク	s e ng t a k u
+涼しく	スズシク	s u z u sh i k u
+渋滞	ジュウタイ	j u long t a i
+渡る	ワタル	w a t a r u
+温泉	オンセン	o ng s e ng
+測る	ハカル	h a k a r u
+測定	ソクテイ	s o k u t e i
+準備	ジュンビ	j u ng b i
+炊く	タク	t a k u
+炒める	イタメル	i t a m e r u
+煮る	ニル	n i r u
+熱	アツ	a ts u
+片付ける	カタヅケル	k a t a z u k e r u
+物理	ブツリ	b u ts u r i
+狭い	セマイ	s e m a i
+玄関	ゲンカン	g e ng k a ng
+田舎	イナカ	i n a k a
+申請	シンセイ	sh i ng s e i
+画面	ガメン	g a m e ng
+留学	リュウガク	r y u long g a k u
+病気	ビョウキ	b y o long k i
+痛い	イタイ	i t a i
+発表	ハッピョウ	h a q p y o long
+登録	トウロク	t o long r o k u
+目標	モクヒョウ	m o k u h y o long
+直す	ナオス	n a o s u
+相談	ソウダン	s o long d a ng
+眼科	ガンカ	g a ng k a
+眼鏡	ガンキョウ	g a ng k y o long
+着く	ツク	ts u k u
+着る	キル	k i r u
+研究	ケンキュウ	k e ng k y u long
+確かめる	タシカメル	t a sh i k a m e r u
+確認	カクニン	k a k u n i ng
+社長	シャチョウ	sh a ch o long
+祝う	イワウ	i w a u
+神社	ジンジャ	j i ng j a
+科学	カガク	k a g a k u
+移動	イドウ	i d o long
+空く	アク	a k u
+空港	クウコウ	k u long k o long
+立つ	タツ	t a ts u
+笑う	ワラウ	w a r a u
+管理	カンリ	k a ng r i
+簡単	カンタン	k a ng t a ng
+紅茶	コウチャ	k o long ch a
+紅葉	コウヨウ	k o long y o long
+終わり	オワリ	o w a r i
+終電	シュウデン	sh u long d e ng
+組み立てる	クミタテル	k u m i t a t e r u
+組む	クム	k u m u
+結婚式	ケッコンシキ	k e q k o ng sh i k i
+絵	エ	e
+綺麗	キレイ	k i r e i
+締め切り	シメキリ	sh i m e k i r i
+練習	レンシュウ	r e ng sh u long
+繋がる	ツナガル	ts u n a g a r u
+繋ぐ	ツナグ	ts u n a g u
+美術館	ビジュツカン	b i j u ts u k a ng
+聞く	キク	k i k u
+聴い	キイ	k i i
+聴き	キキ	k i k i
+肉	ニク	n i k u
+興味	キョウミ	k y o long m i
+英語	エイゴ	e i g o
+茹でる	ユデル	y u d e r u
+落とし	オトシ	o t o sh i
+薬	クスリ	k u s u r i
+虫	チュウ	ch u long
+行き	イキ	i k i
+装置	ソウチ	s o long ch i
+製作	セイサク	s e i s a k u
+見	ミ	m i
+見学	ケンガク	k e ng g a k u
+見積	ミツモ	m i ts u m o
+観光	カンコウ	k a ng k o long
+観察	カンサツ	k a ng s a ts u
+解く	トク	t o k u
+解決	カイケツ	k a i k e ts u
+計画	ケイカク	k e i k a k u
+計算	ケイサン	k e i s a ng
+記録	キロク	k i r o k u
+設計	セッケイ	s e q k e i
+診	ミ	m i
+試す	タメス	t a m e s u
+試合	シアイ	sh i a i
+試験	シケン	sh i k e ng
+認識	ニンシキ	n i ng sh i k i
+語	カタ	k a t a
+説明	セツメイ	s e ts u m e i
+読み	ヨミ	y o m i
+読ん	ヨン	y o ng
+読書	ドクショ	d o k u sh o
+誰	タレ	t a r e
+課長	カチョウ	k a ch o long
+課題	カダイ	k a d a i
+調べる	シラベル	sh i r a b e r u
+調整	チョウセイ	ch o long s e i
+論文	ロンブン	r o ng b u ng
+負ける	マケル	m a k e r u
+財布	サイフ	s a i f u
+買い	カイ	k a i
+資料	シリョウ	sh i r y o long
+質問	シツモン	sh i ts u m o ng
+赤	アカ	a k a
+赤い	アカイ	a k a i
+赤ちゃん	アカチャン	a k a ch a ng
+起きる	オキル	o k i r u
+趣味	シュミ	sh u m i
+車	クルマ	k u r u m a
+迷っ	マヨッ	m a y o q
+退勤	タイキン	t a i k i ng
+退院	タイイン	t a i i ng
+送る	オクル	o k u r u
+通う	カヨウ	k a y o u
+通る	トオル	t o long r u
+通勤	ツウキン	ts u long k i ng
+連絡	レンラク	r e ng r a k u
+週末	シュウマツ	sh u long m a ts u
+進学	シンガク	sh i ng g a k u
+遅れ	オクレ	o k u r e
+遊び	アソビ	a s o b i
+遊ん	アソン	a s o ng
+運動	ウンドウ	u ng d o long
+運転	ウンテン	u ng t e ng
+道	ドウ	d o long
+達成	タッセイ	t a q s e i
+部下	ブカ	b u k a
+部長	ブチョウ	b u ch o long
+配線	ハイセン	h a i s e ng
+野球	ヤキュウ	y a k y u long
+金曜日	キンヨウビ	k i ng y o long b i
+銀行	ギンコウ	g i ng k o long
+鍵	カギ	k a g i
+長い	ナガイ	n a g a i
+閉じる	トジル	t o j i r u
+閉める	シメル	sh i m e r u
+開け	アケ	a k e
+開発	カイハツ	k a i h a ts u
+間に合う	マニアウ	m a n i a u
+間違い	マチガイ	m a ch i g a i
+降っ	クダッ	k u d a q
+降り	オリ	o r i
+降りる	オリル	o r i r u
+院生	インセイ	i ng s e i
+隣	トナ	t o n a
+難しい	ムズカシイ	m u z u k a sh i i
+電池	デンチ	d e ng ch i
+電源	デンゲン	d e ng g e ng
+静か	シズカ	sh i z u k a
+面白い	オモシロイ	o m o sh i r o i
+鞄	カバン	k a b a ng
+音声	オンセイ	o ng s e i
+頭	アタマ	a t a m a
+風	カザ	k a z a
+風邪	カゼ	k a z e
+飛行機	ヒコウキ	h i k o long k i
+食べ	タベ	t a b e
+食事	ショクジ	sh o k u j i
+食器	ショッキ	sh o q k i
+食堂	ショクドウ	sh o k u d o long
+食材	ショクザイ	sh o k u z a i
+飲み	ノミ	n o m i
+馬	ウマ	u m a
+高い	タカイ	t a k a i
+鳴く	ナク	n a k u
+黒板	コクバン	k o k u b a ng
+伊	イ	i
+威	イ	i
+あ	ア	a
+委	イ	i
+甕	ウ	u
+藺	イ	i
+ァ	ァ	a
+ん	ン	ng
+売	ウ	u
+射	イ	i
+ゐ	ヰ	i
+小	オ	o
+苧	オ	o
+獲	エ	e
+尾	オ	o
+居	イ	i
+在	ア	a
+衣	イ	i
+良	イ	i
+江	エ	e
+お	オ	o
+柄	エ	e
+賣	ウ	u
+要	イ	i
+井	イ	i
+卯	ウ	u
+飯	イ	i
+医	イ	i
+熬	イ	i
+画	エ	e
+雄	オ	o
+え	エ	e
+ヘ	ヘ	e
+胃	イ	i
+鵜	ウ	u
+彫	エ	e
+鋳	イ	i
+煎	イ	i
+亜	ア	a
+う	ウ	u
+得	ウ	u
+御	オ	o
+入	イ	i
+ヲ	ヲ	o
+ン	ン	ng
+亥	イ	i
+兎	ウ	u
+李	イ	i
+っ	ッ	q
+意	イ	i
+憂	ウ	u
+折	オ	o
+位	イ	i
+繪	エ	e
+織	オ	o
+有	ア	a
+炒	イ	i
+ペ	ペ	p e
+徐	ジョ	j o
+貼	ハ	h a
+費	ヒ	h i
+蹴	ケ	k e
+蹶	ケ	k e
+こ	コ	k o
+他	タ	t a
+散	チ	ch i
+身	ミ	m i
+故	コ	k o
+婦	フ	f u
+斑	フ	f u
+婬	イン	i ng
+不	フ	f u
+嫁	カ	k a
+擂	ス	s u
+載	ノ	n o
+子	コ	k o
+歯	シ	sh i
+祖	ソ	s o
+撮	ト	t o
+伍	ゴ	g o
+季	キ	k i
+相	アイ	a i
+撚	ヨ	y o
+孤	コ	k o
+げ	ゲ	g e
+伐	キ	k i
+輻	ヤ	y a
+摺	ス	s u
+歴	ヘ	h e
+欧	オウ	o long
+摂	ト	t o
+次	ジ	j i
+炉	ロ	r o
+死	シ	sh i
+ば	バ	b a
+練	ネ	n e
+湯	ユ	y u
+奇	キ	k i
+安	アン	a ng
+雲	ウン	u ng
+じ	ジ	j i
+曽	ソ	s o
+採	ト	t o
+荷	ニ	n i
+掘	ホ	h o
+炎	エン	e ng
+葉	ハ	h a
+濃	コ	k o
+捕	ト	t o
+蒼	アオ	a o
+穫	カ	k a
+香	カ	k a
+矢	ヤ	y a
+素	ソ	s o
+賀	カ	k a
+殷	イン	i ng
+火	カ	k a
+殺	ヤ	y a
+藍	アイ	a i
+す	ス	s u
+振	フ	f u
+二	ニ	n i
+云	ウン	u ng
+黄	キ	k i
+繰	ク	k u
+持	ジ	j i
+藻	モ	m o
+湖	コ	k o
+拠	ヨ	y o
+鬆	ス	s u
+ず	ズ	z u
+纓	エイ	e i
+蘇	ソ	s o
+貴	キ	k i
+磨	ス	s u
+似	ニ	n i
+斗	ト	t o
+茶	チャ	ch a
+せ	セ	s e
+下	カ	k a
+紗	シャ	sh a
+大	オオ	o long
+ぜ	ゼ	z e
+寝	ネ	n e
+癸	キ	k i
+多	オオ	o long
+そ	ソ	s o
+署	ショ	sh o
+蚊	カ	k a
+王	オウ	o long
+比	ヒ	h i
+羅	ラ	r a
+期	キ	k i
+士	シ	sh i
+墺	オウ	o long
+苦	ク	k u
+把	ワ	w a
+ぞ	ゾ	z o
+知	シ	sh i
+技	ギ	g i
+佐	サ	s a
+美	ビ	b i
+蛾	ガ	g a
+渡	ド	d o
+苑	エン	e ng
+わ	ワ	w a
+苅	カ	k a
+ろ	ロ	r o
+手	シュ	sh u
+芽	メ	m e
+れ	レ	r e
+所	ショ	sh o
+植	ウエ	u e
+塩	エン	e ng
+戸	コ	k o
+る	ル	r u
+だ	ダ	d a
+途	ト	t o
+我	ガ	g a
+毛	ケ	k e
+ち	チ	ch i
+都	ト	t o
+義	ギ	g i
+く	ク	k u
+塗	ヌ	n u
+ガ	ガ	g a
+負	フ	f u
+着	キ	k i
+り	リ	r i
+血	チ	ch i
+使	シ	sh i
+依	ヨ	y o
+痔	ジ	j i
+資	シ	sh i
+尹	イン	i ng
+ら	ラ	r a
+基	キ	k i
+執	ト	t o
+ク	ク	k u
+梱	コ	k o
+屁	ヘ	h e
+羽	ハ	h a
+五	ゴ	g o
+愛	アイ	a i
+愚	グ	g u
+鼓	コ	k o
+部	ブ	b u
+個	コ	k o
+看	ミ	m i
+盗	ト	t o
+ぢ	ヂ	j i
+穂	ホ	h o
+糶	セ	s e
+借	カ	k a
+上	ウエ	u e
+偈	ゲ	g e
+逸	イッ	i q
+無	ナ	n a
+屋	ヤ	y a
+翁	オウ	o u
+儀	ギ	g i
+つ	ツ	ts u
+址	シ	sh i
+地	ジ	j i
+酢	ス	s u
+甥	オイ	o i
+斬	キ	k i
+杏	アン	a ng
+運	ウン	u ng
+陰	イン	i ng
+賦	フ	f u
+過	カ	k a
+路	ジ	j i
+恩	オン	o ng
+餡	アン	a ng
+恕	ジョ	j o
+児	コ	k o
+社	シャ	sh a
+老	オイ	o i
+田	タ	t a
+圓	エン	e ng
+園	エン	e ng
+ワ	ワ	w a
+ロ	ロ	r o
+艾	アイ	a i
+種	シュ	sh u
+記	キ	k i
+図	ズ	z u
+議	ギ	g i
+ど	ド	d o
+譜	フ	f u
+韻	イン	i ng
+け	ケ	k e
+碧	アオ	a o
+シ	シ	sh i
+よ	ヨ	y o
+案	アン	a ng
+者	シャ	sh a
+リ	リ	r i
+因	イン	i ng
+永	エイ	e i
+醋	ス	s u
+謂	イイ	i long
+な	ナ	n a
+魅	ミ	m i
+諸	ショ	sh o
+ラ	ラ	r a
+駄	ダ	d a
+具	グ	g u
+微	ビ	b i
+駆	カ	k a
+ヨ	ヨ	y o
+円	エン	e ng
+魏	ギ	g i
+碁	ゴ	g o
+魔	マ	m a
+粉	コ	k o
+狩	カ	k a
+錬	ネ	n e
+煉	ネ	n e
+ゆ	ユ	y u
+嚥	エン	e ng
+瀬	セ	s e
+凝	コ	k o
+非	ヒ	h i
+さ	サ	s a
+根	ネ	n e
+漏	モ	m o
+処	ショ	sh o
+喪	モ	m o
+喜	キ	k i
+簿	ボ	b o
+簾	ス	s u
+簸	ヒ	h i
+禍	カ	k a
+股	コ	k o
+ス	ス	s u
+や	ヤ	y a
+簀	ス	s u
+刃	ハ	h a
+遣	ヤ	y a
+舳	ヘ	h e
+ぬ	ヌ	n u
+麸	フ	f u
+切	キ	k i
+ミ	ミ	m i
+肢	シ	sh i
+課	カ	k a
+刈	カ	k a
+ポ	ポ	p o
+派	ハ	h a
+刳	ク	k u
+剃	ス	s u
+誌	シ	sh i
+院	イン	i ng
+煮	ニ	n i
+洩	モ	m o
+ホ	ホ	h o
+娘	コ	k o
+煽	アオ	a o
+割	ワ	w a
+加	カ	k a
+絽	ロ	r o
+セ	セ	s e
+箭	ヤ	y a
+詩	シ	sh i
+ソ	ソ	s o
+員	イン	i ng
+助	ジョ	j o
+巣	ス	s u
+弧	コ	k o
+箕	ミ	m i
+補	ホ	h o
+背	セ	s e
+裳	モ	m o
+差	サ	s a
+栄	エイ	e i
+砥	ト	t o
+呼	コ	k o
+飲	イン	i ng
+呷	アオ	a o
+津	ツ	ts u
+舎	シャ	sh a
+吽	ウン	u ng
+詠	エイ	e i
+釣	ツ	ts u
+化	カ	k a
+レ	レ	r e
+緋	ヒ	h i
+揺	ユ	y u
+巳	ミ	m i
+め	メ	m e
+訃	フ	f u
+褻	ケ	k e
+符	フ	f u
+笥	ケ	k e
+秘	ヒ	h i
+青	アオ	a o
+ひ	ヒ	h i
+名	ナ	n a
+ご	ゴ	g o
+野	ノ	n o
+吊	ツ	ts u
+デ	デ	d e
+師	シ	sh i
+区	ク	k u
+盧	ノ	n o
+鳴	ナ	n a
+み	ミ	m i
+庵	アン	a ng
+是	ゼ	z e
+私	シ	sh i
+ふ	フ	f u
+笈	オイ	o i
+騎	キ	k i
+座	ザ	z a
+パ	パ	p a
+杼	ヒ	h i
+府	フ	f u
+序	ジョ	j o
+ぶ	ブ	b u
+視	シ	sh i
+自	ジ	j i
+卦	ケ	k e
+旗	キ	k i
+目	メ	m e
+干	ヒ	h i
+架	カ	k a
+腑	フ	f u
+印	イン	i ng
+ノ	ノ	n o
+ネ	ネ	n e
+臥	ガ	g a
+べ	ベ	b e
+去	サ	s a
+ほ	ホ	h o
+腫	シュ	sh u
+駈	カ	k a
+反	ソ	s o
+取	ト	t o
+ナ	ナ	n a
+覇	ハ	h a
+ぼ	ボ	b o
+科	カ	k a
+史	シ	sh i
+ド	ド	d o
+ぽ	ポ	p o
+除	ジョ	j o
+時	ジ	j i
+叙	ジョ	j o
+可	カ	k a
+句	ク	k u
+駟	シ	sh i
+ま	マ	m a
+あえ	アエ	a e
+撃っ	ウッ	u q
+膿ん	ウン	u ng
+えん	エン	e ng
+厭い	アイ	a i
+飢え	ウエ	u e
+卯尾	ウオ	u o
+合い	アイ	a i
+飯井	イイ	i i
+言い	イイ	i i
+逢う	アウ	a u
+えッ	エッ	e q
+えー	エー	e long
+えっ	エッ	e q
+賣っ	ウッ	u q
+熬ん	イン	i ng
+おい	オイ	o i
+合え	アエ	a e
+合お	アオ	a o
+言う	イウ	i u
+言え	イエ	i e
+合っ	アッ	a q
+笑ん	エン	e ng
+熬っ	イッ	i q
+言お	イオ	i o
+ファ	ファ	f a
+井伊	イイ	i i
+あん	アン	a ng
+言っ	イッ	i q
+フェ	フェ	f e
+熟ん	ウン	u ng
+ええ	エエ	e long
+井尾	イオ	i o
+邑生	オウ	o long
+遭っ	アッ	a q
+遭お	アオ	a o
+えい	エイ	e i
+井生	イウ	i u
+遭え	アエ	a e
+遭う	アウ	a u
+遭い	アイ	a i
+和え	アエ	a e
+うん	ウン	u ng
+於い	オイ	o i
+唖々	アア	a a
+いん	イン	i ng
+おう	オウ	o u
+唯々	イイ	i i
+彫っ	エッ	e q
+彫ん	エン	e ng
+唯唯	イイ	i i
+あゝ	アア	a long
+あッ	アッ	a q
+あー	アー	a long
+おえ	オエ	o e
+煎ん	イン	i ng
+おぉ	オォ	o long
+煎っ	イッ	i q
+おお	オオ	o o
+往ん	イン	i ng
+嗚呼	アア	a long
+ジャ	ジャ	j a
+江井	エイ	e i
+飽い	アイ	a i
+討っ	ウッ	u q
+鋳ん	イン	i ng
+浮い	ウイ	u i
+うい	ウイ	u i
+得ん	エン	e ng
+いっ	イッ	i q
+うぅ	ウゥ	u long
+忌ん	イン	i ng
+終え	オエ	o e
+良い	イイ	i i
+良ぅ	イゥ	i long
+謂い	イイ	i i
+良う	イウ	i long
+おん	オン	o ng
+海布	メ	m e
+賣ん	ウン	u ng
+粟生	アオ	a o
+謂う	イウ	i u
+謂え	イエ	i e
+謂お	イオ	i o
+謂っ	イッ	i q
+餓え	ウエ	u e
+入ん	イン	i ng
+うう	ウウ	u long
+ヱイ	ヱイ	e i
+うえ	ウエ	u e
+行っ	イッ	i q
+老い	オイ	o i
+豆汁	ゴ	g o
+豆油	ゴ	g o
+在っ	アッ	a q
+遇っ	アッ	a q
+産ん	ウン	u ng
+在ん	アン	a ng
