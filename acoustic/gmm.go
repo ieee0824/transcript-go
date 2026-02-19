@@ -53,6 +53,11 @@ type GMM struct {
 	soaMean    []float64 // [k*dim] - means packed contiguously
 	soaInvVar  []float64 // [k*dim] - inverse variances packed contiguously
 	soaConst   []float64 // [k] - logWeight - logNormConst per component
+
+	// Batch BLAS fields for LogProbBatchMat.
+	// maha = Σ(x²·invVar) - 2·Σ(x·μ·invVar) + Σ(μ²·invVar)
+	soaMeanInvVar []float64 // [k*dim] - mean[k,d] * invVar[k,d]
+	soaBias       []float64 // [k] - soaConst[k] - 0.5*Σ(mean²·invVar)
 }
 
 // PrecomputeSoA builds the SoA cache for fast LogProb. Call after all components are set.
@@ -62,12 +67,22 @@ func (g *GMM) PrecomputeSoA() {
 	g.soaMean = make([]float64, k*dim)
 	g.soaInvVar = make([]float64, k*dim)
 	g.soaConst = make([]float64, k)
+	g.soaMeanInvVar = make([]float64, k*dim)
+	g.soaBias = make([]float64, k)
 	for i := range g.Components {
 		g.Components[i].Precompute()
 		off := i * dim
 		copy(g.soaMean[off:off+dim], g.Components[i].Mean)
 		copy(g.soaInvVar[off:off+dim], g.Components[i].invVariance)
 		g.soaConst[i] = g.Components[i].LogWeight - g.Components[i].logNormConst
+		// Batch fields: meanInvVar[d] = mean[d]*invVar[d], bias = soaConst - 0.5*Σ(mean²·invVar)
+		meanSqInvVarSum := 0.0
+		for d := 0; d < dim; d++ {
+			mv := g.Components[i].Mean[d] * g.Components[i].invVariance[d]
+			g.soaMeanInvVar[off+d] = mv
+			meanSqInvVarSum += g.Components[i].Mean[d] * mv
+		}
+		g.soaBias[i] = g.soaConst[i] - 0.5*meanSqInvVarSum
 	}
 }
 
