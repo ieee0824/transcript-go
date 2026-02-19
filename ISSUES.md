@@ -297,6 +297,39 @@ FFTバタフライのsplit R/I化 + NEON/SSE2アセンブリ、および `runtim
 | 8 | トークン再結合キーをstring→数値IDに変更 | ✅ |
 | 9 | ビームプルーニングをsort.Slice→quickselectに変更 | ✅ |
 
+### DNN学習: 並列サブバッチ処理 **2.2x**
+
+ミニバッチ(256)を`runtime.NumCPU()`個のサブバッチに分割し、各ワーカーが独立にforward/backwardを実行。勾配を集約後にAdam更新を1回実行する方式。
+
+#### 背景
+
+バッチサイズ256のBLAS行列積は小さく、Apple Accelerate (AMX) のスループットを活かしきれない。CPUコア使用率が低い状態だった。
+
+#### 手法
+
+```
+mega-batch (256 × NumCPU frames)
+  ├─ worker 0: sub-batch (256 frames) → forward → backward → local grads
+  ├─ worker 1: sub-batch (256 frames) → forward → backward → local grads
+  ├─ ...
+  └─ worker N: sub-batch (256 frames) → forward → backward → local grads
+  → barrier (sync.WaitGroup)
+  → gradient accumulation (addSlice)
+  → Adam update (1回)
+```
+
+- 各ワーカーは独立な`dnnWorkspace`と`workerGrads`バッファを持つ (ロック不要)
+- 勾配集約はシリアルだがO(パラメータ数)のみで軽量
+- ワーカー数上限8 (メモリ増加とのトレードオフ)
+
+| ベンチマーク | Before | After | 速度 |
+|---|---|---|---|
+| DNN Training 100Kフレーム 1epoch (batch=256, M2) | 1,112 ms | 512 ms | **2.2x** |
+
+| # | 施策 | 状態 |
+|---|---|---|
+| 15 | `acoustic/dnn_train.go`: mega-batch → NumCPU goroutine sub-batch並列 forward/backward + gradient accumulation | ✅ |
+
 ### 学習パイプライン: 全体 **-77%** (4.4x高速化)
 
 | ベンチマーク | Before | After | 速度 |
