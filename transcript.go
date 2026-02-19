@@ -20,6 +20,7 @@ type Recognizer struct {
 	FeatCfg    feature.Config
 	DecCfg     decoder.Config
 	OOVLogProb float64 // OOV unigram log10 probability (e.g. -5.0). 0 = disable.
+	UseVTLN    bool    // enable VTLN speaker normalization
 }
 
 // Option configures a Recognizer.
@@ -43,6 +44,13 @@ func WithDecoderConfig(cfg decoder.Config) Option {
 func WithOOVLogProb(log10prob float64) Option {
 	return func(r *Recognizer) {
 		r.OOVLogProb = log10prob
+	}
+}
+
+// WithVTLN enables or disables VTLN speaker normalization.
+func WithVTLN(enabled bool) Option {
+	return func(r *Recognizer) {
+		r.UseVTLN = enabled
 	}
 }
 
@@ -118,7 +126,16 @@ func (r *Recognizer) RecognizeFile(wavPath string) (*decoder.Result, error) {
 
 // RecognizeSamples runs recognition on raw audio samples.
 func (r *Recognizer) RecognizeSamples(samples []float64) (*decoder.Result, error) {
-	features, err := feature.Extract(samples, r.FeatCfg)
+	var features [][]float64
+	var err error
+	if r.UseVTLN {
+		scorer := func(feats [][]float64) float64 {
+			return acoustic.FrameLikelihood(r.AM, feats)
+		}
+		features, _, err = feature.ExtractWithVTLN(samples, r.FeatCfg, scorer)
+	} else {
+		features, err = feature.Extract(samples, r.FeatCfg)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("extract features: %w", err)
 	}

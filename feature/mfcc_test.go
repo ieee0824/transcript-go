@@ -105,7 +105,7 @@ func TestPowerSpectrum(t *testing.T) {
 }
 
 func TestMelFilterbank(t *testing.T) {
-	fb := NewMelFilterbank(26, 512, 16000, 0, 8000)
+	fb := NewMelFilterbank(26, 512, 16000, 0, 8000, 1.0)
 	if len(fb.Filters) != 26 {
 		t.Fatalf("numFilters = %d, want 26", len(fb.Filters))
 	}
@@ -207,5 +207,136 @@ func TestExtract_EmptySamples(t *testing.T) {
 	_, err := Extract(nil, cfg)
 	if err == nil {
 		t.Fatal("expected error for empty samples")
+	}
+}
+
+func TestWarpFreq_Identity(t *testing.T) {
+	// alpha=1.0 should return the input frequency unchanged
+	for _, f := range []float64{0, 50, 100, 1000, 4000, 7500, 8000} {
+		got := WarpFreq(f, 1.0, 100, 7500, 0, 8000)
+		if math.Abs(got-f) > 1e-10 {
+			t.Errorf("WarpFreq(%f, 1.0) = %f, want %f", f, got, f)
+		}
+	}
+}
+
+func TestWarpFreq_Boundaries(t *testing.T) {
+	// W(lowFreq) = lowFreq and W(highFreq) = highFreq for any alpha
+	for _, alpha := range []float64{0.82, 0.9, 1.0, 1.1, 1.2} {
+		low := WarpFreq(0, alpha, 100, 7500, 0, 8000)
+		if math.Abs(low-0) > 1e-10 {
+			t.Errorf("WarpFreq(0, %f) = %f, want 0", alpha, low)
+		}
+		high := WarpFreq(8000, alpha, 100, 7500, 0, 8000)
+		if math.Abs(high-8000) > 1e-10 {
+			t.Errorf("WarpFreq(8000, %f) = %f, want 8000", alpha, high)
+		}
+	}
+}
+
+func TestWarpFreq_MiddleRegion(t *testing.T) {
+	// In [vtlnLow, vtlnHigh], W(f) = f * alpha
+	alpha := 0.9
+	for _, f := range []float64{100, 500, 2000, 5000, 7499} {
+		got := WarpFreq(f, alpha, 100, 7500, 0, 8000)
+		want := f * alpha
+		if math.Abs(got-want) > 1e-10 {
+			t.Errorf("WarpFreq(%f, %f) = %f, want %f", f, alpha, got, want)
+		}
+	}
+}
+
+func TestMelFilterbank_VTLN(t *testing.T) {
+	// Warped filterbank should differ from unwarped
+	fb1 := NewMelFilterbank(26, 512, 16000, 0, 8000, 1.0)
+	fb09 := NewMelFilterbank(26, 512, 16000, 0, 8000, 0.9)
+
+	differs := false
+	for i := range fb1.Filters {
+		for j := range fb1.Filters[i] {
+			if fb1.Filters[i][j] != fb09.Filters[i][j] {
+				differs = true
+				break
+			}
+		}
+		if differs {
+			break
+		}
+	}
+	if !differs {
+		t.Error("warped filterbank (alpha=0.9) is identical to unwarped")
+	}
+}
+
+func TestExtractWithVTLN(t *testing.T) {
+	cfg := DefaultConfig()
+	n := 16000
+	samples := make([]float64, n)
+	for i := range samples {
+		samples[i] = math.Sin(2 * math.Pi * 440 * float64(i) / 16000)
+	}
+
+	// Use a simple scorer that returns sum of first cepstral coefficients
+	scorer := func(feats [][]float64) float64 {
+		sum := 0.0
+		for _, f := range feats {
+			sum += f[0]
+		}
+		return sum
+	}
+
+	feats, alpha, err := ExtractWithVTLN(samples, cfg, scorer)
+	if err != nil {
+		t.Fatalf("ExtractWithVTLN error: %v", err)
+	}
+	if alpha < 0.82 || alpha > 1.20 {
+		t.Errorf("alpha = %f, out of range [0.82, 1.20]", alpha)
+	}
+	expectedDim := cfg.FeatureDim()
+	if len(feats[0]) != expectedDim {
+		t.Errorf("feature dim = %d, want %d", len(feats[0]), expectedDim)
+	}
+	// Values should be finite
+	for i, frame := range feats {
+		for j, v := range frame {
+			if math.IsNaN(v) || math.IsInf(v, 0) {
+				t.Errorf("feat[%d][%d] = %f (not finite)", i, j, v)
+			}
+		}
+	}
+}
+
+func TestFeaturesFromSpectra_MatchesExtract(t *testing.T) {
+	cfg := DefaultConfig()
+	cfg.Alpha = 1.0
+	n := 16000
+	samples := make([]float64, n)
+	for i := range samples {
+		samples[i] = math.Sin(2 * math.Pi * 440 * float64(i) / 16000)
+	}
+
+	direct, err := Extract(samples, cfg)
+	if err != nil {
+		t.Fatalf("Extract error: %v", err)
+	}
+
+	spectra, err := ExtractPowerSpectra(samples, cfg)
+	if err != nil {
+		t.Fatalf("ExtractPowerSpectra error: %v", err)
+	}
+	fromSpectra := FeaturesFromSpectra(spectra, cfg)
+
+	if len(direct) != len(fromSpectra) {
+		t.Fatalf("frame count mismatch: %d vs %d", len(direct), len(fromSpectra))
+	}
+	for i := range direct {
+		if len(direct[i]) != len(fromSpectra[i]) {
+			t.Fatalf("dim mismatch at frame %d: %d vs %d", i, len(direct[i]), len(fromSpectra[i]))
+		}
+		for j := range direct[i] {
+			if math.Abs(direct[i][j]-fromSpectra[i][j]) > 1e-10 {
+				t.Errorf("mismatch at [%d][%d]: %f vs %f", i, j, direct[i][j], fromSpectra[i][j])
+			}
+		}
 	}
 }

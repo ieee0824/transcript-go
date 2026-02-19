@@ -19,6 +19,7 @@ func main() {
 	maxTokens := flag.Int("max-tokens", 1000, "maximum active tokens")
 	oovProb := flag.Float64("oov-prob", 0, "OOV unigram log10 probability (e.g. -5.0, 0=disable)")
 	lmInterp := flag.Float64("lm-interp", 0.0, "LM interpolation weight with uniform prior (0=pure LM, 0.5=half uniform)")
+	vtln := flag.Bool("vtln", false, "enable VTLN speaker normalization")
 	verbose := flag.Bool("v", false, "verbose output")
 
 	flag.Parse()
@@ -38,6 +39,7 @@ func main() {
 			LMInterpolation:     *lmInterp,
 		}),
 		transcript.WithOOVLogProb(*oovProb),
+		transcript.WithVTLN(*vtln),
 	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)

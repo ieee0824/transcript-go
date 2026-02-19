@@ -14,8 +14,39 @@ type MelFilterbank struct {
 	sparse  []sparseFilter // sparse representation for fast inner loop
 }
 
+// VTLN frequency warping constants.
+const (
+	vtlnLow  = 100.0  // lower boundary for VTLN warping (Hz)
+	vtlnHigh = 7500.0 // upper boundary for VTLN warping (Hz)
+)
+
+// WarpFreq applies piecewise linear vocal tract length normalization.
+// For f in [lowFreq, vtlnLow]: linear from lowFreq to vtlnLow*alpha.
+// For f in [vtlnLow, vtlnHigh]: f * alpha.
+// For f in [vtlnHigh, highFreq]: linear from vtlnHigh*alpha to highFreq.
+// Boundary constraint: W(lowFreq) = lowFreq, W(highFreq) = highFreq.
+func WarpFreq(freq, alpha, vtlnLow, vtlnHigh, lowFreq, highFreq float64) float64 {
+	if freq <= vtlnLow {
+		if vtlnLow == lowFreq {
+			return freq * alpha
+		}
+		slope := (vtlnLow*alpha - lowFreq) / (vtlnLow - lowFreq)
+		return lowFreq + slope*(freq-lowFreq)
+	}
+	if freq < vtlnHigh {
+		return freq * alpha
+	}
+	// freq >= vtlnHigh
+	if highFreq == vtlnHigh {
+		return freq * alpha
+	}
+	slope := (highFreq - vtlnHigh*alpha) / (highFreq - vtlnHigh)
+	return vtlnHigh*alpha + slope*(freq-vtlnHigh)
+}
+
 // NewMelFilterbank constructs the filterbank.
-func NewMelFilterbank(numFilters, fftSize, sampleRate int, lowFreq, highFreq float64) *MelFilterbank {
+// alpha is the VTLN warp factor (1.0 = no warping).
+func NewMelFilterbank(numFilters, fftSize, sampleRate int, lowFreq, highFreq, alpha float64) *MelFilterbank {
 	nBins := fftSize/2 + 1
 	lowMel := hzToMel(lowFreq)
 	highMel := hzToMel(highFreq)
@@ -27,10 +58,13 @@ func NewMelFilterbank(numFilters, fftSize, sampleRate int, lowFreq, highFreq flo
 		melPoints[i] = lowMel + float64(i)*step
 	}
 
-	// Convert to Hz and then to FFT bin indices
+	// Convert to Hz, apply VTLN warping, then to FFT bin indices
 	binIndices := make([]int, numFilters+2)
 	for i, m := range melPoints {
 		freq := melToHz(m)
+		if alpha != 1.0 {
+			freq = WarpFreq(freq, alpha, vtlnLow, vtlnHigh, lowFreq, highFreq)
+		}
 		binIndices[i] = int(math.Floor(freq * float64(fftSize+1) / float64(sampleRate)))
 	}
 

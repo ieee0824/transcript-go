@@ -36,7 +36,7 @@ func BenchmarkPowerSpectrum_512(b *testing.B) {
 }
 
 func BenchmarkMelFilterbank_Apply(b *testing.B) {
-	fb := NewMelFilterbank(26, 512, 16000, 0, 8000)
+	fb := NewMelFilterbank(26, 512, 16000, 0, 8000, 1.0)
 	ps := make([]float64, 257)
 	for i := range ps {
 		ps[i] = 0.01
