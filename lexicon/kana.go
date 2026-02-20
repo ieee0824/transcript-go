@@ -51,6 +51,29 @@ var kanaPhonemes = []struct {
 	{"フィ", p(acoustic.PhonF, acoustic.PhonI)},
 	{"フェ", p(acoustic.PhonF, acoustic.PhonE)},
 	{"フォ", p(acoustic.PhonF, acoustic.PhonO)},
+	{"フュ", p(acoustic.PhonF, acoustic.PhonY, acoustic.PhonU)},
+	// 外来語拗音
+	{"チェ", p(acoustic.PhonCh, acoustic.PhonE)},
+	{"シェ", p(acoustic.PhonSh, acoustic.PhonE)},
+	{"ジェ", p(acoustic.PhonJ, acoustic.PhonE)},
+	{"ウィ", p(acoustic.PhonU, acoustic.PhonI)},
+	{"ウェ", p(acoustic.PhonU, acoustic.PhonE)},
+	{"ウォ", p(acoustic.PhonU, acoustic.PhonO)},
+	{"ヴァ", p(acoustic.PhonB, acoustic.PhonA)},
+	{"ヴィ", p(acoustic.PhonB, acoustic.PhonI)},
+	{"ヴェ", p(acoustic.PhonB, acoustic.PhonE)},
+	{"ヴォ", p(acoustic.PhonB, acoustic.PhonO)},
+	{"トゥ", p(acoustic.PhonT, acoustic.PhonU)},
+	{"ドゥ", p(acoustic.PhonD, acoustic.PhonU)},
+	{"デュ", p(acoustic.PhonD, acoustic.PhonY, acoustic.PhonU)},
+	{"テュ", p(acoustic.PhonT, acoustic.PhonY, acoustic.PhonU)},
+	{"ツァ", p(acoustic.PhonTs, acoustic.PhonA)},
+	{"ツィ", p(acoustic.PhonTs, acoustic.PhonI)},
+	{"ツェ", p(acoustic.PhonTs, acoustic.PhonE)},
+	{"ツォ", p(acoustic.PhonTs, acoustic.PhonO)},
+	{"イェ", p(acoustic.PhonI, acoustic.PhonE)},
+	{"クァ", p(acoustic.PhonK, acoustic.PhonW, acoustic.PhonA)},
+	{"グァ", p(acoustic.PhonG, acoustic.PhonW, acoustic.PhonA)},
 
 	// 単独カナ
 	// ア行
@@ -138,6 +161,12 @@ var kanaPhonemes = []struct {
 	// ワ行
 	{"ワ", p(acoustic.PhonW, acoustic.PhonA)},
 	{"ヲ", p(acoustic.PhonO)},
+	// 小文字母音 (外来語フォールバック)
+	{"ァ", p(acoustic.PhonA)},
+	{"ィ", p(acoustic.PhonI)},
+	{"ゥ", p(acoustic.PhonU)},
+	{"ェ", p(acoustic.PhonE)},
+	{"ォ", p(acoustic.PhonO)},
 	// 特殊
 	{"ン", p(acoustic.PhonNg)},
 	{"ッ", p(acoustic.PhonQ)},

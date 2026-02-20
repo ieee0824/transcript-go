@@ -159,6 +159,45 @@ var (
 		"動く", "光る", "繋がる",
 	}
 
+	// === 外来語カテゴリ ===
+
+	// 日用品・家電
+	loanDaily = []string{
+		"コーヒー", "ビール", "ジュース", "ミルク", "パン",
+		"テレビ", "エアコン", "マイク", "カメラ", "ラジオ",
+		"テーブル", "ソファ", "カーテン", "タオル", "コップ",
+		"ナイフ", "フォーク", "スプーン", "ボトル", "バッグ",
+		"シャツ", "ジャケット", "コート", "ブーツ", "サンダル",
+	}
+
+	// 場所・施設
+	loanPlaces = []string{
+		"コンビニ", "スーパー", "デパート", "ホテル", "レストラン",
+		"カフェ", "ビル", "マンション", "アパート", "パーキング",
+		"エレベーター", "エスカレーター", "トイレ", "ロビー",
+	}
+
+	// IT・テクノロジー
+	loanTech = []string{
+		"パソコン", "インターネット", "ソフト", "アプリ", "サーバー",
+		"ネットワーク", "システム", "ファイル", "フォルダ", "メモリ",
+		"ディスプレイ", "プリンター", "マウス", "キーボード",
+	}
+
+	// スポーツ・趣味
+	loanHobby = []string{
+		"サッカー", "テニス", "ゴルフ", "スキー", "ジョギング",
+		"ゲーム", "ドラマ", "ニュース", "コンサート", "イベント",
+	}
+
+	// する動詞になる外来語
+	loanSuru = []string{
+		"チェック", "スタート", "ストップ", "キャンセル", "コピー",
+		"プリント", "ダウンロード", "アップロード", "インストール",
+		"クリック", "ログイン", "ログアウト", "サイン", "メモ",
+		"リセット", "セット", "テスト", "チャレンジ", "トレーニング",
+	}
+
 	// === ビジネスカテゴリ ===
 
 	// ビジネスで扱う対象物
@@ -352,6 +391,45 @@ func main() {
 		{"%s も %s する", [][]string{businessPeople, businessSuru}},
 		// ADVERB BUSINESS_THING を BUSINESS_SURU する
 		{"%s %s を %s する", [][]string{adverbs, businessThings, businessSuru}},
+
+		// === 外来語テンプレート ===
+
+		// LOAN_DAILY を VERB_T (コーヒー を 飲む, カメラ を 買う)
+		{"%s を %s", [][]string{loanDaily, verbTransitive}},
+		// LOAN_DAILY を LOAN_SURU する (マイク を チェック する)
+		{"%s を %s する", [][]string{loanDaily, loanSuru}},
+		// LOAN_PLACES で THING を VERB_T (コンビニ で パン を 買う)
+		{"%s で %s を %s", [][]string{loanPlaces, things, verbTransitive}},
+		// LOAN_PLACES に VERB_MOTION (スーパー に 行く)
+		{"%s に %s", [][]string{loanPlaces, verbMotion}},
+		// LOAN_PLACES へ VERB_MOTION
+		{"%s へ %s", [][]string{loanPlaces, verbMotion}},
+		// LOAN_PLACES で LOAN_DAILY を VERB_T (カフェ で コーヒー を 飲む)
+		{"%s で %s を %s", [][]string{loanPlaces, loanDaily, verbTransitive}},
+		// LOAN_TECH を VERB_T (パソコン を 使う)
+		{"%s を %s", [][]string{loanTech, verbTransitive}},
+		// LOAN_TECH を LOAN_SURU する (ソフト を インストール する)
+		{"%s を %s する", [][]string{loanTech, loanSuru}},
+		// LOAN_SURU する (チェック する, スタート する)
+		{"%s する", [][]string{loanSuru}},
+		// LOAN_HOBBY を VERB_T (サッカー を 見る)
+		{"%s を %s", [][]string{loanHobby, verbTransitive}},
+		// PLACE で LOAN_HOBBY を VERB_T (公園 で サッカー を する)
+		{"%s で %s を %s", [][]string{places, loanHobby, verbTransitive}},
+		// LOAN_DAILY は ADJ (コーヒー は おいしい)
+		{"%s は %s", [][]string{loanDaily, adjectives}},
+		// LOAN_PLACES は ADJ (ホテル は 高い)
+		{"%s は %s", [][]string{loanPlaces, adjectives}},
+		// TIME に LOAN_SURU する (朝 に ジョギング する)
+		{"%s に %s する", [][]string{times, loanSuru}},
+		// PERSON と LOAN_HOBBY を VERB_T (友達 と ゲーム を する)
+		{"%s と %s を %s", [][]string{persons, loanHobby, verbTransitive}},
+		// LOAN_TECH の LOAN_SURU する (パソコン の チェック する)
+		{"%s の %s する", [][]string{loanTech, loanSuru}},
+		// LOAN_DAILY を PERSON に VERB_T (コーヒー を お母さん に 作る)
+		{"%s を %s に %s", [][]string{loanDaily, persons, verbTransitive}},
+		// ADVERB LOAN_DAILY を VERB_T (すぐ コーヒー を 飲む)
+		{"%s %s を %s", [][]string{adverbs, loanDaily, verbTransitive}},
 	}
 
 	seen := make(map[string]bool)

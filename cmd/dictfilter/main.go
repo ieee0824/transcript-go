@@ -9,6 +9,9 @@ import (
 	"sort"
 	"strings"
 	"unicode"
+
+	"github.com/ieee0824/transcript-go/acoustic"
+	"github.com/ieee0824/transcript-go/lexicon"
 )
 
 func isJapanese(r rune) bool {
@@ -23,9 +26,20 @@ func runeLen(s string) int {
 	return n
 }
 
+func parsePhonemes(s string) []acoustic.Phoneme {
+	fields := strings.Fields(s)
+	ps := make([]acoustic.Phoneme, len(fields))
+	for i, f := range fields {
+		ps[i] = acoustic.Phoneme(f)
+	}
+	return ps
+}
+
 func main() {
 	corpusGlob := flag.String("corpus", "", "glob pattern for corpus files (e.g. 'training/corpus*.txt')")
 	maxWords := flag.Int("max", 4000, "maximum output dictionary size")
+	minEditDist := flag.Int("min-edit-dist", 0, "minimum phoneme edit distance from existing words (0=disabled, 2=recommended)")
+	maxRunes := flag.Int("max-runes", 8, "maximum word length in runes")
 	flag.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage: dictfilter [options] <dict.txt> <smalldict.txt>")
 		fmt.Fprintln(os.Stderr, "  Filters a large dictionary to a smaller one.")
@@ -45,7 +59,15 @@ func main() {
 	smallDictPath := flag.Arg(1)
 
 	// Load small dict lines (always included, as-is)
-	var mustLines []string
+	type entry struct {
+		line  string
+		word  string
+		phon  []acoustic.Phoneme
+		nPhon int
+		runeN int
+	}
+
+	var mustEntries []entry
 	mustWords := make(map[string]bool)
 	{
 		sf, err := os.Open(smallDictPath)
@@ -59,13 +81,17 @@ func main() {
 			if line == "" {
 				continue
 			}
-			parts := strings.SplitN(line, "\t", 2)
+			parts := strings.SplitN(line, "\t", 3)
 			mustWords[parts[0]] = true
-			mustLines = append(mustLines, line)
+			var phon []acoustic.Phoneme
+			if len(parts) >= 3 {
+				phon = parsePhonemes(parts[2])
+			}
+			mustEntries = append(mustEntries, entry{line, parts[0], phon, len(phon), 0})
 		}
 		sf.Close()
 	}
-	fmt.Fprintf(os.Stderr, "Small dict: %d entries\n", len(mustLines))
+	fmt.Fprintf(os.Stderr, "Small dict: %d entries\n", len(mustEntries))
 
 	// Load corpus words (if -corpus specified)
 	corpusWords := make(map[string]bool)
@@ -92,14 +118,30 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Corpus words: %d unique\n", len(corpusWords))
 	}
 
-	// Read full dict and build lookup
-	type entry struct {
-		line  string
-		word  string
-		nPhon int
-		runeN int
+	// Build phoneme index of must-include words for edit distance check
+	var acceptedPhonemes [][]acoustic.Phoneme
+	if *minEditDist > 0 {
+		for _, e := range mustEntries {
+			if len(e.phon) > 0 {
+				acceptedPhonemes = append(acceptedPhonemes, e.phon)
+			}
+		}
 	}
 
+	// tooClose checks if a phoneme sequence is too close to any accepted word
+	tooClose := func(phon []acoustic.Phoneme) bool {
+		if *minEditDist <= 0 || len(phon) == 0 {
+			return false
+		}
+		for _, ap := range acceptedPhonemes {
+			if lexicon.PhonemeEditDistance(phon, ap) < *minEditDist {
+				return true
+			}
+		}
+		return false
+	}
+
+	// Read full dict
 	f, err := os.Open(dictPath)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -112,8 +154,8 @@ func main() {
 		seen[w] = true
 	}
 
-	var corpusEntries []entry    // corpus words found in dict
-	var candidates []entry       // other candidates
+	var corpusEntries []entry
+	var candidates []entry
 
 	scanner := bufio.NewScanner(f)
 	scanner.Buffer(make([]byte, 1024*1024), 1024*1024)
@@ -131,13 +173,17 @@ func main() {
 			continue
 		}
 
-		nPhon := len(strings.Fields(parts[2]))
+		phon := parsePhonemes(parts[2])
+		nPhon := len(phon)
 		rc := runeLen(word)
 
-		// Corpus words: always include (no Japanese-only or length filter)
+		// Corpus words: always include (no edit distance check)
 		if corpusWords[word] {
 			seen[word] = true
-			corpusEntries = append(corpusEntries, entry{line, word, nPhon, rc})
+			corpusEntries = append(corpusEntries, entry{line, word, phon, nPhon, rc})
+			if *minEditDist > 0 {
+				acceptedPhonemes = append(acceptedPhonemes, phon)
+			}
 			continue
 		}
 
@@ -152,12 +198,15 @@ func main() {
 		if !allJP {
 			continue
 		}
-		if rc > 5 {
+		if rc > *maxRunes {
 			continue
+		}
+		if nPhon < 2 {
+			continue // skip single-phoneme words
 		}
 
 		seen[word] = true
-		candidates = append(candidates, entry{line, word, nPhon, rc})
+		candidates = append(candidates, entry{line, word, phon, nPhon, rc})
 	}
 
 	fmt.Fprintf(os.Stderr, "Corpus words in dict: %d\n", len(corpusEntries))
@@ -172,28 +221,46 @@ func main() {
 	})
 
 	// Budget: max - small dict - corpus words
-	take := *maxWords - len(mustLines) - len(corpusEntries)
-	if take < 0 {
-		take = 0
-	}
-	if take > len(candidates) {
-		take = len(candidates)
+	budget := *maxWords - len(mustEntries) - len(corpusEntries)
+	if budget < 0 {
+		budget = 0
 	}
 
-	// Output: small dict first, then corpus words, then top candidates
-	for _, line := range mustLines {
-		fmt.Println(line)
+	// Select candidates with confusion filter
+	var selected []entry
+	confuseSkipped := 0
+	for _, c := range candidates {
+		if len(selected) >= budget {
+			break
+		}
+		if tooClose(c.phon) {
+			confuseSkipped++
+			continue
+		}
+		selected = append(selected, c)
+		if *minEditDist > 0 {
+			acceptedPhonemes = append(acceptedPhonemes, c.phon)
+		}
+	}
+
+	// Output: small dict first, then corpus words, then selected candidates
+	for _, e := range mustEntries {
+		fmt.Println(e.line)
 	}
 	for _, e := range corpusEntries {
 		fmt.Println(e.line)
 	}
-	for i := 0; i < take; i++ {
-		fmt.Println(candidates[i].line)
+	for _, e := range selected {
+		fmt.Println(e.line)
 	}
 
-	total := len(mustLines) + len(corpusEntries) + take
+	total := len(mustEntries) + len(corpusEntries) + len(selected)
 	fmt.Fprintf(os.Stderr, "Output: %d (small=%d + corpus=%d + fill=%d)\n",
-		total, len(mustLines), len(corpusEntries), take)
+		total, len(mustEntries), len(corpusEntries), len(selected))
+	if *minEditDist > 0 {
+		fmt.Fprintf(os.Stderr, "Confusion filter: %d candidates rejected (min-edit-dist=%d)\n",
+			confuseSkipped, *minEditDist)
+	}
 
 	// Warn about corpus words not found in dict
 	missing := 0

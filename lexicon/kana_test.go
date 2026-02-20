@@ -54,6 +54,19 @@ func TestKanaToPhonemes(t *testing.T) {
 		{"ファイル", "f a i r u"},
 		{"ティー", "t i long"},
 		{"ディスク", "d i s u k u"},
+		// 外来語拗音
+		{"チェック", "ch e q k u"},
+		{"シェア", "sh e a"},
+		{"ジェット", "j e q t o"},
+		{"ウェブ", "u e b u"},
+		{"ウィンドウ", "u i ng d o u"},
+		{"ヴァイオリン", "b a i o r i ng"},
+		{"フュージョン", "f y u long j o ng"},
+		{"トゥモロー", "t u m o r o long"},
+		{"マイク", "m a i k u"},
+		{"コーヒー", "k o long h i long"},
+		// 小文字カナフォールバック
+		{"スィート", "s u i long t o"},  // スィ = ス+ィ (2文字マッチなし→個別)
 		// 空文字列
 		{"", ""},
 	}
