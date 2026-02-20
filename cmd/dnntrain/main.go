@@ -29,6 +29,8 @@ func main() {
 	batchSize := flag.Int("batch", 256, "mini-batch size")
 	maxEpochs := flag.Int("epochs", 20, "max training epochs")
 	patience := flag.Int("patience", 3, "early stopping patience (0=disabled)")
+	labelSmooth := flag.Float64("label-smooth", 0.0, "label smoothing epsilon (0=disabled, recommended 0.1)")
+	lrSchedule := flag.String("lr-schedule", "none", "learning rate schedule (none/cosine)")
 	augmentFlag := flag.Bool("augment", false, "enable 5-way speed perturbation")
 	manifestNoAug := flag.String("manifest-noaug", "", "additional manifest (no augmentation applied)")
 
@@ -289,6 +291,8 @@ func main() {
 		MaxEpochs:    *maxEpochs,
 		Patience:     *patience,
 		HeldOutFrac:  0.1,
+		LabelSmooth:  *labelSmooth,
+		LRSchedule:   *lrSchedule,
 	}
 	totalParams := 0
 	for _, l := range dnn.Layers {

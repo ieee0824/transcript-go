@@ -21,6 +21,8 @@ type DNNTrainConfig struct {
 	MaxEpochs    int
 	Patience     int     // early stopping patience (0 = disabled)
 	HeldOutFrac  float64 // fraction held out for validation
+	LabelSmooth  float64 // label smoothing epsilon (0 = disabled, e.g. 0.1)
+	LRSchedule   string  // "none" or "cosine"
 }
 
 // DefaultDNNTrainConfig returns sensible defaults for DNN training.
@@ -179,6 +181,14 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 	results := make([]workerResult, workers)
 
 	for epoch := 0; epoch < cfg.MaxEpochs; epoch++ {
+		// Compute effective learning rate
+		effectiveLR := cfg.LearningRate
+		if cfg.LRSchedule == "cosine" {
+			lrMin := cfg.LearningRate * 0.01
+			cosine := 0.5 * (1.0 + math.Cos(math.Pi*float64(epoch)/float64(cfg.MaxEpochs)))
+			effectiveLR = lrMin + (cfg.LearningRate-lrMin)*cosine
+		}
+
 		// Shuffle training indices
 		rand.Shuffle(trainN, func(i, j int) {
 			trainIdx[i], trainIdx[j] = trainIdx[j], trainIdx[i]
@@ -225,7 +235,7 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 					if dnn.DropoutRate > 0 {
 						rng = workerRNGs[w]
 					}
-					loss, correct := backpropBatch(dnn, ws.xBatch, batchTargets, bs, ws, wGrads, rng)
+					loss, correct := backpropBatch(dnn, ws.xBatch, batchTargets, bs, ws, wGrads, rng, cfg.LabelSmooth)
 					results[w] = workerResult{loss: loss, correct: correct, samples: bs}
 				}(w, subStart, bs)
 			}
@@ -250,8 +260,8 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 			invBS := 1.0 / float64(totalBS)
 			adam.t++
 			for i := range dnn.Layers {
-				adamUpdate(dnn.Layers[i].W, totalGrads.gW[i], adam.mW[i], adam.vW[i], cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
-				adamUpdate(dnn.Layers[i].B, totalGrads.gB[i], adam.mB[i], adam.vB[i], cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
+				adamUpdate(dnn.Layers[i].W, totalGrads.gW[i], adam.mW[i], adam.vW[i], effectiveLR, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
+				adamUpdate(dnn.Layers[i].B, totalGrads.gB[i], adam.mB[i], adam.vB[i], effectiveLR, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
 			}
 			nSteps++
 		}
@@ -262,8 +272,13 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 		// Validation
 		valLoss, valAcc := evaluateDNN(dnn, inputs, targets, valIdx, cfg.BatchSize, workerWSList[0])
 
-		fmt.Fprintf(os.Stderr, "  Epoch %2d: train_loss=%.4f train_acc=%.1f%% val_loss=%.4f val_acc=%.1f%%\n",
-			epoch+1, trainLoss, trainAcc, valLoss, valAcc)
+		if cfg.LRSchedule == "cosine" {
+			fmt.Fprintf(os.Stderr, "  Epoch %2d: train_loss=%.4f train_acc=%.1f%% val_loss=%.4f val_acc=%.1f%% lr=%.6f\n",
+				epoch+1, trainLoss, trainAcc, valLoss, valAcc, effectiveLR)
+		} else {
+			fmt.Fprintf(os.Stderr, "  Epoch %2d: train_loss=%.4f train_acc=%.1f%% val_loss=%.4f val_acc=%.1f%%\n",
+				epoch+1, trainLoss, trainAcc, valLoss, valAcc)
+		}
 
 		// Early stopping
 		if cfg.Patience > 0 {
@@ -290,9 +305,10 @@ func fillBatch(inputs []float64, targets []int, indices []int, inputDim int, xBa
 
 // backpropBatch computes forward pass, loss, and gradients for one mini-batch.
 // If rng is non-nil and dnn.DropoutRate > 0, dropout is applied to hidden layers.
+// labelSmooth is label smoothing epsilon (0 = disabled).
 // Returns average cross-entropy loss and number of correct predictions.
 func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
-	ws *dnnWorkspace, grads *workerGrads, rng *rand.Rand) (float64, int) {
+	ws *dnnWorkspace, grads *workerGrads, rng *rand.Rand, labelSmooth float64) (float64, int) {
 
 	nLayers := len(dnn.Layers)
 	O := dnn.OutputDim
@@ -364,14 +380,33 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 	// Loss and accuracy
 	totalLoss := 0.0
 	correct := 0
+	K := float64(O)
+	smooth := labelSmooth / K // per-class uniform component
 	for r := 0; r < bs; r++ {
 		off := r * O
 		t := batchTargets[r]
-		p := ws.prob[off+t]
-		if p < 1e-30 {
-			p = 1e-30
+
+		if labelSmooth > 0 {
+			// Smoothed cross-entropy: -Σ y_smooth[j] * log(p[j])
+			targetWeight := 1.0 - labelSmooth + smooth // weight for correct class
+			for j := 0; j < O; j++ {
+				p := ws.prob[off+j]
+				if p < 1e-30 {
+					p = 1e-30
+				}
+				if j == t {
+					totalLoss -= targetWeight * math.Log(p)
+				} else {
+					totalLoss -= smooth * math.Log(p)
+				}
+			}
+		} else {
+			p := ws.prob[off+t]
+			if p < 1e-30 {
+				p = 1e-30
+			}
+			totalLoss -= math.Log(p)
 		}
-		totalLoss -= math.Log(p)
 
 		bestJ := 0
 		bestP := ws.prob[off]
@@ -388,11 +423,22 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 
 	// === Backward pass ===
 
-	// dz[nLayers-1] = prob - one_hot(target)
+	// dz[nLayers-1] = prob - y_smooth (or prob - one_hot if no smoothing)
 	outIdx := nLayers - 1
 	copy(ws.dz[outIdx], ws.prob[:bs*O])
-	for r := 0; r < bs; r++ {
-		ws.dz[outIdx][r*O+batchTargets[r]] -= 1.0
+	if labelSmooth > 0 {
+		targetWeight := 1.0 - labelSmooth + smooth
+		for r := 0; r < bs; r++ {
+			off := r * O
+			for j := 0; j < O; j++ {
+				ws.dz[outIdx][off+j] -= smooth
+			}
+			ws.dz[outIdx][off+batchTargets[r]] -= (targetWeight - smooth)
+		}
+	} else {
+		for r := 0; r < bs; r++ {
+			ws.dz[outIdx][r*O+batchTargets[r]] -= 1.0
+		}
 	}
 
 	for i := nLayers - 1; i >= 0; i-- {

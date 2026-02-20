@@ -162,6 +162,46 @@ DNNアーキテクチャを可変層対応にリファクタリングし、よ�
 - **IC微減**: 26/30→25/30 (-1)。外部話者テストで1文悪化 (「朝 から 雨 が 降る」→「朝 ごはん を 描く する」)。デコーダパラメータ調整では改善せず、音響レベルの混同
 - **結論**: 深層化+Dropoutはフレーム精度・OOC認識精度の両方で有効。ICの微減は統計的揺らぎの範囲。OOC 50%は本プロジェクトのDNN-HMM最高値
 
+### Cosine LR Annealing実験 (v15)
+
+v14アーキテクチャ (4層×512, Dropout 0.2) に学習率スケジューリングを追加。Label Smoothingも実装・評価。
+
+#### 実装
+
+- **Cosine LR**: `lr_t = lr_min + 0.5 * (lr_max - lr_min) * (1 + cos(π * epoch / maxEpochs))`、lr_min = lr_max × 0.01
+- **Label Smoothing**: `y_smooth[j] = (1-ε) * one_hot[j] + ε/K` (K=87クラス)
+- CLIフラグ: `-lr-schedule cosine`, `-label-smooth 0.1`
+
+#### 学習結果
+
+| 構成 | val_acc | val_loss | 備考 |
+|---|---|---|---|
+| v14 (constant LR) | 80.0% | 0.5385 | ベースライン |
+| cosine LR + label-smooth ε=0.1 | 83.7% | 0.5293 | デコーダ認識不可 (出力logit平坦化) |
+| **cosine LR のみ** | **84.0%** | **0.4196** | **採用** |
+
+Label Smoothing ε=0.1は出力層の重み標準偏差を0.275→0.032に縮小させ、softmax出力が均一化。フレーム精度は高いがデコーダのbeam searchで有意な音響スコア差が出ず、認識結果が空になる問題が発生。
+
+#### 評価結果
+
+| テスト条件 | v14 (constant LR) | v15 (cosine LR) | 差 |
+|---|---|---|---|
+| コーパス内文 × 外部話者 (test_external) | 8/10 | **9/10** | **+1** |
+| 感情音声 (test_emotion) | 10/10 | 10/10 | ±0 |
+| 特定TTS話者 (test_tts) | 7/10 | 7/10 | ±0 |
+| **IC合計** | **25/30 (83%)** | **26/30 (87%)** | **+1** |
+| コーパス外文 × 話者A | 10/20 | 10/20 | ±0 |
+| コーパス外文 × 話者B | 9/20 | 11/20 | **+2** |
+| コーパス外文 × 話者C | 11/20 | **15/20** | **+4** |
+| **OOC合計** | **30/60 (50%)** | **36/60 (60%)** | **+10pt** |
+
+#### 分析
+
+- **フレーム精度**: val_acc 80.0%→84.0% (+4.0pt)。Cosine LRが後半エポックで学習率を緩やかに減衰させ、v14では到達できなかった最適解に収束
+- **OOC認識**: 30/60→36/60 (+10pt)。特に話者Cで+4発話、話者Bで+2発話改善。フレーム精度の向上が音響弁別力に直結
+- **IC認識**: v14で失っていた「朝 から 雨 が 降る」(test_external) がv15で復活
+- **Label Smoothingの教訓**: ε=0.1は87クラスの本タスクには過剰。出力logitが極端に小さくなりデコーダとの互換性を失う。使用する場合はε=0.01-0.05が適切、または推論時のtemperature scalingが必要
+
 ### Common Voice実音声混合訓練実験 (v12/v12b)
 
 Mozilla Common Voice日本語コーパス (CC-0) の実音声を追加学習データとして取り込む実験を実施。辞書1,176語フィルタにより280,477発話中4,686発話が通過 (1.7%)。
@@ -269,6 +309,7 @@ Wikipedia日本語ダンプ → `cmd/wikitext` + `cmd/lmtext` で辞書フィル
 | ~~中~~ | ~~辞書拡張 + 混同フィルタ~~ | ~~語彙カバレッジ向上~~ → **実施済み: IC 20/20達成、OOC -2pt** (1,176→1,694語。混同フィルタでIC維持、OOCは微減) |
 | ~~中~~ | ~~GMM混合数増加 (8-mix)~~ | ~~弁別力向上~~ → **実施済み: 過学習** (OOC 55%→38%。データ不足で7,296ガウス推定が不安定) |
 | ~~中~~ | ~~DNN深層化 + Dropout~~ | ~~フレーム精度・汎化性能向上~~ → **v14で実施: OOC +5pt** (4層×512+DO 0.2。val_acc 69.9%→80.0%、OOC 45%→50%) |
+| ~~中~~ | ~~Cosine LR Annealing~~ | ~~学習収束改善~~ → **v15で実施: OOC +10pt** (val_acc 80.0%→84.0%、OOC 50%→60%) |
 | 低 | コーパスのドメイン拡張（医療・IT等） | 未知文カバレッジ向上 |
 
 ## パフォーマンス最適化
@@ -387,17 +428,17 @@ mega-batch (256 × NumCPU frames)
 ## 現在の推奨構成
 
 ```
-AM:   models/v14/am.gob (55話者 5,794発話, 5-way augment, 4-mix GMM, トライフォン)
-DNN:  models/v14/dnn.gob (4層×512, Dropout 0.2, 50エポック, val_acc 80.0%)
-LM:   models/v14/lm.arpa (トライグラム、14,643文から構築: テンプレート14,250 + Wikipedia393)
-Dict: models/v14/dict.txt (1,694語、混同フィルタ済)
+AM:   models/v15/am.gob (55話者 5,794発話, 5-way augment, 4-mix GMM, トライフォン)
+DNN:  models/v15/dnn.gob (4層×512, Dropout 0.2, Cosine LR, 50エポック, val_acc 84.0%)
+LM:   models/v15/lm.arpa (トライグラム、14,643文から構築: テンプレート14,250 + Wikipedia393)
+Dict: models/v15/dict.txt (1,694語、混同フィルタ済)
 
 認識コマンド:
 /tmp/transcript \
-  -am models/v14/am.gob \
-  -dnn models/v14/dnn.gob \
-  -lm models/v14/lm.arpa \
-  -dict models/v14/dict.txt \
+  -am models/v15/am.gob \
+  -dnn models/v15/dnn.gob \
+  -lm models/v15/lm.arpa \
+  -dict models/v15/dict.txt \
   -wav input.wav
 
 DNN学習コマンド:
@@ -405,8 +446,8 @@ go run ./cmd/dnntrain \
   -manifest data/manifest_all_v5.tsv \
   -dict data/work/dict_2000_filtered.txt \
   -am data/work/am_tri_8mix.gob \
-  -output models/v14/dnn.gob \
-  -hidden 512 -layers 4 -dropout 0.2 -epochs 50 -patience 5 -augment
+  -output models/v15/dnn.gob \
+  -hidden 512 -layers 4 -dropout 0.2 -lr-schedule cosine -epochs 50 -patience 0 -augment
 
 GMM学習コマンド:
 go run ./cmd/train \

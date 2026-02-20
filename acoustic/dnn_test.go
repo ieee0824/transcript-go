@@ -287,7 +287,7 @@ func TestBackpropBatch_GradientCheck(t *testing.T) {
 	grads := newWorkerGrads(d)
 
 	// No dropout for gradient check (rng=nil)
-	backpropBatch(d, xBatch, batchTargets, bs, ws, grads, nil)
+	backpropBatch(d, xBatch, batchTargets, bs, ws, grads, nil, 0.0)
 
 	// Check all layers
 	eps := 1e-5
@@ -341,6 +341,10 @@ func TestBackpropBatch_GradientCheck(t *testing.T) {
 }
 
 func computeLoss(d *DNN, xBatch []float64, targets []int, bs int, ws *dnnWorkspace) float64 {
+	return computeLossSmooth(d, xBatch, targets, bs, ws, 0.0)
+}
+
+func computeLossSmooth(d *DNN, xBatch []float64, targets []int, bs int, ws *dnnWorkspace, labelSmooth float64) float64 {
 	nLayers := len(d.Layers)
 
 	// Forward pass
@@ -370,6 +374,8 @@ func computeLoss(d *DNN, xBatch []float64, targets []int, bs int, ws *dnnWorkspa
 	O := d.OutputDim
 	outLayer := &d.Layers[nLayers-1]
 	loss := 0.0
+	K := float64(O)
+	smooth := labelSmooth / K
 	for r := 0; r < bs; r++ {
 		off := r * O
 		maxVal := math.Inf(-1)
@@ -385,8 +391,21 @@ func computeLoss(d *DNN, xBatch []float64, targets []int, bs int, ws *dnnWorkspa
 			sumExp += math.Exp(ws.z[nLayers-1][off+j] - maxVal)
 		}
 		logSumExp := maxVal + math.Log(sumExp)
-		logP := ws.z[nLayers-1][off+targets[r]] - logSumExp
-		loss -= logP
+
+		if labelSmooth > 0 {
+			targetWeight := 1.0 - labelSmooth + smooth
+			for j := 0; j < O; j++ {
+				logP := ws.z[nLayers-1][off+j] - logSumExp
+				if j == targets[r] {
+					loss -= targetWeight * logP
+				} else {
+					loss -= smooth * logP
+				}
+			}
+		} else {
+			logP := ws.z[nLayers-1][off+targets[r]] - logSumExp
+			loss -= logP
+		}
 	}
 	return loss / float64(bs)
 }
@@ -522,7 +541,7 @@ func TestBackpropBatch_GradientCheck_4Layers(t *testing.T) {
 
 	ws := newDNNWorkspace(bs, d.Layers, 0.0)
 	grads := newWorkerGrads(d)
-	backpropBatch(d, xBatch, batchTargets, bs, ws, grads, nil)
+	backpropBatch(d, xBatch, batchTargets, bs, ws, grads, nil, 0.0)
 
 	eps := 1e-5
 	for li := range d.Layers {
@@ -547,6 +566,185 @@ func TestBackpropBatch_GradientCheck_4Layers(t *testing.T) {
 		if maxRelErr > 0.01 {
 			t.Errorf("4-layer: Layer %d W gradient check failed: max relative error = %e", li, maxRelErr)
 		}
+	}
+}
+
+// --- Label smoothing tests ---
+
+func TestBackpropBatch_GradientCheck_LabelSmooth(t *testing.T) {
+	rand.Seed(789)
+	d := &DNN{
+		Layers: []DNNLayer{
+			{W: make([]float64, 4*6), B: make([]float64, 4), InDim: 6, OutDim: 4},
+			{W: make([]float64, 3*4), B: make([]float64, 3), InDim: 4, OutDim: 3},
+		},
+		InputDim:    6,
+		HiddenDim:   4,
+		OutputDim:   3,
+		ContextLen:  0,
+		LogPrior:    make([]float64, 3),
+		PhonemeList: AllPhonemes(),
+	}
+	xavierInit(d.Layers[0].W, 6, 4)
+	xavierInit(d.Layers[1].W, 4, 3)
+
+	bs := 4
+	xBatch := make([]float64, bs*6)
+	for i := range xBatch {
+		xBatch[i] = rand.NormFloat64() * 0.5
+	}
+	batchTargets := []int{0, 1, 2, 1}
+	labelSmooth := 0.1
+
+	ws := newDNNWorkspace(bs, d.Layers, 0.0)
+	grads := newWorkerGrads(d)
+	backpropBatch(d, xBatch, batchTargets, bs, ws, grads, nil, labelSmooth)
+
+	eps := 1e-5
+	for li := range d.Layers {
+		// Check weights
+		maxRelErr := 0.0
+		for idx := range d.Layers[li].W {
+			orig := d.Layers[li].W[idx]
+			d.Layers[li].W[idx] = orig + eps
+			lossPlus := computeLossSmooth(d, xBatch, batchTargets, bs, ws, labelSmooth)
+			d.Layers[li].W[idx] = orig - eps
+			lossMinus := computeLossSmooth(d, xBatch, batchTargets, bs, ws, labelSmooth)
+			d.Layers[li].W[idx] = orig
+
+			numGrad := (lossPlus - lossMinus) / (2 * eps)
+			anaGrad := grads.gW[li][idx] / float64(bs)
+			diff := math.Abs(numGrad - anaGrad)
+			denom := math.Max(math.Abs(numGrad)+math.Abs(anaGrad), 1e-8)
+			relErr := diff / denom
+			if relErr > maxRelErr {
+				maxRelErr = relErr
+			}
+		}
+		if maxRelErr > 0.01 {
+			t.Errorf("LabelSmooth: Layer %d W gradient check failed: max relative error = %e", li, maxRelErr)
+		}
+
+		// Check biases
+		maxRelErr = 0.0
+		for idx := range d.Layers[li].B {
+			orig := d.Layers[li].B[idx]
+			d.Layers[li].B[idx] = orig + eps
+			lossPlus := computeLossSmooth(d, xBatch, batchTargets, bs, ws, labelSmooth)
+			d.Layers[li].B[idx] = orig - eps
+			lossMinus := computeLossSmooth(d, xBatch, batchTargets, bs, ws, labelSmooth)
+			d.Layers[li].B[idx] = orig
+
+			numGrad := (lossPlus - lossMinus) / (2 * eps)
+			anaGrad := grads.gB[li][idx] / float64(bs)
+			diff := math.Abs(numGrad - anaGrad)
+			denom := math.Max(math.Abs(numGrad)+math.Abs(anaGrad), 1e-8)
+			relErr := diff / denom
+			if relErr > maxRelErr {
+				maxRelErr = relErr
+			}
+		}
+		if maxRelErr > 0.01 {
+			t.Errorf("LabelSmooth: Layer %d B gradient check failed: max relative error = %e", li, maxRelErr)
+		}
+	}
+}
+
+func TestCosineLRSchedule(t *testing.T) {
+	// Verify cosine LR values at key points
+	lr := 0.001
+	lrMin := lr * 0.01
+	maxEpochs := 50
+
+	// Epoch 0: should be close to lr_max
+	cosine0 := 0.5 * (1.0 + math.Cos(math.Pi*0.0/float64(maxEpochs)))
+	lr0 := lrMin + (lr-lrMin)*cosine0
+	if math.Abs(lr0-lr) > 1e-10 {
+		t.Errorf("epoch 0: lr=%e, want %e", lr0, lr)
+	}
+
+	// Epoch maxEpochs: should be close to lr_min
+	cosineEnd := 0.5 * (1.0 + math.Cos(math.Pi*float64(maxEpochs)/float64(maxEpochs)))
+	lrEnd := lrMin + (lr-lrMin)*cosineEnd
+	if math.Abs(lrEnd-lrMin) > 1e-10 {
+		t.Errorf("epoch %d: lr=%e, want %e", maxEpochs, lrEnd, lrMin)
+	}
+
+	// Epoch maxEpochs/2: should be midpoint
+	cosineHalf := 0.5 * (1.0 + math.Cos(math.Pi*float64(maxEpochs/2)/float64(maxEpochs)))
+	lrHalf := lrMin + (lr-lrMin)*cosineHalf
+	expected := (lr + lrMin) / 2.0
+	if math.Abs(lrHalf-expected) > 1e-6 {
+		t.Errorf("epoch %d: lr=%e, want ~%e", maxEpochs/2, lrHalf, expected)
+	}
+
+	// Verify monotonically decreasing
+	prev := lr
+	for epoch := 1; epoch <= maxEpochs; epoch++ {
+		cosine := 0.5 * (1.0 + math.Cos(math.Pi*float64(epoch)/float64(maxEpochs)))
+		lrE := lrMin + (lr-lrMin)*cosine
+		if lrE > prev+1e-15 {
+			t.Errorf("epoch %d: lr=%e > prev=%e (not monotonically decreasing)", epoch, lrE, prev)
+		}
+		prev = lrE
+	}
+}
+
+func TestDNNTraining_WithLabelSmoothing(t *testing.T) {
+	rand.Seed(42)
+	d := NewDNN(4, 16, 0, 2, 0.0)
+
+	N := 500
+	inputDim := d.InputDim
+	inputs := make([]float64, N*inputDim)
+	targets := make([]int, N)
+	for i := 0; i < N; i++ {
+		c := i % d.OutputDim
+		targets[i] = c
+		for j := 0; j < inputDim; j++ {
+			inputs[i*inputDim+j] = float64(c)*0.5 + rand.NormFloat64()*0.1
+		}
+	}
+
+	cfg := DefaultDNNTrainConfig()
+	cfg.BatchSize = 64
+	cfg.MaxEpochs = 5
+	cfg.Patience = 0
+	cfg.HeldOutFrac = 0.1
+	cfg.LabelSmooth = 0.1
+
+	err := TrainDNN(d, inputs, targets, cfg)
+	if err != nil {
+		t.Fatalf("TrainDNN with label smoothing: %v", err)
+	}
+}
+
+func TestDNNTraining_WithCosineLR(t *testing.T) {
+	rand.Seed(42)
+	d := NewDNN(4, 16, 0, 2, 0.0)
+
+	N := 500
+	inputDim := d.InputDim
+	inputs := make([]float64, N*inputDim)
+	targets := make([]int, N)
+	for i := 0; i < N; i++ {
+		c := i % d.OutputDim
+		targets[i] = c
+		for j := 0; j < inputDim; j++ {
+			inputs[i*inputDim+j] = float64(c)*0.5 + rand.NormFloat64()*0.1
+		}
+	}
+
+	cfg := DefaultDNNTrainConfig()
+	cfg.BatchSize = 64
+	cfg.MaxEpochs = 5
+	cfg.Patience = 0
+	cfg.HeldOutFrac = 0.1
+	cfg.LRSchedule = "cosine"
+
+	err := TrainDNN(d, inputs, targets, cfg)
+	if err != nil {
+		t.Fatalf("TrainDNN with cosine LR: %v", err)
 	}
 }
 
