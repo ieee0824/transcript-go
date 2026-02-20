@@ -17,6 +17,7 @@ type Config struct {
 	LMWeight             float64 // language model scaling factor
 	WordInsertionPenalty float64 // penalty to control insertion rate
 	LMInterpolation      float64 // uniform interpolation weight (0=pure LM, 0.5=half LM half uniform)
+	MaxWordEnds          int     // max word completions expanded per frame (0 = unlimited)
 }
 
 // DefaultConfig returns reasonable default parameters.
@@ -351,11 +352,19 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 	// Token recombination map (reused each frame)
 	recom := make(map[recomKey]int, estimatedTokens)
 
+	// Word-end candidate buffer for deferred expansion + pruning
+	wordEndCap := 256
+	if cfg.MaxWordEnds > 0 && cfg.MaxWordEnds*2 > wordEndCap {
+		wordEndCap = cfg.MaxWordEnds * 2
+	}
+	wordEndBuf := make([]wordEndCandidate, 0, wordEndCap)
+
 	// Frame-synchronous beam search
 	for t := 1; t < T; t++ {
 		nextPool.reset()
 		nextTokens = nextTokens[:0]
 		bestNextScore := math.Inf(-1)
+		wordEndBuf = wordEndBuf[:0]
 
 		for k := range recom {
 			delete(recom, k)
@@ -477,7 +486,7 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 					}
 				}
 
-				// Word-end: this node completes one or more words
+				// Word-end: buffer completions for deferred expansion
 				if len(nd.wordEnds) > 0 {
 					if bestNextScore > math.Inf(-1) && baseScore < bestNextScore-cfg.BeamWidth {
 						continue
@@ -496,7 +505,6 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 							newNode.length = 1
 						}
 
-						// Compute actual LM score, subtract look-ahead that was applied at trie entry
 						lmHistBuf = buildLMHist(tok.history, lmHistBuf[:0])
 						var lmScore float64
 						if len(lmHistBuf) == 0 {
@@ -504,30 +512,41 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 						} else {
 							lmScore = scoreLM(lmHistBuf, word)
 						}
-						// baseScore includes lmLookAhead from trie entry; replace with actual LM
 						wordBaseScore := baseScore - lmLookAhead + lmScore + cfg.WordInsertionPenalty
 
-						// Start new words: expand root children with look-ahead
-						for _, c := range rootChildren {
-							childNd := &nodes[c.nodeIdx]
-							acScore := cachedEmit(childNd.hmmOrd, 1, t)
-							s := wordBaseScore + acScore + lmLookAhead
-							addOrRecombine(&nextTokens, nextPool, recom, c.nodeIdx, 1, newNode, s)
-							if s > bestNextScore {
-								bestNextScore = s
-							}
-						}
-
-						// Enter silence (no look-ahead for silence)
-						if silHMM != nil {
-							acScore := cachedEmit(silHMMOrd, 1, t)
-							s := wordBaseScore + acScore
-							addOrRecombine(&nextTokens, nextPool, recom, -1, 1, newNode, s)
-							if s > bestNextScore {
-								bestNextScore = s
-							}
-						}
+						wordEndBuf = append(wordEndBuf, wordEndCandidate{
+							history:   newNode,
+							wordScore: wordBaseScore,
+						})
 					}
+				}
+			}
+		}
+
+		// Word-end pruning: keep top-MaxWordEnds completions
+		if cfg.MaxWordEnds > 0 && len(wordEndBuf) > cfg.MaxWordEnds {
+			quickselectWordEnds(wordEndBuf, cfg.MaxWordEnds)
+			wordEndBuf = wordEndBuf[:cfg.MaxWordEnds]
+		}
+
+		// Expand surviving word completions into root children + silence
+		for i := range wordEndBuf {
+			we := &wordEndBuf[i]
+			for _, c := range rootChildren {
+				childNd := &nodes[c.nodeIdx]
+				acScore := cachedEmit(childNd.hmmOrd, 1, t)
+				s := we.wordScore + acScore + lmLookAhead
+				addOrRecombine(&nextTokens, nextPool, recom, c.nodeIdx, 1, we.history, s)
+				if s > bestNextScore {
+					bestNextScore = s
+				}
+			}
+			if silHMM != nil {
+				acScore := cachedEmit(silHMMOrd, 1, t)
+				s := we.wordScore + acScore
+				addOrRecombine(&nextTokens, nextPool, recom, -1, 1, we.history, s)
+				if s > bestNextScore {
+					bestNextScore = s
 				}
 			}
 		}
@@ -706,6 +725,38 @@ func quickselectTokens(tokens []*token, k int) {
 			}
 		}
 		tokens[storeIdx], tokens[right] = tokens[right], tokens[storeIdx]
+		if storeIdx == k-1 {
+			return
+		} else if storeIdx < k-1 {
+			left = storeIdx + 1
+		} else {
+			right = storeIdx - 1
+		}
+	}
+}
+
+// wordEndCandidate holds a deferred word completion for batch pruning.
+type wordEndCandidate struct {
+	history   *wordHistoryNode
+	wordScore float64 // baseScore - lmLookAhead + lmScore + WordInsertionPenalty
+}
+
+// quickselectWordEnds partially reorders candidates so that the top k highest-scoring
+// candidates are in positions [0, k). Average O(n), no allocations.
+func quickselectWordEnds(candidates []wordEndCandidate, k int) {
+	left, right := 0, len(candidates)-1
+	for left < right {
+		pivotIdx := left + (right-left)/2
+		pivotVal := candidates[pivotIdx].wordScore
+		candidates[pivotIdx], candidates[right] = candidates[right], candidates[pivotIdx]
+		storeIdx := left
+		for i := left; i < right; i++ {
+			if candidates[i].wordScore > pivotVal {
+				candidates[storeIdx], candidates[i] = candidates[i], candidates[storeIdx]
+				storeIdx++
+			}
+		}
+		candidates[storeIdx], candidates[right] = candidates[right], candidates[storeIdx]
 		if storeIdx == k-1 {
 			return
 		} else if storeIdx < k-1 {

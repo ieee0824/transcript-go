@@ -17,6 +17,7 @@ func main() {
 	lmWeight := flag.Float64("lm-weight", 10.0, "language model weight")
 	wordPenalty := flag.Float64("word-penalty", 0.0, "word insertion penalty")
 	maxTokens := flag.Int("max-tokens", 1000, "maximum active tokens")
+	maxWordEnds := flag.Int("max-word-ends", 0, "maximum word completions per frame (0=unlimited)")
 	oovProb := flag.Float64("oov-prob", 0, "OOV unigram log10 probability (e.g. -5.0, 0=disable)")
 	lmInterp := flag.Float64("lm-interp", 0.0, "LM interpolation weight with uniform prior (0=pure LM, 0.5=half uniform)")
 	vtln := flag.Bool("vtln", false, "enable VTLN speaker normalization")
@@ -37,6 +38,7 @@ func main() {
 			LMWeight:             *lmWeight,
 			WordInsertionPenalty: *wordPenalty,
 			MaxActiveTokens:      *maxTokens,
+			MaxWordEnds:          *maxWordEnds,
 			LMInterpolation:     *lmInterp,
 		}),
 		transcript.WithOOVLogProb(*oovProb),

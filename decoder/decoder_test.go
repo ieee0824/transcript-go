@@ -159,6 +159,65 @@ func TestDecode_ScoreFinite(t *testing.T) {
 	}
 }
 
+// TestDecode_MaxWordEndsZero verifies that MaxWordEnds=0 (unlimited) produces same result as legacy.
+func TestDecode_MaxWordEndsZero(t *testing.T) {
+	am, lm, dict := buildTinyModel()
+	cfg := Config{
+		BeamWidth:            300.0,
+		MaxActiveTokens:      500,
+		LMWeight:             1.0,
+		WordInsertionPenalty: -2.0,
+		MaxWordEnds:          0,
+	}
+
+	features := make([][]float64, 12)
+	for i := 0; i < 6; i++ {
+		features[i] = []float64{0.1}
+	}
+	for i := 6; i < 12; i++ {
+		features[i] = []float64{4.9}
+	}
+
+	result := Decode(features, am, lm, dict, cfg)
+	if result == nil {
+		t.Fatal("result is nil")
+	}
+	hasA := strings.Contains(result.Text, "あ")
+	hasI := strings.Contains(result.Text, "い")
+	if !hasA || !hasI {
+		t.Errorf("expected あ and い, got %q", result.Text)
+	}
+}
+
+// TestDecode_MaxWordEndsLimiting verifies pruning doesn't crash and produces output.
+func TestDecode_MaxWordEndsLimiting(t *testing.T) {
+	am, lm, dict := buildTinyModel()
+	features := make([][]float64, 12)
+	for i := 0; i < 6; i++ {
+		features[i] = []float64{0.1}
+	}
+	for i := 6; i < 12; i++ {
+		features[i] = []float64{4.9}
+	}
+
+	cfg1 := Config{BeamWidth: 300, MaxActiveTokens: 500, LMWeight: 1.0, MaxWordEnds: 1}
+	cfg2 := Config{BeamWidth: 300, MaxActiveTokens: 500, LMWeight: 1.0, MaxWordEnds: 0}
+
+	r1 := Decode(features, am, lm, dict, cfg1)
+	r2 := Decode(features, am, lm, dict, cfg2)
+
+	if r1.Text == "" {
+		t.Error("MaxWordEnds=1 produced empty text")
+	}
+	if math.IsNaN(r1.LogScore) || math.IsInf(r1.LogScore, 0) {
+		t.Errorf("MaxWordEnds=1 score not finite: %f", r1.LogScore)
+	}
+	// Unlimited should produce equal or better score
+	if r2.LogScore < r1.LogScore-1.0 {
+		t.Errorf("unlimited score %.4f significantly worse than limited %.4f", r2.LogScore, r1.LogScore)
+	}
+}
+
 // buildTinyTrigramModel creates a model with a trigram LM for testing trigram recombination.
 func buildTinyTrigramModel() (*acoustic.AcousticModel, *language.NGramModel, *lexicon.Dictionary) {
 	dim := 1
