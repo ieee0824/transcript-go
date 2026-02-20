@@ -1,6 +1,7 @@
 package acoustic
 
 import (
+	"bytes"
 	"encoding/gob"
 	"io"
 	"math"
@@ -9,22 +10,26 @@ import (
 	"github.com/ieee0824/transcript-go/internal/blas"
 )
 
+// DNNLayer holds weights and biases for a single fully-connected layer.
+// W is [OutDim × InDim] row-major, B is [OutDim].
+type DNNLayer struct {
+	W      []float64
+	B      []float64
+	InDim  int
+	OutDim int
+}
+
 // DNN is a feedforward neural network for HMM state classification.
-// Architecture: input → hidden1 (ReLU) → hidden2 (ReLU) → output (log-softmax).
+// Architecture: input → hidden1 (ReLU) → ... → hiddenN (ReLU) → output (log-softmax).
+// Layers[0..N-2] are hidden layers with ReLU, Layers[N-1] is the output layer with log-softmax.
 // Used in DNN-HMM hybrid: replaces GMM emission scoring while keeping HMM transitions.
 type DNN struct {
-	InputDim  int // context window: (2*ContextLen+1) * FeatureDim
-	HiddenDim int
-	OutputDim int // NumPhonemes * NumEmittingStates (87)
-	ContextLen int // frames on each side (e.g. 5 → 11-frame window)
-
-	// Weights (row-major flat slices for BLAS)
-	W1 []float64 // [HiddenDim × InputDim]
-	B1 []float64 // [HiddenDim]
-	W2 []float64 // [HiddenDim × HiddenDim]
-	B2 []float64 // [HiddenDim]
-	W3 []float64 // [OutputDim × HiddenDim]
-	B3 []float64 // [OutputDim]
+	Layers      []DNNLayer // hidden layers + output layer
+	InputDim    int        // = Layers[0].InDim (cached for compatibility)
+	HiddenDim   int        // = Layers[0].OutDim (cached for display)
+	OutputDim   int        // = Layers[N-1].OutDim (cached)
+	ContextLen  int        // frames on each side (e.g. 5 → 11-frame window)
+	DropoutRate float64    // inverted dropout rate for hidden layers (0 = disabled)
 
 	// Log prior P(state) from training label histogram, for Bayes conversion
 	LogPrior []float64 // [OutputDim]
@@ -34,32 +39,44 @@ type DNN struct {
 }
 
 // NewDNN creates a DNN with Xavier-initialized weights.
-func NewDNN(featureDim, hiddenDim, contextLen int) *DNN {
+// numHiddenLayers specifies the number of hidden layers (all with hiddenDim units).
+// dropoutRate is the inverted dropout rate for hidden layers (0 = disabled).
+func NewDNN(featureDim, hiddenDim, contextLen, numHiddenLayers int, dropoutRate float64) *DNN {
 	phonemes := AllPhonemes()
 	outputDim := len(phonemes) * NumEmittingStates
 	inputDim := (2*contextLen + 1) * featureDim
 
-	d := &DNN{
+	layers := make([]DNNLayer, numHiddenLayers+1)
+	prevDim := inputDim
+	for i := 0; i < numHiddenLayers; i++ {
+		layers[i] = DNNLayer{
+			W:      make([]float64, hiddenDim*prevDim),
+			B:      make([]float64, hiddenDim),
+			InDim:  prevDim,
+			OutDim: hiddenDim,
+		}
+		xavierInit(layers[i].W, prevDim, hiddenDim)
+		prevDim = hiddenDim
+	}
+	// Output layer
+	layers[numHiddenLayers] = DNNLayer{
+		W:      make([]float64, outputDim*prevDim),
+		B:      make([]float64, outputDim),
+		InDim:  prevDim,
+		OutDim: outputDim,
+	}
+	xavierInit(layers[numHiddenLayers].W, prevDim, outputDim)
+
+	return &DNN{
+		Layers:      layers,
 		InputDim:    inputDim,
 		HiddenDim:   hiddenDim,
 		OutputDim:   outputDim,
 		ContextLen:  contextLen,
-		W1:          make([]float64, hiddenDim*inputDim),
-		B1:          make([]float64, hiddenDim),
-		W2:          make([]float64, hiddenDim*hiddenDim),
-		B2:          make([]float64, hiddenDim),
-		W3:          make([]float64, outputDim*hiddenDim),
-		B3:          make([]float64, outputDim),
+		DropoutRate: dropoutRate,
 		LogPrior:    make([]float64, outputDim),
 		PhonemeList: phonemes,
 	}
-
-	// Xavier initialization: N(0, sqrt(2/(fan_in+fan_out)))
-	xavierInit(d.W1, inputDim, hiddenDim)
-	xavierInit(d.W2, hiddenDim, hiddenDim)
-	xavierInit(d.W3, hiddenDim, outputDim)
-
-	return d
 }
 
 func xavierInit(w []float64, fanIn, fanOut int) {
@@ -82,28 +99,35 @@ func (d *DNN) StateClassIndex(ph Phoneme, stateIdx int) int {
 
 // Forward computes log-softmax outputs for a batch of input vectors using BLAS.
 // input: flat [batchSize × InputDim] row-major
+// activations: per-hidden-layer buffers, each [batchSize × layer.OutDim]
 // output: flat [batchSize × OutputDim] log-softmax values
-// work buffers h1, h2 must be [batchSize × HiddenDim].
-func (d *DNN) Forward(input []float64, batchSize int, h1, h2, output []float64) {
-	H := d.HiddenDim
-	O := d.OutputDim
-	I := d.InputDim
+// Dropout is NOT applied (inference path).
+func (d *DNN) Forward(input []float64, batchSize int, activations [][]float64, output []float64) {
+	nLayers := len(d.Layers)
+	prevAct := input
+	prevDim := d.InputDim
 
-	// Layer 1: h1 = input @ W1^T + B1, then ReLU
-	// h1[B×H] = input[B×I] × W1^T[I×H]
-	blas.Dgemm(false, true, batchSize, H, I,
-		1.0, input, I, d.W1, I, 0.0, h1, H)
-	addBiasReLU(h1, d.B1, batchSize, H)
+	for i := range d.Layers {
+		layer := &d.Layers[i]
+		var dst []float64
+		if i < nLayers-1 {
+			dst = activations[i]
+		} else {
+			dst = output
+		}
 
-	// Layer 2: h2 = h1 @ W2^T + B2, then ReLU
-	blas.Dgemm(false, true, batchSize, H, H,
-		1.0, h1, H, d.W2, H, 0.0, h2, H)
-	addBiasReLU(h2, d.B2, batchSize, H)
+		blas.Dgemm(false, true, batchSize, layer.OutDim, prevDim,
+			1.0, prevAct, prevDim, layer.W, prevDim, 0.0, dst, layer.OutDim)
 
-	// Layer 3: output = h2 @ W3^T + B3, then log-softmax
-	blas.Dgemm(false, true, batchSize, O, H,
-		1.0, h2, H, d.W3, H, 0.0, output, O)
-	addBiasLogSoftmax(output, d.B3, batchSize, O)
+		if i < nLayers-1 {
+			addBiasReLU(dst, layer.B, batchSize, layer.OutDim)
+		} else {
+			addBiasLogSoftmax(dst, layer.B, batchSize, layer.OutDim)
+		}
+
+		prevAct = dst
+		prevDim = layer.OutDim
+	}
 }
 
 // addBiasReLU adds bias and applies ReLU in place.
@@ -171,12 +195,15 @@ func (d *DNN) ForwardFrames(features [][]float64) [][]float64 {
 		}
 	}
 
-	// Allocate work buffers and output
-	h1 := make([]float64, T*d.HiddenDim)
-	h2 := make([]float64, T*d.HiddenDim)
+	// Allocate per-hidden-layer buffers
+	nHidden := len(d.Layers) - 1
+	activations := make([][]float64, nHidden)
+	for i := 0; i < nHidden; i++ {
+		activations[i] = make([]float64, T*d.Layers[i].OutDim)
+	}
 	outFlat := make([]float64, T*d.OutputDim)
 
-	d.Forward(input, T, h1, h2, outFlat)
+	d.Forward(input, T, activations, outFlat)
 
 	// Reshape to [][]float64
 	result := make([][]float64, T)
@@ -194,7 +221,26 @@ func (d *DNN) SubtractPrior(logPost []float64) {
 	}
 }
 
-// serialized DNN for gob encoding
+// --- Serialization ---
+
+// V2 serialized format (variable layers)
+type serializedDNNLayer struct {
+	W      []float64
+	B      []float64
+	InDim  int
+	OutDim int
+}
+
+type serializedDNNV2 struct {
+	Version     int // = 2
+	ContextLen  int
+	DropoutRate float64
+	Layers      []serializedDNNLayer
+	LogPrior    []float64
+	PhonemeList []string
+}
+
+// V1 serialized format (legacy 3-layer)
 type serializedDNN struct {
 	InputDim    int
 	HiddenDim   int
@@ -207,17 +253,16 @@ type serializedDNN struct {
 	PhonemeList []string
 }
 
-// Save serializes the DNN to a writer using gob encoding.
+// Save serializes the DNN to a writer using gob encoding (V2 format).
 func (d *DNN) Save(w io.Writer) error {
-	sd := serializedDNN{
-		InputDim:   d.InputDim,
-		HiddenDim:  d.HiddenDim,
-		OutputDim:  d.OutputDim,
+	sd := serializedDNNV2{
+		Version:    2,
 		ContextLen: d.ContextLen,
-		W1:         d.W1, B1: d.B1,
-		W2:         d.W2, B2: d.B2,
-		W3:         d.W3, B3: d.B3,
+		Layers:     make([]serializedDNNLayer, len(d.Layers)),
 		LogPrior:   d.LogPrior,
+	}
+	for i, l := range d.Layers {
+		sd.Layers[i] = serializedDNNLayer{W: l.W, B: l.B, InDim: l.InDim, OutDim: l.OutDim}
 	}
 	sd.PhonemeList = make([]string, len(d.PhonemeList))
 	for i, p := range d.PhonemeList {
@@ -226,25 +271,64 @@ func (d *DNN) Save(w io.Writer) error {
 	return gob.NewEncoder(w).Encode(sd)
 }
 
-// LoadDNN deserializes a DNN from a reader.
+// LoadDNN deserializes a DNN from a reader. Supports both V2 and legacy V1 formats.
 func LoadDNN(r io.Reader) (*DNN, error) {
-	var sd serializedDNN
-	if err := gob.NewDecoder(r).Decode(&sd); err != nil {
+	data, err := io.ReadAll(r)
+	if err != nil {
 		return nil, err
 	}
+
+	// Try V2 format
+	var v2 serializedDNNV2
+	if err := gob.NewDecoder(bytes.NewReader(data)).Decode(&v2); err == nil && v2.Version == 2 && len(v2.Layers) > 0 {
+		return dnnFromV2(&v2), nil
+	}
+
+	// Fall back to V1 (legacy 3-layer format)
+	var v1 serializedDNN
+	if err := gob.NewDecoder(bytes.NewReader(data)).Decode(&v1); err != nil {
+		return nil, err
+	}
+	return dnnFromV1(&v1), nil
+}
+
+func dnnFromV2(sd *serializedDNNV2) *DNN {
+	layers := make([]DNNLayer, len(sd.Layers))
+	for i, sl := range sd.Layers {
+		layers[i] = DNNLayer{W: sl.W, B: sl.B, InDim: sl.InDim, OutDim: sl.OutDim}
+	}
+	nLayers := len(layers)
 	d := &DNN{
-		InputDim:   sd.InputDim,
-		HiddenDim:  sd.HiddenDim,
-		OutputDim:  sd.OutputDim,
+		Layers:     layers,
+		InputDim:   layers[0].InDim,
+		HiddenDim:  layers[0].OutDim,
+		OutputDim:  layers[nLayers-1].OutDim,
 		ContextLen: sd.ContextLen,
-		W1:         sd.W1, B1: sd.B1,
-		W2:         sd.W2, B2: sd.B2,
-		W3:         sd.W3, B3: sd.B3,
 		LogPrior:   sd.LogPrior,
 	}
 	d.PhonemeList = make([]Phoneme, len(sd.PhonemeList))
 	for i, s := range sd.PhonemeList {
 		d.PhonemeList[i] = Phoneme(s)
 	}
-	return d, nil
+	return d
+}
+
+func dnnFromV1(sd *serializedDNN) *DNN {
+	d := &DNN{
+		Layers: []DNNLayer{
+			{W: sd.W1, B: sd.B1, InDim: sd.InputDim, OutDim: sd.HiddenDim},
+			{W: sd.W2, B: sd.B2, InDim: sd.HiddenDim, OutDim: sd.HiddenDim},
+			{W: sd.W3, B: sd.B3, InDim: sd.HiddenDim, OutDim: sd.OutputDim},
+		},
+		InputDim:   sd.InputDim,
+		HiddenDim:  sd.HiddenDim,
+		OutputDim:  sd.OutputDim,
+		ContextLen: sd.ContextLen,
+		LogPrior:   sd.LogPrior,
+	}
+	d.PhonemeList = make([]Phoneme, len(sd.PhonemeList))
+	for i, s := range sd.PhonemeList {
+		d.PhonemeList[i] = Phoneme(s)
+	}
+	return d
 }

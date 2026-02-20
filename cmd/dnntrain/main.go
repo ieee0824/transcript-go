@@ -22,6 +22,8 @@ func main() {
 	amPath := flag.String("am", "data/am.gob", "path to trained GMM acoustic model (for forced alignment)")
 	output := flag.String("output", "data/dnn.gob", "output DNN model path")
 	hiddenDim := flag.Int("hidden", 256, "hidden layer size")
+	numLayers := flag.Int("layers", 2, "number of hidden layers")
+	dropout := flag.Float64("dropout", 0.0, "dropout rate for hidden layers (0=disabled)")
 	contextLen := flag.Int("context", 5, "context window half-size (frames on each side)")
 	lr := flag.Float64("lr", 0.001, "learning rate")
 	batchSize := flag.Int("batch", 256, "mini-batch size")
@@ -222,7 +224,7 @@ func main() {
 	}
 
 	// Create DNN
-	dnn := acoustic.NewDNN(featureDim, *hiddenDim, *contextLen)
+	dnn := acoustic.NewDNN(featureDim, *hiddenDim, *contextLen, *numLayers, *dropout)
 
 	// Count total frames and compute class priors
 	totalFrames := 0
@@ -288,8 +290,12 @@ func main() {
 		Patience:     *patience,
 		HeldOutFrac:  0.1,
 	}
-	fmt.Fprintf(os.Stderr, "Training DNN: input=%d hidden=%d output=%d\n",
-		dnn.InputDim, dnn.HiddenDim, dnn.OutputDim)
+	totalParams := 0
+	for _, l := range dnn.Layers {
+		totalParams += len(l.W) + len(l.B)
+	}
+	fmt.Fprintf(os.Stderr, "Training DNN: input=%d hidden=%d layers=%d output=%d dropout=%.2f params=%d\n",
+		dnn.InputDim, dnn.HiddenDim, len(dnn.Layers)-1, dnn.OutputDim, dnn.DropoutRate, totalParams)
 	if err := acoustic.TrainDNN(dnn, inputs, targets, trainCfg); err != nil {
 		fmt.Fprintf(os.Stderr, "training error: %v\n", err)
 		os.Exit(1)

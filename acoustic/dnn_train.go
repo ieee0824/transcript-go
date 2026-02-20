@@ -40,73 +40,85 @@ func DefaultDNNTrainConfig() DNNTrainConfig {
 // dnnWorkspace holds pre-allocated buffers for one mini-batch forward/backward pass.
 type dnnWorkspace struct {
 	batchSize int
-	// Forward intermediates
-	xBatch []float64 // [batchSize × InputDim]
-	z1     []float64 // [batchSize × HiddenDim] pre-activation layer 1
-	a1     []float64 // [batchSize × HiddenDim] post-activation layer 1
-	z2     []float64 // [batchSize × HiddenDim]
-	a2     []float64 // [batchSize × HiddenDim]
-	z3     []float64 // [batchSize × OutputDim]
-	prob   []float64 // [batchSize × OutputDim] softmax probabilities
+	xBatch    []float64   // [batchSize × InputDim]
+	z         [][]float64 // z[i] = pre-activation for layer i [batchSize × layer.OutDim]
+	a         [][]float64 // a[i] = post-activation for hidden layer i [batchSize × layer.OutDim]
+	prob      []float64   // [batchSize × OutputDim] softmax output
+	masks     [][]float64 // dropout masks for hidden layers (nil if no dropout)
 
 	// Backward intermediates
-	dz3 []float64 // [batchSize × OutputDim]
-	da2 []float64 // [batchSize × HiddenDim]
-	dz2 []float64 // [batchSize × HiddenDim]
-	da1 []float64 // [batchSize × HiddenDim]
-	dz1 []float64 // [batchSize × HiddenDim]
+	dz [][]float64 // dz[i] for each layer
+	da [][]float64 // da[i] for each hidden layer
 }
 
-func newDNNWorkspace(batchSize, inputDim, hiddenDim, outputDim int) *dnnWorkspace {
-	return &dnnWorkspace{
+func newDNNWorkspace(batchSize int, layers []DNNLayer, dropoutRate float64) *dnnWorkspace {
+	nLayers := len(layers)
+	nHidden := nLayers - 1
+	ws := &dnnWorkspace{
 		batchSize: batchSize,
-		xBatch:    make([]float64, batchSize*inputDim),
-		z1:        make([]float64, batchSize*hiddenDim),
-		a1:        make([]float64, batchSize*hiddenDim),
-		z2:        make([]float64, batchSize*hiddenDim),
-		a2:        make([]float64, batchSize*hiddenDim),
-		z3:        make([]float64, batchSize*outputDim),
-		prob:      make([]float64, batchSize*outputDim),
-		dz3:       make([]float64, batchSize*outputDim),
-		da2:       make([]float64, batchSize*hiddenDim),
-		dz2:       make([]float64, batchSize*hiddenDim),
-		da1:       make([]float64, batchSize*hiddenDim),
-		dz1:       make([]float64, batchSize*hiddenDim),
+		xBatch:    make([]float64, batchSize*layers[0].InDim),
+		z:         make([][]float64, nLayers),
+		a:         make([][]float64, nHidden),
+		prob:      make([]float64, batchSize*layers[nLayers-1].OutDim),
+		dz:        make([][]float64, nLayers),
+		da:        make([][]float64, nHidden),
 	}
+	for i := 0; i < nLayers; i++ {
+		ws.z[i] = make([]float64, batchSize*layers[i].OutDim)
+		ws.dz[i] = make([]float64, batchSize*layers[i].OutDim)
+		if i < nHidden {
+			ws.a[i] = make([]float64, batchSize*layers[i].OutDim)
+			ws.da[i] = make([]float64, batchSize*layers[i].OutDim)
+		}
+	}
+	if dropoutRate > 0 {
+		ws.masks = make([][]float64, nHidden)
+		for i := 0; i < nHidden; i++ {
+			ws.masks[i] = make([]float64, batchSize*layers[i].OutDim)
+		}
+	}
+	return ws
 }
 
 // workerGrads holds per-worker gradient buffers.
 type workerGrads struct {
-	gW1, gB1 []float64
-	gW2, gB2 []float64
-	gW3, gB3 []float64
+	gW [][]float64 // gW[i] for each layer
+	gB [][]float64 // gB[i] for each layer
 }
 
 func newWorkerGrads(d *DNN) *workerGrads {
-	return &workerGrads{
-		gW1: make([]float64, len(d.W1)), gB1: make([]float64, len(d.B1)),
-		gW2: make([]float64, len(d.W2)), gB2: make([]float64, len(d.B2)),
-		gW3: make([]float64, len(d.W3)), gB3: make([]float64, len(d.B3)),
+	wg := &workerGrads{
+		gW: make([][]float64, len(d.Layers)),
+		gB: make([][]float64, len(d.Layers)),
 	}
+	for i, layer := range d.Layers {
+		wg.gW[i] = make([]float64, len(layer.W))
+		wg.gB[i] = make([]float64, len(layer.B))
+	}
+	return wg
 }
 
 // adamState holds per-parameter momentum and variance for Adam optimizer.
 type adamState struct {
-	mW1, vW1, mB1, vB1 []float64
-	mW2, vW2, mB2, vB2 []float64
-	mW3, vW3, mB3, vB3 []float64
-	t                   int // step counter
+	mW, vW [][]float64 // per-layer weight momentum/variance
+	mB, vB [][]float64 // per-layer bias momentum/variance
+	t      int         // step counter
 }
 
 func newAdamState(d *DNN) *adamState {
-	return &adamState{
-		mW1: make([]float64, len(d.W1)), vW1: make([]float64, len(d.W1)),
-		mB1: make([]float64, len(d.B1)), vB1: make([]float64, len(d.B1)),
-		mW2: make([]float64, len(d.W2)), vW2: make([]float64, len(d.W2)),
-		mB2: make([]float64, len(d.B2)), vB2: make([]float64, len(d.B2)),
-		mW3: make([]float64, len(d.W3)), vW3: make([]float64, len(d.W3)),
-		mB3: make([]float64, len(d.B3)), vB3: make([]float64, len(d.B3)),
+	s := &adamState{
+		mW: make([][]float64, len(d.Layers)),
+		vW: make([][]float64, len(d.Layers)),
+		mB: make([][]float64, len(d.Layers)),
+		vB: make([][]float64, len(d.Layers)),
 	}
+	for i, layer := range d.Layers {
+		s.mW[i] = make([]float64, len(layer.W))
+		s.vW[i] = make([]float64, len(layer.W))
+		s.mB[i] = make([]float64, len(layer.B))
+		s.vB[i] = make([]float64, len(layer.B))
+	}
+	return s
 }
 
 // TrainDNN trains the DNN on (input, target) sample pairs with mini-batch Adam.
@@ -141,12 +153,14 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 	}
 	effectiveBatch := cfg.BatchSize * workers
 
-	// Per-worker workspace and gradient buffers
+	// Per-worker workspace, gradient buffers, and RNGs
 	workerWSList := make([]*dnnWorkspace, workers)
 	workerGradsList := make([]*workerGrads, workers)
+	workerRNGs := make([]*rand.Rand, workers)
 	for w := 0; w < workers; w++ {
-		workerWSList[w] = newDNNWorkspace(cfg.BatchSize, dnn.InputDim, dnn.HiddenDim, dnn.OutputDim)
+		workerWSList[w] = newDNNWorkspace(cfg.BatchSize, dnn.Layers, dnn.DropoutRate)
 		workerGradsList[w] = newWorkerGrads(dnn)
+		workerRNGs[w] = rand.New(rand.NewSource(rand.Int63()))
 	}
 
 	// Total gradient accumulators
@@ -198,7 +212,7 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 				go func(w, subStart, bs int) {
 					defer wg.Done()
 					ws := workerWSList[w]
-					wg := workerGradsList[w]
+					wGrads := workerGradsList[w]
 
 					// Fill batch
 					fillBatch(inputs, targets, trainIdx[subStart:subStart+bs], dnn.InputDim, ws.xBatch)
@@ -207,27 +221,26 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 						batchTargets[i] = targets[trainIdx[subStart+i]]
 					}
 
-					loss, correct := backpropBatch(dnn, ws.xBatch, batchTargets, bs, ws,
-						wg.gW1, wg.gB1, wg.gW2, wg.gB2, wg.gW3, wg.gB3)
+					var rng *rand.Rand
+					if dnn.DropoutRate > 0 {
+						rng = workerRNGs[w]
+					}
+					loss, correct := backpropBatch(dnn, ws.xBatch, batchTargets, bs, ws, wGrads, rng)
 					results[w] = workerResult{loss: loss, correct: correct, samples: bs}
 				}(w, subStart, bs)
 			}
 			wg.Wait()
 
 			// Accumulate gradients from all workers
-			clearSlice(totalGrads.gW1)
-			clearSlice(totalGrads.gB1)
-			clearSlice(totalGrads.gW2)
-			clearSlice(totalGrads.gB2)
-			clearSlice(totalGrads.gW3)
-			clearSlice(totalGrads.gB3)
+			for i := range dnn.Layers {
+				clearSlice(totalGrads.gW[i])
+				clearSlice(totalGrads.gB[i])
+			}
 			for w := 0; w < activeWorkers; w++ {
-				addSlice(totalGrads.gW1, workerGradsList[w].gW1)
-				addSlice(totalGrads.gB1, workerGradsList[w].gB1)
-				addSlice(totalGrads.gW2, workerGradsList[w].gW2)
-				addSlice(totalGrads.gB2, workerGradsList[w].gB2)
-				addSlice(totalGrads.gW3, workerGradsList[w].gW3)
-				addSlice(totalGrads.gB3, workerGradsList[w].gB3)
+				for i := range dnn.Layers {
+					addSlice(totalGrads.gW[i], workerGradsList[w].gW[i])
+					addSlice(totalGrads.gB[i], workerGradsList[w].gB[i])
+				}
 				totalLoss += results[w].loss * float64(results[w].samples)
 				totalCorrect += results[w].correct
 				totalSamples += results[w].samples
@@ -236,12 +249,10 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 			// Adam update with total effective batch size
 			invBS := 1.0 / float64(totalBS)
 			adam.t++
-			adamUpdate(dnn.W1, totalGrads.gW1, adam.mW1, adam.vW1, cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
-			adamUpdate(dnn.B1, totalGrads.gB1, adam.mB1, adam.vB1, cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
-			adamUpdate(dnn.W2, totalGrads.gW2, adam.mW2, adam.vW2, cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
-			adamUpdate(dnn.B2, totalGrads.gB2, adam.mB2, adam.vB2, cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
-			adamUpdate(dnn.W3, totalGrads.gW3, adam.mW3, adam.vW3, cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
-			adamUpdate(dnn.B3, totalGrads.gB3, adam.mB3, adam.vB3, cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
+			for i := range dnn.Layers {
+				adamUpdate(dnn.Layers[i].W, totalGrads.gW[i], adam.mW[i], adam.vW[i], cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
+				adamUpdate(dnn.Layers[i].B, totalGrads.gB[i], adam.mB[i], adam.vB[i], cfg.LearningRate, cfg.Beta1, cfg.Beta2, cfg.Epsilon, adam.t, invBS)
+			}
 			nSteps++
 		}
 
@@ -278,81 +289,90 @@ func fillBatch(inputs []float64, targets []int, indices []int, inputDim int, xBa
 }
 
 // backpropBatch computes forward pass, loss, and gradients for one mini-batch.
+// If rng is non-nil and dnn.DropoutRate > 0, dropout is applied to hidden layers.
 // Returns average cross-entropy loss and number of correct predictions.
 func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
-	ws *dnnWorkspace,
-	gW1, gB1, gW2, gB2, gW3, gB3 []float64) (float64, int) {
+	ws *dnnWorkspace, grads *workerGrads, rng *rand.Rand) (float64, int) {
 
-	I := dnn.InputDim
-	H := dnn.HiddenDim
+	nLayers := len(dnn.Layers)
 	O := dnn.OutputDim
 
 	// === Forward pass ===
+	prevAct := xBatch
+	prevDim := dnn.InputDim
 
-	// Layer 1: z1 = X @ W1^T, a1 = ReLU(z1 + b1)
-	blas.Dgemm(false, true, bs, H, I,
-		1.0, xBatch, I, dnn.W1, I, 0.0, ws.z1, H)
-	for i := 0; i < bs; i++ {
-		for j := 0; j < H; j++ {
-			v := ws.z1[i*H+j] + dnn.B1[j]
-			ws.z1[i*H+j] = v
-			if v > 0 {
-				ws.a1[i*H+j] = v
-			} else {
-				ws.a1[i*H+j] = 0
+	for i := 0; i < nLayers; i++ {
+		layer := &dnn.Layers[i]
+
+		blas.Dgemm(false, true, bs, layer.OutDim, prevDim,
+			1.0, prevAct, prevDim, layer.W, prevDim, 0.0, ws.z[i], layer.OutDim)
+
+		if i < nLayers-1 {
+			// Hidden layer: bias + ReLU + optional dropout
+			dim := layer.OutDim
+			for r := 0; r < bs; r++ {
+				for j := 0; j < dim; j++ {
+					idx := r*dim + j
+					v := ws.z[i][idx] + layer.B[j]
+					ws.z[i][idx] = v
+					if v > 0 {
+						ws.a[i][idx] = v
+					} else {
+						ws.a[i][idx] = 0
+					}
+				}
+			}
+			// Inverted dropout
+			if dnn.DropoutRate > 0 && rng != nil {
+				scale := 1.0 / (1.0 - dnn.DropoutRate)
+				n := bs * dim
+				for idx := 0; idx < n; idx++ {
+					if rng.Float64() < dnn.DropoutRate {
+						ws.masks[i][idx] = 0
+						ws.a[i][idx] = 0
+					} else {
+						ws.masks[i][idx] = scale
+						ws.a[i][idx] *= scale
+					}
+				}
+			}
+			prevAct = ws.a[i]
+			prevDim = dim
+		} else {
+			// Output layer: bias + softmax + loss
+			for r := 0; r < bs; r++ {
+				off := r * O
+				maxVal := math.Inf(-1)
+				for j := 0; j < O; j++ {
+					ws.z[i][off+j] += layer.B[j]
+					if ws.z[i][off+j] > maxVal {
+						maxVal = ws.z[i][off+j]
+					}
+				}
+				sumExp := 0.0
+				for j := 0; j < O; j++ {
+					ws.prob[off+j] = math.Exp(ws.z[i][off+j] - maxVal)
+					sumExp += ws.prob[off+j]
+				}
+				for j := 0; j < O; j++ {
+					ws.prob[off+j] /= sumExp
+				}
 			}
 		}
 	}
 
-	// Layer 2: z2 = a1 @ W2^T, a2 = ReLU(z2 + b2)
-	blas.Dgemm(false, true, bs, H, H,
-		1.0, ws.a1, H, dnn.W2, H, 0.0, ws.z2, H)
-	for i := 0; i < bs; i++ {
-		for j := 0; j < H; j++ {
-			v := ws.z2[i*H+j] + dnn.B2[j]
-			ws.z2[i*H+j] = v
-			if v > 0 {
-				ws.a2[i*H+j] = v
-			} else {
-				ws.a2[i*H+j] = 0
-			}
-		}
-	}
-
-	// Layer 3: z3 = a2 @ W3^T + b3, prob = softmax(z3)
-	blas.Dgemm(false, true, bs, O, H,
-		1.0, ws.a2, H, dnn.W3, H, 0.0, ws.z3, O)
-
+	// Loss and accuracy
 	totalLoss := 0.0
 	correct := 0
-	for i := 0; i < bs; i++ {
-		off := i * O
-		// Add bias + softmax
-		maxVal := math.Inf(-1)
-		for j := 0; j < O; j++ {
-			ws.z3[off+j] += dnn.B3[j]
-			if ws.z3[off+j] > maxVal {
-				maxVal = ws.z3[off+j]
-			}
-		}
-		sumExp := 0.0
-		for j := 0; j < O; j++ {
-			ws.prob[off+j] = math.Exp(ws.z3[off+j] - maxVal)
-			sumExp += ws.prob[off+j]
-		}
-		for j := 0; j < O; j++ {
-			ws.prob[off+j] /= sumExp
-		}
-
-		// Cross-entropy loss
-		t := batchTargets[i]
+	for r := 0; r < bs; r++ {
+		off := r * O
+		t := batchTargets[r]
 		p := ws.prob[off+t]
 		if p < 1e-30 {
 			p = 1e-30
 		}
 		totalLoss -= math.Log(p)
 
-		// Accuracy
 		bestJ := 0
 		bestP := ws.prob[off]
 		for j := 1; j < O; j++ {
@@ -368,76 +388,67 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 
 	// === Backward pass ===
 
-	// dz3 = prob - one_hot(target) [softmax + CE gradient]
-	for i := 0; i < bs*O; i++ {
-		ws.dz3[i] = ws.prob[i]
-	}
-	for i := 0; i < bs; i++ {
-		ws.dz3[i*O+batchTargets[i]] -= 1.0
-	}
-
-	// gW3 = dz3^T @ a2  [O×bs] × [bs×H] = [O×H]
-	clearSlice(gW3)
-	blas.Dgemm(true, false, O, H, bs,
-		1.0, ws.dz3, O, ws.a2, H, 0.0, gW3, H)
-
-	// gB3 = sum(dz3, axis=0)
-	clearSlice(gB3)
-	for i := 0; i < bs; i++ {
-		for j := 0; j < O; j++ {
-			gB3[j] += ws.dz3[i*O+j]
-		}
+	// dz[nLayers-1] = prob - one_hot(target)
+	outIdx := nLayers - 1
+	copy(ws.dz[outIdx], ws.prob[:bs*O])
+	for r := 0; r < bs; r++ {
+		ws.dz[outIdx][r*O+batchTargets[r]] -= 1.0
 	}
 
-	// da2 = dz3 @ W3  [bs×O] × [O×H] = [bs×H]
-	blas.Dgemm(false, false, bs, H, O,
-		1.0, ws.dz3, O, dnn.W3, H, 0.0, ws.da2, H)
+	for i := nLayers - 1; i >= 0; i-- {
+		layer := &dnn.Layers[i]
 
-	// dz2 = da2 * ReLU'(z2)
-	for i := 0; i < bs*H; i++ {
-		if ws.z2[i] > 0 {
-			ws.dz2[i] = ws.da2[i]
+		// Input to this layer
+		var inputToLayer []float64
+		var inputDim int
+		if i == 0 {
+			inputToLayer = xBatch
+			inputDim = dnn.InputDim
 		} else {
-			ws.dz2[i] = 0
+			inputToLayer = ws.a[i-1]
+			inputDim = dnn.Layers[i-1].OutDim
 		}
-	}
 
-	// gW2 = dz2^T @ a1
-	clearSlice(gW2)
-	blas.Dgemm(true, false, H, H, bs,
-		1.0, ws.dz2, H, ws.a1, H, 0.0, gW2, H)
+		// gW[i] = dz[i]^T @ inputToLayer
+		clearSlice(grads.gW[i])
+		blas.Dgemm(true, false, layer.OutDim, inputDim, bs,
+			1.0, ws.dz[i], layer.OutDim, inputToLayer, inputDim,
+			0.0, grads.gW[i], inputDim)
 
-	// gB2 = sum(dz2, axis=0)
-	clearSlice(gB2)
-	for i := 0; i < bs; i++ {
-		for j := 0; j < H; j++ {
-			gB2[j] += ws.dz2[i*H+j]
+		// gB[i] = sum(dz[i], axis=0)
+		clearSlice(grads.gB[i])
+		for r := 0; r < bs; r++ {
+			for j := 0; j < layer.OutDim; j++ {
+				grads.gB[i][j] += ws.dz[i][r*layer.OutDim+j]
+			}
 		}
-	}
 
-	// da1 = dz2 @ W2
-	blas.Dgemm(false, false, bs, H, H,
-		1.0, ws.dz2, H, dnn.W2, H, 0.0, ws.da1, H)
+		// Propagate gradient to previous layer
+		if i > 0 {
+			prevHiddenDim := dnn.Layers[i-1].OutDim
 
-	// dz1 = da1 * ReLU'(z1)
-	for i := 0; i < bs*H; i++ {
-		if ws.z1[i] > 0 {
-			ws.dz1[i] = ws.da1[i]
-		} else {
-			ws.dz1[i] = 0
-		}
-	}
+			// da[i-1] = dz[i] @ W[i]
+			blas.Dgemm(false, false, bs, prevHiddenDim, layer.OutDim,
+				1.0, ws.dz[i], layer.OutDim, layer.W, prevHiddenDim,
+				0.0, ws.da[i-1], prevHiddenDim)
 
-	// gW1 = dz1^T @ X
-	clearSlice(gW1)
-	blas.Dgemm(true, false, H, I, bs,
-		1.0, ws.dz1, H, xBatch, I, 0.0, gW1, I)
+			// Apply dropout mask
+			if dnn.DropoutRate > 0 && ws.masks != nil {
+				n := bs * prevHiddenDim
+				for idx := 0; idx < n; idx++ {
+					ws.da[i-1][idx] *= ws.masks[i-1][idx]
+				}
+			}
 
-	// gB1 = sum(dz1, axis=0)
-	clearSlice(gB1)
-	for i := 0; i < bs; i++ {
-		for j := 0; j < H; j++ {
-			gB1[j] += ws.dz1[i*H+j]
+			// dz[i-1] = da[i-1] * ReLU'(z[i-1])
+			n := bs * prevHiddenDim
+			for idx := 0; idx < n; idx++ {
+				if ws.z[i-1][idx] > 0 {
+					ws.dz[i-1][idx] = ws.da[i-1][idx]
+				} else {
+					ws.dz[i-1][idx] = 0
+				}
+			}
 		}
 	}
 
@@ -466,9 +477,9 @@ func evaluateDNN(dnn *DNN, inputs []float64, targets []int, indices []int, batch
 		return 0, 0
 	}
 
+	nLayers := len(dnn.Layers)
 	I := dnn.InputDim
 	O := dnn.OutputDim
-	H := dnn.HiddenDim
 
 	totalLoss := 0.0
 	totalCorrect := 0
@@ -482,47 +493,49 @@ func evaluateDNN(dnn *DNN, inputs []float64, targets []int, indices []int, batch
 
 		fillBatch(inputs, targets, indices[start:end], I, ws.xBatch)
 
-		// Forward only
-		blas.Dgemm(false, true, bs, H, I,
-			1.0, ws.xBatch, I, dnn.W1, I, 0.0, ws.z1, H)
-		for i := 0; i < bs*H; i++ {
-			v := ws.z1[i] + dnn.B1[i%H]
-			if v > 0 {
-				ws.a1[i] = v
-			} else {
-				ws.a1[i] = 0
-			}
-		}
-		blas.Dgemm(false, true, bs, H, H,
-			1.0, ws.a1, H, dnn.W2, H, 0.0, ws.z2, H)
-		for i := 0; i < bs*H; i++ {
-			v := ws.z2[i] + dnn.B2[i%H]
-			if v > 0 {
-				ws.a2[i] = v
-			} else {
-				ws.a2[i] = 0
-			}
-		}
-		blas.Dgemm(false, true, bs, O, H,
-			1.0, ws.a2, H, dnn.W3, H, 0.0, ws.z3, O)
+		// Forward only (no dropout)
+		prevAct := ws.xBatch
+		prevDim := I
+		for i := 0; i < nLayers; i++ {
+			layer := &dnn.Layers[i]
 
-		for i := 0; i < bs; i++ {
-			off := i * O
+			blas.Dgemm(false, true, bs, layer.OutDim, prevDim,
+				1.0, prevAct, prevDim, layer.W, prevDim, 0.0, ws.z[i], layer.OutDim)
+
+			if i < nLayers-1 {
+				dim := layer.OutDim
+				for idx := 0; idx < bs*dim; idx++ {
+					v := ws.z[i][idx] + layer.B[idx%dim]
+					if v > 0 {
+						ws.a[i][idx] = v
+					} else {
+						ws.a[i][idx] = 0
+					}
+				}
+				prevAct = ws.a[i]
+				prevDim = dim
+			}
+		}
+
+		// Output layer: softmax + loss + accuracy
+		outLayer := &dnn.Layers[nLayers-1]
+		for r := 0; r < bs; r++ {
+			off := r * O
 			maxVal := math.Inf(-1)
 			for j := 0; j < O; j++ {
-				ws.z3[off+j] += dnn.B3[j]
-				if ws.z3[off+j] > maxVal {
-					maxVal = ws.z3[off+j]
+				ws.z[nLayers-1][off+j] += outLayer.B[j]
+				if ws.z[nLayers-1][off+j] > maxVal {
+					maxVal = ws.z[nLayers-1][off+j]
 				}
 			}
 			sumExp := 0.0
 			for j := 0; j < O; j++ {
-				e := math.Exp(ws.z3[off+j] - maxVal)
+				e := math.Exp(ws.z[nLayers-1][off+j] - maxVal)
 				ws.prob[off+j] = e
 				sumExp += e
 			}
 
-			t := targets[indices[start+i]]
+			t := targets[indices[start+r]]
 			p := ws.prob[off+t] / sumExp
 			if p < 1e-30 {
 				p = 1e-30

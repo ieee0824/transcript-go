@@ -119,6 +119,49 @@ JSUT + Common Voiceコーパス (288,173文) をMeCab分かち書きし、未カ
 - **備考**: v13セクションのGMM評価値と本セクションの値が異なるのは、v13評価後のコード変更 (LogZero修正等) による再計測結果
 - **学習高速化**: 並列サブバッチ処理 (NumCPU個のワーカーで同時にforward/backward、gradient accumulation) により学習速度2.2x向上 (1,112ms→512ms/epoch, 100Kフレーム, M2)
 
+### DNN深層化 + Dropout実験 (v14)
+
+DNNアーキテクチャを可変層対応にリファクタリングし、より深いネットワーク + Dropoutで精度改善を試行。
+
+#### アーキテクチャ変更
+
+| | v13 (旧) | v14 (新) |
+|---|---|---|
+| 隠れ層 | 2層 × 256 | 4層 × 512 |
+| Dropout | なし | 0.2 (inverted) |
+| パラメータ数 | ~196K | ~1,052K (5.4倍) |
+| 入力/出力 | 429→87 | 429→87 (同一) |
+
+実装: `DNNLayer`構造体導入、`[]DNNLayer`スライスによるN層ループ化、inverted dropout (学習時のみ、ワーカーごと独立RNG)。シリアライズV2形式 (V1後方互換読み込み)。`-layers`, `-dropout` CLIフラグ追加。
+
+#### 学習結果
+
+| | v13 | v14 |
+|---|---|---|
+| エポック数 | 8 (patience=3) | 50 |
+| val_acc (フレーム) | 69.9% | **80.0%** (+10.1pt) |
+| val_loss | - | 0.5385 |
+
+#### 評価結果
+
+| テスト条件 | v13 DNN-HMM (2層×256) | v14 DNN-HMM (4層×512+DO) | 差 |
+|---|---|---|---|
+| コーパス内文 × 外部話者 (test_external) | 9/10 | 8/10 | -1 |
+| 感情音声 (test_emotion) | 10/10 | 10/10 | ±0 |
+| 特定TTS話者 (test_tts) | 7/10 | 7/10 | ±0 |
+| **IC合計** | **26/30 (87%)** | **25/30 (83%)** | **-1** |
+| コーパス外文 × 話者A | 10/20 | 10/20 | ±0 |
+| コーパス外文 × 話者B | 9/20 | 9/20 | ±0 |
+| コーパス外文 × 話者C | 8/20 | **11/20** | **+3** |
+| **OOC合計** | **27/60 (45%)** | **30/60 (50%)** | **+5pt** |
+
+#### 分析
+
+- **フレーム精度**: val_acc 69.9%→80.0% (+10.1pt)。Dropoutにより50エポックまでval_lossが減少し続けた (旧モデルは8エポックで収束)
+- **OOC認識**: 27/60→30/60 (+5pt)。特に話者Cで+3発話改善。フレーム精度向上が汎化性能に寄与
+- **IC微減**: 26/30→25/30 (-1)。外部話者テストで1文悪化 (「朝 から 雨 が 降る」→「朝 ごはん を 描く する」)。デコーダパラメータ調整では改善せず、音響レベルの混同
+- **結論**: 深層化+Dropoutはフレーム精度・OOC認識精度の両方で有効。ICの微減は統計的揺らぎの範囲。OOC 50%は本プロジェクトのDNN-HMM最高値
+
 ### Common Voice実音声混合訓練実験 (v12/v12b)
 
 Mozilla Common Voice日本語コーパス (CC-0) の実音声を追加学習データとして取り込む実験を実施。辞書1,176語フィルタにより280,477発話中4,686発話が通過 (1.7%)。
@@ -225,6 +268,7 @@ Wikipedia日本語ダンプ → `cmd/wikitext` + `cmd/lmtext` で辞書フィル
 | ~~高~~ | ~~VTLN（声道長正規化）~~ | ~~話者正規化による混同低減~~ → **実施済み: 効果なし** (TTS音声の声道長差が小さいため) |
 | ~~中~~ | ~~辞書拡張 + 混同フィルタ~~ | ~~語彙カバレッジ向上~~ → **実施済み: IC 20/20達成、OOC -2pt** (1,176→1,694語。混同フィルタでIC維持、OOCは微減) |
 | ~~中~~ | ~~GMM混合数増加 (8-mix)~~ | ~~弁別力向上~~ → **実施済み: 過学習** (OOC 55%→38%。データ不足で7,296ガウス推定が不安定) |
+| ~~中~~ | ~~DNN深層化 + Dropout~~ | ~~フレーム精度・汎化性能向上~~ → **v14で実施: OOC +5pt** (4層×512+DO 0.2。val_acc 69.9%→80.0%、OOC 45%→50%) |
 | 低 | コーパスのドメイン拡張（医療・IT等） | 未知文カバレッジ向上 |
 
 ## パフォーマンス最適化
@@ -343,20 +387,28 @@ mega-batch (256 × NumCPU frames)
 ## 現在の推奨構成
 
 ```
-AM:   models/v11/am.gob (55話者 5,794発話, 5-way augment, 4-mix GMM, トライフォン)
-LM:   models/v11/lm.arpa (トライグラム、14,643文から構築: テンプレート14,250 + Wikipedia393)
-Dict: models/v11/dict.txt (1,176語)
-Flags: -oov-prob -5.0 -lm-weight 10.0 -max-tokens 5000
+AM:   models/v14/am.gob (55話者 5,794発話, 5-way augment, 4-mix GMM, トライフォン)
+DNN:  models/v14/dnn.gob (4層×512, Dropout 0.2, 50エポック, val_acc 80.0%)
+LM:   models/v14/lm.arpa (トライグラム、14,643文から構築: テンプレート14,250 + Wikipedia393)
+Dict: models/v14/dict.txt (1,694語、混同フィルタ済)
 
 認識コマンド:
 /tmp/transcript \
-  -am models/v11/am.gob \
-  -lm models/v11/lm.arpa \
-  -dict models/v11/dict.txt \
-  -wav input.wav \
-  -oov-prob -5.0 -lm-weight 10.0 -max-tokens 5000
+  -am models/v14/am.gob \
+  -dnn models/v14/dnn.gob \
+  -lm models/v14/lm.arpa \
+  -dict models/v14/dict.txt \
+  -wav input.wav
 
-学習コマンド:
+DNN学習コマンド:
+go run ./cmd/dnntrain \
+  -manifest data/manifest_all_v5.tsv \
+  -dict data/work/dict_2000_filtered.txt \
+  -am data/work/am_tri_8mix.gob \
+  -output models/v14/dnn.gob \
+  -hidden 512 -layers 4 -dropout 0.2 -epochs 50 -patience 5 -augment
+
+GMM学習コマンド:
 go run ./cmd/train \
   -manifest data/manifest_all_v5.tsv \
   -dict data/work/dict_lm_v8.txt \
@@ -364,6 +416,6 @@ go run ./cmd/train \
   -mix 4 -iter 20 -align-iter 2 -triphone -augment
 
 LM構築コマンド:
-go run ./cmd/lmbuild -order 3 -output models/v11/lm.arpa \
+go run ./cmd/lmbuild -order 3 -output models/v14/lm.arpa \
   training/corpus8_expanded.txt data/work/nlp_corpus.txt
 ```
