@@ -11,7 +11,7 @@ import (
 )
 
 func TestDNNForward_Dimensions(t *testing.T) {
-	d := NewDNN(39, 16, 3, 2, 0.0) // small DNN for testing
+	d := NewDNN(39, 16, 3, 2, 0.0, false)
 	T := 10
 	features := make([][]float64, T)
 	for i := range features {
@@ -33,7 +33,7 @@ func TestDNNForward_Dimensions(t *testing.T) {
 }
 
 func TestDNNLogSoftmax_SumsToOne(t *testing.T) {
-	d := NewDNN(39, 16, 3, 2, 0.0)
+	d := NewDNN(39, 16, 3, 2, 0.0, false)
 	features := make([][]float64, 5)
 	for i := range features {
 		features[i] = make([]float64, 39)
@@ -55,7 +55,7 @@ func TestDNNLogSoftmax_SumsToOne(t *testing.T) {
 }
 
 func TestDNNForward_Deterministic(t *testing.T) {
-	d := NewDNN(39, 16, 3, 2, 0.0)
+	d := NewDNN(39, 16, 3, 2, 0.0, false)
 	features := make([][]float64, 5)
 	for i := range features {
 		features[i] = make([]float64, 39)
@@ -76,7 +76,7 @@ func TestDNNForward_Deterministic(t *testing.T) {
 }
 
 func TestDNNSubtractPrior(t *testing.T) {
-	d := NewDNN(39, 16, 3, 2, 0.0)
+	d := NewDNN(39, 16, 3, 2, 0.0, false)
 	// Set known priors
 	for i := range d.LogPrior {
 		d.LogPrior[i] = -2.0
@@ -97,7 +97,7 @@ func TestDNNSubtractPrior(t *testing.T) {
 }
 
 func TestDNNStateClassIndex(t *testing.T) {
-	d := NewDNN(39, 16, 3, 2, 0.0)
+	d := NewDNN(39, 16, 3, 2, 0.0, false)
 	phonemes := AllPhonemes()
 
 	// Every phoneme × state should have a valid index
@@ -120,7 +120,7 @@ func TestDNNStateClassIndex(t *testing.T) {
 }
 
 func TestDNNSaveLoad_RoundTrip(t *testing.T) {
-	d := NewDNN(39, 16, 3, 2, 0.0)
+	d := NewDNN(39, 16, 3, 2, 0.0, false)
 	// Set some non-default priors
 	for i := range d.LogPrior {
 		d.LogPrior[i] = -float64(i) * 0.1
@@ -226,7 +226,7 @@ func TestDNNTraining_LossDecreases(t *testing.T) {
 	featureDim := 4
 	hiddenDim := 16
 	contextLen := 0 // no context for simplicity
-	d := NewDNN(featureDim, hiddenDim, contextLen, 2, 0.0)
+	d := NewDNN(featureDim, hiddenDim, contextLen, 2, 0.0, false)
 
 	numClasses := d.OutputDim
 	N := 1000
@@ -283,7 +283,7 @@ func TestBackpropBatch_GradientCheck(t *testing.T) {
 	}
 	batchTargets := []int{0, 1, 2, 1}
 
-	ws := newDNNWorkspace(bs, d.Layers, 0.0)
+	ws := newDNNWorkspace(bs, d.Layers, 0.0, false)
 	grads := newWorkerGrads(d)
 
 	// No dropout for gradient check (rng=nil)
@@ -413,7 +413,7 @@ func computeLossSmooth(d *DNN, xBatch []float64, targets []int, bs int, ws *dnnW
 // --- Variable layer tests ---
 
 func TestDNNForward_4HiddenLayers(t *testing.T) {
-	d := NewDNN(39, 32, 3, 4, 0.0)
+	d := NewDNN(39, 32, 3, 4, 0.0, false)
 	if len(d.Layers) != 5 { // 4 hidden + 1 output
 		t.Fatalf("expected 5 layers, got %d", len(d.Layers))
 	}
@@ -445,7 +445,7 @@ func TestDNNForward_4HiddenLayers(t *testing.T) {
 }
 
 func TestDNNForward_1HiddenLayer(t *testing.T) {
-	d := NewDNN(39, 32, 3, 1, 0.0)
+	d := NewDNN(39, 32, 3, 1, 0.0, false)
 	if len(d.Layers) != 2 { // 1 hidden + 1 output
 		t.Fatalf("expected 2 layers, got %d", len(d.Layers))
 	}
@@ -471,7 +471,7 @@ func TestDNNForward_1HiddenLayer(t *testing.T) {
 }
 
 func TestDNNSaveLoad_VariableLayers(t *testing.T) {
-	d := NewDNN(39, 32, 3, 4, 0.2)
+	d := NewDNN(39, 32, 3, 4, 0.2, false)
 	for i := range d.LogPrior {
 		d.LogPrior[i] = -float64(i) * 0.01
 	}
@@ -539,7 +539,7 @@ func TestBackpropBatch_GradientCheck_4Layers(t *testing.T) {
 	}
 	batchTargets := []int{0, 1, 2, 1}
 
-	ws := newDNNWorkspace(bs, d.Layers, 0.0)
+	ws := newDNNWorkspace(bs, d.Layers, 0.0, false)
 	grads := newWorkerGrads(d)
 	backpropBatch(d, xBatch, batchTargets, bs, ws, grads, nil, 0.0)
 
@@ -596,7 +596,7 @@ func TestBackpropBatch_GradientCheck_LabelSmooth(t *testing.T) {
 	batchTargets := []int{0, 1, 2, 1}
 	labelSmooth := 0.1
 
-	ws := newDNNWorkspace(bs, d.Layers, 0.0)
+	ws := newDNNWorkspace(bs, d.Layers, 0.0, false)
 	grads := newWorkerGrads(d)
 	backpropBatch(d, xBatch, batchTargets, bs, ws, grads, nil, labelSmooth)
 
@@ -692,7 +692,7 @@ func TestCosineLRSchedule(t *testing.T) {
 
 func TestDNNTraining_WithLabelSmoothing(t *testing.T) {
 	rand.Seed(42)
-	d := NewDNN(4, 16, 0, 2, 0.0)
+	d := NewDNN(4, 16, 0, 2, 0.0, false)
 
 	N := 500
 	inputDim := d.InputDim
@@ -721,7 +721,7 @@ func TestDNNTraining_WithLabelSmoothing(t *testing.T) {
 
 func TestDNNTraining_WithCosineLR(t *testing.T) {
 	rand.Seed(42)
-	d := NewDNN(4, 16, 0, 2, 0.0)
+	d := NewDNN(4, 16, 0, 2, 0.0, false)
 
 	N := 500
 	inputDim := d.InputDim
@@ -751,7 +751,7 @@ func TestDNNTraining_WithCosineLR(t *testing.T) {
 // --- Dropout tests ---
 
 func TestDNNDropout_InferenceDeterministic(t *testing.T) {
-	d := NewDNN(39, 32, 3, 2, 0.5)
+	d := NewDNN(39, 32, 3, 2, 0.5, false)
 	features := make([][]float64, 5)
 	for i := range features {
 		features[i] = make([]float64, 39)
@@ -774,7 +774,7 @@ func TestDNNDropout_InferenceDeterministic(t *testing.T) {
 
 func TestDNNTraining_WithDropout(t *testing.T) {
 	rand.Seed(42)
-	d := NewDNN(4, 16, 0, 2, 0.3)
+	d := NewDNN(4, 16, 0, 2, 0.3, false)
 
 	N := 500
 	inputDim := d.InputDim
@@ -800,10 +800,430 @@ func TestDNNTraining_WithDropout(t *testing.T) {
 	}
 }
 
+// --- Batch Normalization tests ---
+
+func TestDNNBatchNorm_Forward_Dimensions(t *testing.T) {
+	d := NewDNN(39, 16, 3, 2, 0.0, true)
+	if !d.UseBatchNorm {
+		t.Fatal("expected UseBatchNorm=true")
+	}
+	if len(d.BN) != 2 {
+		t.Fatalf("expected 2 BN layers, got %d", len(d.BN))
+	}
+
+	features := make([][]float64, 10)
+	for i := range features {
+		features[i] = make([]float64, 39)
+		for j := range features[i] {
+			features[i][j] = float64(i*39+j) * 0.01
+		}
+	}
+
+	result := d.ForwardFrames(features)
+	if len(result) != 10 {
+		t.Fatalf("expected 10 frames, got %d", len(result))
+	}
+	for tIdx, row := range result {
+		if len(row) != d.OutputDim {
+			t.Fatalf("frame %d: expected %d outputs, got %d", tIdx, d.OutputDim, len(row))
+		}
+		sumExp := 0.0
+		for _, lp := range row {
+			sumExp += math.Exp(lp)
+		}
+		if math.Abs(sumExp-1.0) > 1e-6 {
+			t.Errorf("frame %d: exp(log-softmax) sums to %f, want ~1.0", tIdx, sumExp)
+		}
+	}
+}
+
+func TestDNNBatchNorm_Deterministic(t *testing.T) {
+	d := NewDNN(39, 16, 3, 2, 0.0, true)
+	features := make([][]float64, 5)
+	for i := range features {
+		features[i] = make([]float64, 39)
+		for j := range features[i] {
+			features[i][j] = float64(j) * 0.1
+		}
+	}
+
+	r1 := d.ForwardFrames(features)
+	r2 := d.ForwardFrames(features)
+	for tIdx := range r1 {
+		for j := range r1[tIdx] {
+			if r1[tIdx][j] != r2[tIdx][j] {
+				t.Fatalf("frame %d class %d: %f != %f", tIdx, j, r1[tIdx][j], r2[tIdx][j])
+			}
+		}
+	}
+}
+
+func TestDNNBatchNorm_SaveLoad_RoundTrip(t *testing.T) {
+	d := NewDNN(39, 16, 3, 2, 0.0, true)
+	for i := range d.LogPrior {
+		d.LogPrior[i] = -float64(i) * 0.1
+	}
+	// Set non-trivial BN running stats
+	for i := range d.BN {
+		for j := range d.BN[i].RunningMean {
+			d.BN[i].RunningMean[j] = float64(j) * 0.01
+			d.BN[i].RunningVar[j] = 1.0 + float64(j)*0.001
+			d.BN[i].Gamma[j] = 1.0 + float64(j)*0.0001
+			d.BN[i].Beta[j] = float64(j) * 0.001
+		}
+	}
+
+	var buf bytes.Buffer
+	if err := d.Save(&buf); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+
+	d2, err := LoadDNN(&buf)
+	if err != nil {
+		t.Fatalf("LoadDNN: %v", err)
+	}
+
+	if !d2.UseBatchNorm {
+		t.Fatal("loaded model should have UseBatchNorm=true")
+	}
+	if len(d2.BN) != len(d.BN) {
+		t.Fatalf("BN count: %d != %d", len(d2.BN), len(d.BN))
+	}
+	if d2.InputDim != d.InputDim || d2.OutputDim != d.OutputDim {
+		t.Fatal("dimension mismatch")
+	}
+
+	checkSlice := func(name string, a, b []float64) {
+		t.Helper()
+		if len(a) != len(b) {
+			t.Fatalf("%s: length %d != %d", name, len(a), len(b))
+		}
+		for i := range a {
+			if a[i] != b[i] {
+				t.Fatalf("%s[%d]: %f != %f", name, i, a[i], b[i])
+			}
+		}
+	}
+	for i := range d.BN {
+		checkSlice(fmt.Sprintf("BN[%d].Gamma", i), d.BN[i].Gamma, d2.BN[i].Gamma)
+		checkSlice(fmt.Sprintf("BN[%d].Beta", i), d.BN[i].Beta, d2.BN[i].Beta)
+		checkSlice(fmt.Sprintf("BN[%d].RunningMean", i), d.BN[i].RunningMean, d2.BN[i].RunningMean)
+		checkSlice(fmt.Sprintf("BN[%d].RunningVar", i), d.BN[i].RunningVar, d2.BN[i].RunningVar)
+	}
+
+	// Verify forward output matches
+	features := make([][]float64, 5)
+	for i := range features {
+		features[i] = make([]float64, 39)
+		for j := range features[i] {
+			features[i][j] = float64(j) * 0.01
+		}
+	}
+	r1 := d.ForwardFrames(features)
+	r2 := d2.ForwardFrames(features)
+	for ti := range r1 {
+		for j := range r1[ti] {
+			if math.Abs(r1[ti][j]-r2[ti][j]) > 1e-10 {
+				t.Fatalf("output mismatch frame %d class %d", ti, j)
+			}
+		}
+	}
+}
+
+// computeLossBN computes loss for a BN-enabled DNN (recomputes batch stats each call).
+func computeLossBN(d *DNN, xBatch []float64, targets []int, bs int, ws *dnnWorkspace) float64 {
+	nLayers := len(d.Layers)
+
+	prevAct := xBatch
+	prevDim := d.InputDim
+	for i := 0; i < nLayers; i++ {
+		layer := &d.Layers[i]
+		blas.Dgemm(false, true, bs, layer.OutDim, prevDim,
+			1.0, prevAct, prevDim, layer.W, prevDim, 0.0, ws.z[i], layer.OutDim)
+
+		if i < nLayers-1 {
+			dim := layer.OutDim
+			bsF := float64(bs)
+			bn := &d.BN[i]
+
+			// Add bias
+			for r := 0; r < bs; r++ {
+				for j := 0; j < dim; j++ {
+					ws.z[i][r*dim+j] += layer.B[j]
+				}
+			}
+
+			// Batch mean
+			mean := make([]float64, dim)
+			for r := 0; r < bs; r++ {
+				for j := 0; j < dim; j++ {
+					mean[j] += ws.z[i][r*dim+j]
+				}
+			}
+			for j := range mean {
+				mean[j] /= bsF
+			}
+
+			// Batch var + normalize + gamma/beta + ReLU
+			variance := make([]float64, dim)
+			for r := 0; r < bs; r++ {
+				for j := 0; j < dim; j++ {
+					d := ws.z[i][r*dim+j] - mean[j]
+					variance[j] += d * d
+				}
+			}
+			for j := range variance {
+				variance[j] /= bsF
+			}
+
+			for r := 0; r < bs; r++ {
+				for j := 0; j < dim; j++ {
+					idx := r*dim + j
+					xh := (ws.z[i][idx] - mean[j]) / math.Sqrt(variance[j]+batchNormEps)
+					v := bn.Gamma[j]*xh + bn.Beta[j]
+					if v > 0 {
+						ws.a[i][idx] = v
+					} else {
+						ws.a[i][idx] = 0
+					}
+				}
+			}
+			prevAct = ws.a[i]
+			prevDim = dim
+		}
+	}
+
+	// Output layer: softmax + loss
+	O := d.OutputDim
+	outLayer := &d.Layers[nLayers-1]
+	loss := 0.0
+	for r := 0; r < bs; r++ {
+		off := r * O
+		maxVal := math.Inf(-1)
+		for j := 0; j < O; j++ {
+			v := ws.z[nLayers-1][off+j] + outLayer.B[j]
+			ws.z[nLayers-1][off+j] = v
+			if v > maxVal {
+				maxVal = v
+			}
+		}
+		sumExp := 0.0
+		for j := 0; j < O; j++ {
+			sumExp += math.Exp(ws.z[nLayers-1][off+j] - maxVal)
+		}
+		logSumExp := maxVal + math.Log(sumExp)
+		logP := ws.z[nLayers-1][off+targets[r]] - logSumExp
+		loss -= logP
+	}
+	return loss / float64(bs)
+}
+
+func TestBackpropBatch_GradientCheck_BatchNorm(t *testing.T) {
+	rand.Seed(999)
+	d := &DNN{
+		Layers: []DNNLayer{
+			{W: make([]float64, 4*6), B: make([]float64, 4), InDim: 6, OutDim: 4},
+			{W: make([]float64, 4*4), B: make([]float64, 4), InDim: 4, OutDim: 4},
+			{W: make([]float64, 3*4), B: make([]float64, 3), InDim: 4, OutDim: 3},
+		},
+		InputDim:     6,
+		HiddenDim:    4,
+		OutputDim:    3,
+		ContextLen:   0,
+		UseBatchNorm: true,
+		LogPrior:     make([]float64, 3),
+		PhonemeList:  AllPhonemes(),
+	}
+	// Initialize BN params
+	d.BN = make([]BatchNormParams, 2)
+	for i := 0; i < 2; i++ {
+		dim := 4
+		gamma := make([]float64, dim)
+		for j := range gamma {
+			gamma[j] = 1.0 + rand.NormFloat64()*0.1
+		}
+		d.BN[i] = BatchNormParams{
+			Gamma:       gamma,
+			Beta:        make([]float64, dim),
+			RunningMean: make([]float64, dim),
+			RunningVar:  make([]float64, dim),
+			Dim:         dim,
+		}
+		for j := range d.BN[i].Beta {
+			d.BN[i].Beta[j] = rand.NormFloat64() * 0.1
+		}
+		for j := range d.BN[i].RunningVar {
+			d.BN[i].RunningVar[j] = 1.0
+		}
+	}
+	for i := range d.Layers {
+		heInit(d.Layers[i].W, d.Layers[i].InDim, d.Layers[i].OutDim)
+	}
+
+	bs := 8 // need reasonable batch size for BN stats stability
+	xBatch := make([]float64, bs*6)
+	for i := range xBatch {
+		xBatch[i] = rand.NormFloat64() * 0.5
+	}
+	batchTargets := make([]int, bs)
+	for i := range batchTargets {
+		batchTargets[i] = i % 3
+	}
+
+	ws := newDNNWorkspace(bs, d.Layers, 0.0, true)
+	grads := newWorkerGrads(d)
+
+	backpropBatch(d, xBatch, batchTargets, bs, ws, grads, nil, 0.0)
+
+	eps := 1e-5
+
+	// Check W gradients
+	for li := range d.Layers {
+		maxRelErr := 0.0
+		for idx := range d.Layers[li].W {
+			orig := d.Layers[li].W[idx]
+			d.Layers[li].W[idx] = orig + eps
+			lossPlus := computeLossBN(d, xBatch, batchTargets, bs, ws)
+			d.Layers[li].W[idx] = orig - eps
+			lossMinus := computeLossBN(d, xBatch, batchTargets, bs, ws)
+			d.Layers[li].W[idx] = orig
+
+			numGrad := (lossPlus - lossMinus) / (2 * eps)
+			anaGrad := grads.gW[li][idx] / float64(bs)
+			diff := math.Abs(numGrad - anaGrad)
+			denom := math.Max(math.Abs(numGrad)+math.Abs(anaGrad), 1e-8)
+			relErr := diff / denom
+			if relErr > maxRelErr {
+				maxRelErr = relErr
+			}
+		}
+		if maxRelErr > 0.02 {
+			t.Errorf("BN: Layer %d W gradient check failed: max relative error = %e", li, maxRelErr)
+		}
+	}
+
+	// Check B gradients (biases before BN)
+	for li := 0; li < len(d.Layers); li++ {
+		maxRelErr := 0.0
+		for idx := range d.Layers[li].B {
+			orig := d.Layers[li].B[idx]
+			d.Layers[li].B[idx] = orig + eps
+			lossPlus := computeLossBN(d, xBatch, batchTargets, bs, ws)
+			d.Layers[li].B[idx] = orig - eps
+			lossMinus := computeLossBN(d, xBatch, batchTargets, bs, ws)
+			d.Layers[li].B[idx] = orig
+
+			numGrad := (lossPlus - lossMinus) / (2 * eps)
+			anaGrad := grads.gB[li][idx] / float64(bs)
+			diff := math.Abs(numGrad - anaGrad)
+			denom := math.Max(math.Abs(numGrad)+math.Abs(anaGrad), 1e-8)
+			relErr := diff / denom
+			if relErr > maxRelErr {
+				maxRelErr = relErr
+			}
+		}
+		if maxRelErr > 0.02 {
+			t.Errorf("BN: Layer %d B gradient check failed: max relative error = %e", li, maxRelErr)
+		}
+	}
+
+	// Check Gamma gradients
+	for li := 0; li < 2; li++ {
+		maxRelErr := 0.0
+		for idx := range d.BN[li].Gamma {
+			orig := d.BN[li].Gamma[idx]
+			d.BN[li].Gamma[idx] = orig + eps
+			lossPlus := computeLossBN(d, xBatch, batchTargets, bs, ws)
+			d.BN[li].Gamma[idx] = orig - eps
+			lossMinus := computeLossBN(d, xBatch, batchTargets, bs, ws)
+			d.BN[li].Gamma[idx] = orig
+
+			numGrad := (lossPlus - lossMinus) / (2 * eps)
+			anaGrad := grads.gGamma[li][idx] / float64(bs)
+			diff := math.Abs(numGrad - anaGrad)
+			denom := math.Max(math.Abs(numGrad)+math.Abs(anaGrad), 1e-8)
+			relErr := diff / denom
+			if relErr > maxRelErr {
+				maxRelErr = relErr
+			}
+		}
+		if maxRelErr > 0.02 {
+			t.Errorf("BN: BN[%d] Gamma gradient check failed: max relative error = %e", li, maxRelErr)
+		}
+	}
+
+	// Check Beta gradients
+	for li := 0; li < 2; li++ {
+		maxRelErr := 0.0
+		for idx := range d.BN[li].Beta {
+			orig := d.BN[li].Beta[idx]
+			d.BN[li].Beta[idx] = orig + eps
+			lossPlus := computeLossBN(d, xBatch, batchTargets, bs, ws)
+			d.BN[li].Beta[idx] = orig - eps
+			lossMinus := computeLossBN(d, xBatch, batchTargets, bs, ws)
+			d.BN[li].Beta[idx] = orig
+
+			numGrad := (lossPlus - lossMinus) / (2 * eps)
+			anaGrad := grads.gBeta[li][idx] / float64(bs)
+			diff := math.Abs(numGrad - anaGrad)
+			denom := math.Max(math.Abs(numGrad)+math.Abs(anaGrad), 1e-8)
+			relErr := diff / denom
+			if relErr > maxRelErr {
+				maxRelErr = relErr
+			}
+		}
+		if maxRelErr > 0.02 {
+			t.Errorf("BN: BN[%d] Beta gradient check failed: max relative error = %e", li, maxRelErr)
+		}
+	}
+}
+
+func TestDNNTraining_WithBatchNorm(t *testing.T) {
+	rand.Seed(42)
+	d := NewDNN(4, 16, 0, 2, 0.0, true)
+
+	N := 500
+	inputDim := d.InputDim
+	inputs := make([]float64, N*inputDim)
+	targets := make([]int, N)
+	for i := 0; i < N; i++ {
+		c := i % d.OutputDim
+		targets[i] = c
+		for j := 0; j < inputDim; j++ {
+			inputs[i*inputDim+j] = float64(c)*0.5 + rand.NormFloat64()*0.1
+		}
+	}
+
+	cfg := DefaultDNNTrainConfig()
+	cfg.BatchSize = 64
+	cfg.MaxEpochs = 5
+	cfg.Patience = 0
+	cfg.HeldOutFrac = 0.1
+
+	err := TrainDNN(d, inputs, targets, cfg)
+	if err != nil {
+		t.Fatalf("TrainDNN with BN: %v", err)
+	}
+
+	// Verify running stats were updated (not all zeros)
+	for i, bn := range d.BN {
+		allZero := true
+		for _, v := range bn.RunningMean {
+			if v != 0 {
+				allZero = false
+				break
+			}
+		}
+		if allZero {
+			t.Errorf("BN[%d].RunningMean still all zeros after training", i)
+		}
+	}
+}
+
 // --- Benchmarks ---
 
 func BenchmarkDNNForward_300frames(b *testing.B) {
-	d := NewDNN(39, 256, 5, 2, 0.0)
+	d := NewDNN(39, 256, 5, 2, 0.0, false)
 	features := make([][]float64, 300)
 	for i := range features {
 		features[i] = make([]float64, 39)
@@ -817,7 +1237,7 @@ func BenchmarkDNNForward_300frames(b *testing.B) {
 
 func BenchmarkDNNTraining(b *testing.B) {
 	rand.Seed(42)
-	d := NewDNN(39, 256, 5, 2, 0.0) // production-size DNN
+	d := NewDNN(39, 256, 5, 2, 0.0, false) // production-size DNN
 	N := 100000
 	inputDim := d.InputDim
 	inputs := make([]float64, N*inputDim)

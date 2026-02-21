@@ -19,6 +19,15 @@ type DNNLayer struct {
 	OutDim int
 }
 
+// BatchNormParams holds parameters for one batch normalization layer.
+type BatchNormParams struct {
+	Gamma       []float64 // learnable scale [Dim]
+	Beta        []float64 // learnable shift [Dim]
+	RunningMean []float64 // EMA mean for inference [Dim]
+	RunningVar  []float64 // EMA variance for inference [Dim]
+	Dim         int
+}
+
 // DNN is a feedforward neural network for HMM state classification.
 // Architecture: input → hidden1 (ReLU) → ... → hiddenN (ReLU) → output (log-softmax).
 // Layers[0..N-2] are hidden layers with ReLU, Layers[N-1] is the output layer with log-softmax.
@@ -31,6 +40,10 @@ type DNN struct {
 	ContextLen  int        // frames on each side (e.g. 5 → 11-frame window)
 	DropoutRate float64    // inverted dropout rate for hidden layers (0 = disabled)
 
+	// Batch normalization (hidden layers only)
+	UseBatchNorm bool              // whether BN is enabled
+	BN           []BatchNormParams // len = nHidden (nil if !UseBatchNorm)
+
 	// Log prior P(state) from training label histogram, for Bayes conversion
 	LogPrior []float64 // [OutputDim]
 
@@ -38,13 +51,19 @@ type DNN struct {
 	PhonemeList []Phoneme // len = number of phonemes used
 }
 
-// NewDNN creates a DNN with Xavier-initialized weights.
+// NewDNN creates a DNN with initialized weights.
 // numHiddenLayers specifies the number of hidden layers (all with hiddenDim units).
 // dropoutRate is the inverted dropout rate for hidden layers (0 = disabled).
-func NewDNN(featureDim, hiddenDim, contextLen, numHiddenLayers int, dropoutRate float64) *DNN {
+// useBatchNorm enables batch normalization on hidden layers (He init is used instead of Xavier).
+func NewDNN(featureDim, hiddenDim, contextLen, numHiddenLayers int, dropoutRate float64, useBatchNorm bool) *DNN {
 	phonemes := AllPhonemes()
 	outputDim := len(phonemes) * NumEmittingStates
 	inputDim := (2*contextLen + 1) * featureDim
+
+	initWeights := xavierInit
+	if useBatchNorm {
+		initWeights = heInit
+	}
 
 	layers := make([]DNNLayer, numHiddenLayers+1)
 	prevDim := inputDim
@@ -55,7 +74,7 @@ func NewDNN(featureDim, hiddenDim, contextLen, numHiddenLayers int, dropoutRate 
 			InDim:  prevDim,
 			OutDim: hiddenDim,
 		}
-		xavierInit(layers[i].W, prevDim, hiddenDim)
+		initWeights(layers[i].W, prevDim, hiddenDim)
 		prevDim = hiddenDim
 	}
 	// Output layer
@@ -67,20 +86,53 @@ func NewDNN(featureDim, hiddenDim, contextLen, numHiddenLayers int, dropoutRate 
 	}
 	xavierInit(layers[numHiddenLayers].W, prevDim, outputDim)
 
-	return &DNN{
-		Layers:      layers,
-		InputDim:    inputDim,
-		HiddenDim:   hiddenDim,
-		OutputDim:   outputDim,
-		ContextLen:  contextLen,
-		DropoutRate: dropoutRate,
-		LogPrior:    make([]float64, outputDim),
-		PhonemeList: phonemes,
+	d := &DNN{
+		Layers:       layers,
+		InputDim:     inputDim,
+		HiddenDim:    hiddenDim,
+		OutputDim:    outputDim,
+		ContextLen:   contextLen,
+		DropoutRate:  dropoutRate,
+		UseBatchNorm: useBatchNorm,
+		LogPrior:     make([]float64, outputDim),
+		PhonemeList:  phonemes,
 	}
+
+	if useBatchNorm {
+		d.BN = make([]BatchNormParams, numHiddenLayers)
+		for i := 0; i < numHiddenLayers; i++ {
+			dim := layers[i].OutDim
+			gamma := make([]float64, dim)
+			for j := range gamma {
+				gamma[j] = 1.0
+			}
+			d.BN[i] = BatchNormParams{
+				Gamma:       gamma,
+				Beta:        make([]float64, dim),
+				RunningMean: make([]float64, dim),
+				RunningVar:  make([]float64, dim),
+				Dim:         dim,
+			}
+			// RunningVar initialized to 1.0
+			for j := range d.BN[i].RunningVar {
+				d.BN[i].RunningVar[j] = 1.0
+			}
+		}
+	}
+
+	return d
 }
 
 func xavierInit(w []float64, fanIn, fanOut int) {
 	scale := math.Sqrt(2.0 / float64(fanIn+fanOut))
+	for i := range w {
+		w[i] = rand.NormFloat64() * scale
+	}
+}
+
+// heInit initializes weights with He normal initialization (for ReLU networks with BN).
+func heInit(w []float64, fanIn, _ int) {
+	scale := math.Sqrt(2.0 / float64(fanIn))
 	for i := range w {
 		w[i] = rand.NormFloat64() * scale
 	}
@@ -97,11 +149,15 @@ func (d *DNN) StateClassIndex(ph Phoneme, stateIdx int) int {
 	return -1
 }
 
+// batchNormEps is the epsilon for numerical stability in batch normalization.
+const batchNormEps = 1e-5
+
 // Forward computes log-softmax outputs for a batch of input vectors using BLAS.
 // input: flat [batchSize × InputDim] row-major
 // activations: per-hidden-layer buffers, each [batchSize × layer.OutDim]
 // output: flat [batchSize × OutputDim] log-softmax values
 // Dropout is NOT applied (inference path).
+// When UseBatchNorm is true, hidden layers use running stats for BN inference.
 func (d *DNN) Forward(input []float64, batchSize int, activations [][]float64, output []float64) {
 	nLayers := len(d.Layers)
 	prevAct := input
@@ -120,7 +176,11 @@ func (d *DNN) Forward(input []float64, batchSize int, activations [][]float64, o
 			1.0, prevAct, prevDim, layer.W, prevDim, 0.0, dst, layer.OutDim)
 
 		if i < nLayers-1 {
-			addBiasReLU(dst, layer.B, batchSize, layer.OutDim)
+			if d.UseBatchNorm {
+				addBiasBNReLU(dst, layer.B, &d.BN[i], batchSize, layer.OutDim)
+			} else {
+				addBiasReLU(dst, layer.B, batchSize, layer.OutDim)
+			}
 		} else {
 			addBiasLogSoftmax(dst, layer.B, batchSize, layer.OutDim)
 		}
@@ -136,6 +196,29 @@ func addBiasReLU(z []float64, bias []float64, rows, cols int) {
 		off := i * cols
 		for j := 0; j < cols; j++ {
 			v := z[off+j] + bias[j]
+			if v < 0 {
+				v = 0
+			}
+			z[off+j] = v
+		}
+	}
+}
+
+// addBiasBNReLU adds bias, applies batch normalization using running stats, then ReLU.
+// Fused: z = gamma * (z + bias - runningMean) / sqrt(runningVar + eps) + beta → ReLU
+func addBiasBNReLU(z []float64, bias []float64, bn *BatchNormParams, rows, cols int) {
+	// Precompute per-feature scale and shift for fused operation
+	scale := make([]float64, cols)
+	shift := make([]float64, cols)
+	for j := 0; j < cols; j++ {
+		invStd := 1.0 / math.Sqrt(bn.RunningVar[j]+batchNormEps)
+		scale[j] = bn.Gamma[j] * invStd
+		shift[j] = bn.Beta[j] - bn.Gamma[j]*invStd*(bn.RunningMean[j]-bias[j])
+	}
+	for i := 0; i < rows; i++ {
+		off := i * cols
+		for j := 0; j < cols; j++ {
+			v := z[off+j]*scale[j] + shift[j]
 			if v < 0 {
 				v = 0
 			}
@@ -223,7 +306,7 @@ func (d *DNN) SubtractPrior(logPost []float64) {
 
 // --- Serialization ---
 
-// V2 serialized format (variable layers)
+// V3 serialized format (variable layers + batch normalization)
 type serializedDNNLayer struct {
 	W      []float64
 	B      []float64
@@ -231,6 +314,25 @@ type serializedDNNLayer struct {
 	OutDim int
 }
 
+type serializedBNParams struct {
+	Gamma       []float64
+	Beta        []float64
+	RunningMean []float64
+	RunningVar  []float64
+	Dim         int
+}
+
+type serializedDNNV3 struct {
+	Version     int // = 3
+	ContextLen  int
+	DropoutRate float64
+	Layers      []serializedDNNLayer
+	BN          []serializedBNParams // len = nHidden
+	LogPrior    []float64
+	PhonemeList []string
+}
+
+// V2 serialized format (variable layers, no BN)
 type serializedDNNV2 struct {
 	Version     int // = 2
 	ContextLen  int
@@ -253,29 +355,58 @@ type serializedDNN struct {
 	PhonemeList []string
 }
 
-// Save serializes the DNN to a writer using gob encoding (V2 format).
+// Save serializes the DNN to a writer using gob encoding.
+// Uses V3 format when BatchNorm is enabled, V2 otherwise.
 func (d *DNN) Save(w io.Writer) error {
-	sd := serializedDNNV2{
-		Version:    2,
-		ContextLen: d.ContextLen,
-		Layers:     make([]serializedDNNLayer, len(d.Layers)),
-		LogPrior:   d.LogPrior,
-	}
-	for i, l := range d.Layers {
-		sd.Layers[i] = serializedDNNLayer{W: l.W, B: l.B, InDim: l.InDim, OutDim: l.OutDim}
-	}
-	sd.PhonemeList = make([]string, len(d.PhonemeList))
+	phonemes := make([]string, len(d.PhonemeList))
 	for i, p := range d.PhonemeList {
-		sd.PhonemeList[i] = string(p)
+		phonemes[i] = string(p)
+	}
+	layers := make([]serializedDNNLayer, len(d.Layers))
+	for i, l := range d.Layers {
+		layers[i] = serializedDNNLayer{W: l.W, B: l.B, InDim: l.InDim, OutDim: l.OutDim}
+	}
+
+	if d.UseBatchNorm {
+		sd := serializedDNNV3{
+			Version:     3,
+			ContextLen:  d.ContextLen,
+			Layers:      layers,
+			LogPrior:    d.LogPrior,
+			PhonemeList: phonemes,
+		}
+		sd.BN = make([]serializedBNParams, len(d.BN))
+		for i, bn := range d.BN {
+			sd.BN[i] = serializedBNParams{
+				Gamma: bn.Gamma, Beta: bn.Beta,
+				RunningMean: bn.RunningMean, RunningVar: bn.RunningVar,
+				Dim: bn.Dim,
+			}
+		}
+		return gob.NewEncoder(w).Encode(sd)
+	}
+
+	sd := serializedDNNV2{
+		Version:     2,
+		ContextLen:  d.ContextLen,
+		Layers:      layers,
+		LogPrior:    d.LogPrior,
+		PhonemeList: phonemes,
 	}
 	return gob.NewEncoder(w).Encode(sd)
 }
 
-// LoadDNN deserializes a DNN from a reader. Supports both V2 and legacy V1 formats.
+// LoadDNN deserializes a DNN from a reader. Supports V3, V2 and legacy V1 formats.
 func LoadDNN(r io.Reader) (*DNN, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
+	}
+
+	// Try V3 format (with BN)
+	var v3 serializedDNNV3
+	if err := gob.NewDecoder(bytes.NewReader(data)).Decode(&v3); err == nil && v3.Version == 3 && len(v3.Layers) > 0 {
+		return dnnFromV3(&v3), nil
 	}
 
 	// Try V2 format
@@ -290,6 +421,36 @@ func LoadDNN(r io.Reader) (*DNN, error) {
 		return nil, err
 	}
 	return dnnFromV1(&v1), nil
+}
+
+func dnnFromV3(sd *serializedDNNV3) *DNN {
+	layers := make([]DNNLayer, len(sd.Layers))
+	for i, sl := range sd.Layers {
+		layers[i] = DNNLayer{W: sl.W, B: sl.B, InDim: sl.InDim, OutDim: sl.OutDim}
+	}
+	nLayers := len(layers)
+	d := &DNN{
+		Layers:       layers,
+		InputDim:     layers[0].InDim,
+		HiddenDim:    layers[0].OutDim,
+		OutputDim:    layers[nLayers-1].OutDim,
+		ContextLen:   sd.ContextLen,
+		UseBatchNorm: true,
+		LogPrior:     sd.LogPrior,
+	}
+	d.BN = make([]BatchNormParams, len(sd.BN))
+	for i, sbn := range sd.BN {
+		d.BN[i] = BatchNormParams{
+			Gamma: sbn.Gamma, Beta: sbn.Beta,
+			RunningMean: sbn.RunningMean, RunningVar: sbn.RunningVar,
+			Dim: sbn.Dim,
+		}
+	}
+	d.PhonemeList = make([]Phoneme, len(sd.PhonemeList))
+	for i, s := range sd.PhonemeList {
+		d.PhonemeList[i] = Phoneme(s)
+	}
+	return d
 }
 
 func dnnFromV2(sd *serializedDNNV2) *DNN {

@@ -31,6 +31,7 @@ func main() {
 	patience := flag.Int("patience", 3, "early stopping patience (0=disabled)")
 	labelSmooth := flag.Float64("label-smooth", 0.0, "label smoothing epsilon (0=disabled, recommended 0.1)")
 	lrSchedule := flag.String("lr-schedule", "none", "learning rate schedule (none/cosine)")
+	batchNorm := flag.Bool("batchnorm", false, "enable batch normalization on hidden layers")
 	augmentFlag := flag.Bool("augment", false, "enable 5-way speed perturbation")
 	manifestNoAug := flag.String("manifest-noaug", "", "additional manifest (no augmentation applied)")
 
@@ -226,7 +227,7 @@ func main() {
 	}
 
 	// Create DNN
-	dnn := acoustic.NewDNN(featureDim, *hiddenDim, *contextLen, *numLayers, *dropout)
+	dnn := acoustic.NewDNN(featureDim, *hiddenDim, *contextLen, *numLayers, *dropout, *batchNorm)
 
 	// Count total frames and compute class priors
 	totalFrames := 0
@@ -298,8 +299,8 @@ func main() {
 	for _, l := range dnn.Layers {
 		totalParams += len(l.W) + len(l.B)
 	}
-	fmt.Fprintf(os.Stderr, "Training DNN: input=%d hidden=%d layers=%d output=%d dropout=%.2f params=%d\n",
-		dnn.InputDim, dnn.HiddenDim, len(dnn.Layers)-1, dnn.OutputDim, dnn.DropoutRate, totalParams)
+	fmt.Fprintf(os.Stderr, "Training DNN: input=%d hidden=%d layers=%d output=%d dropout=%.2f batchnorm=%v params=%d\n",
+		dnn.InputDim, dnn.HiddenDim, len(dnn.Layers)-1, dnn.OutputDim, dnn.DropoutRate, dnn.UseBatchNorm, totalParams)
 	if err := acoustic.TrainDNN(dnn, inputs, targets, trainCfg); err != nil {
 		fmt.Fprintf(os.Stderr, "training error: %v\n", err)
 		os.Exit(1)
