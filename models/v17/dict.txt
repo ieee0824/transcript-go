@@ -1,0 +1,5000 @@
+<sil>	SIL	sil
+あ	ア	a
+あいだ	アイダ	a i d a
+あえ	アエ	a e
+あそこ	アソコ	a s o k o
+あたり	アタリ	a t a r i
+あっ	アッ	a q
+あなた	アナタ	a n a t a
+あの	アノ	a n o
+あまり	アマリ	a m a r i
+あまりに	アマリニ	a m a r i n i
+あり	アリ	a r i
+ありがとう	アリガトウ	a r i g a t o long
+ある	アル	a r u
+あるいは	アルイハ	a r u i h a
+あれ	アレ	a r e
+あん	アン	a ng
+あゝ	アア	a long
+あッ	アッ	a q
+あー	アー	a long
+い	イ	i
+いい	イイ	i i
+いい	ユイ	y u i
+いくら	イクラ	i k u r a
+いただき	イタダキ	i t a d a k i
+いっ	イッ	i q
+いっしょ	イッショ	i q sh o
+いっぱい	イッパイ	i q p a i
+いつ	イツ	i ts u
+いる	イル	i r u
+いろいろ	イロイロ	i r o i r o
+いろんな	イロンナ	i r o ng n a
+いわゆる	イワユル	i w a y u r u
+いん	イン	i ng
+う	ウ	u
+うい	ウイ	u i
+うぅ	ウゥ	u long
+うう	ウウ	u long
+うえ	ウエ	u e
+うさぎ	ウサギ	u s a g i
+うまく	ウマク	u m a k u
+うん	ウン	u ng
+え	エ	e
+えい	エイ	e i
+ええ	エエ	e long
+えっ	エッ	e q
+えん	エン	e ng
+えッ	エッ	e q
+えー	エー	e long
+お	オ	o
+おい	オイ	o i
+おいしい	オイシイ	o i sh i i
+おう	オウ	o u
+おえ	オエ	o e
+おぉ	オォ	o long
+おお	オオ	o o
+おじいさん	オジイサン	o j i long s a ng
+おそらく	オソラク	o s o r a k u
+おはよう	オハヨウ	o h a y o long
+おばあさん	オバアサン	o b a long s a ng
+おめでとう	オメデトウ	o m e d e t o long
+おやすみなさい	オヤスミナサイ	o y a s u m i n a s a i
+おん	オン	o ng
+お前	オマエ	o m a e
+お参り	オマイリ	o m a i r i
+お客様	オキャクサマ	o k y a k u s a m a
+お寺	オテラ	o t e r a
+お正月	オショウガツ	o sh o long g a ts u
+お母さん	オカアサン	o k a long s a ng
+お父さん	オトウサン	o t o long s a ng
+お疲れ様	オツカレサマ	o ts u k a r e s a m a
+お祭り	オマツリ	o m a ts u r i
+お腹	オナカ	o n a k a
+お茶	オチャ	o ch a
+お金	オカネ	o k a n e
+お願い	オネガイ	o n e g a i
+か	カ	k a
+かかっ	カカッ	k a k a q
+かぎり	カギリ	k a g i r i
+かける	カケル	k a k e r u
+から	カラ	k a r a
+かわいい	カワイイ	k a w a i i
+が	ガ	g a
+き	キ	k i
+きっと	キット	k i q t o
+きれい	キレイ	k i r e i
+く	ク	k u
+ください	クダサイ	k u d a s a i
+くらい	クライ	k u r a i
+くれる	クレル	k u r e r u
+ぐらい	グライ	g u r a i
+け	ケ	k e
+けど	ケド	k e d o
+けれど	ケレド	k e r e d o
+けれども	ケレドモ	k e r e d o m o
+げ	ゲ	g e
+こ	コ	k o
+こういう	コウイウ	k o u i u
+ここ	ココ	k o k o
+こちら	コチラ	k o ch i r a
+こと	コト	k o t o
+この	コノ	k o n o
+これ	コレ	k o r e
+これから	コレカラ	k o r e k a r a
+これら	コレラ	k o r e r a
+こんな	コンナ	k o ng n a
+こんなに	コンナニ	k o ng n a n i
+こんにちは	コンニチハ	k o ng n i ch i w a
+こんばんは	コンバンハ	k o ng b a ng w a
+ご	ゴ	g o
+ござい	ゴザイ	g o z a i
+ごちそうさま	ゴチソウサマ	g o ch i s o long s a m a
+ごはん	ゴハン	g o h a ng
+ごめんなさい	ゴメンナサイ	g o m e ng n a s a i
+ご飯	ゴハン	g o h a ng
+さ	サ	s a
+さすが	サスガ	s a s u g a
+さらに	サラニ	s a r a n i
+し	シ	sh i
+しか	シカ	sh i k a
+しかし	シカシ	sh i k a sh i
+しかして	シカシテ	sh i k a sh i t e
+しかも	シカモ	sh i k a m o
+しばらく	シバラク	sh i b a r a k u
+しまう	シマウ	sh i m a u
+しまっ	シマッ	sh i m a q
+しよ	シヨ	sh i y o
+しれ	シレ	sh i r e
+じ	ジ	j i
+じっと	ジット	j i q t o
+す	ス	s u
+すぎる	スギル	s u g i r u
+すぐ	スグ	s u g u
+すっかり	スッカリ	s u q k a r i
+すでに	スデニ	s u d e n i
+すべて	スベテ	s u b e t e
+すみません	スミマセン	s u m i m a s e ng
+する	スル	s u r u
+すると	スルト	s u r u t o
+ず	ズ	z u
+ずっと	ズット	z u q t o
+せ	セ	s e
+ぜ	ゼ	z e
+そ	ソ	s o
+そう	ソウ	s o u
+そういう	ソウイウ	s o u i u
+そこで	ソコデ	s o k o d e
+そして	ソシテ	s o sh i t e
+その	ソノ	s o n o
+それ	ソレ	s o r e
+それから	ソレカラ	s o r e k a r a
+それで	ソレデ	s o r e d e
+それら	ソレラ	s o r e r a
+そろそろ	ソロソロ	s o r o s o r o
+そんな	ソンナ	s o ng n a
+そんなに	ソンナニ	s o ng n a n i
+ぞ	ゾ	z o
+た	タ	t a
+たい	タイ	t a i
+たくさん	タクサン	t a k u s a ng
+ただいま	タダイマ	t a d a i m a
+たち	タチ	t a ch i
+たとえ	タトエ	t a t o e
+ため	タメ	t a m e
+たら	タラ	t a r a
+だ	ダ	d a
+だけ	ダケ	d a k e
+だし	ダシ	d a sh i
+だっ	ダッ	d a q
+だって	ダッテ	d a q t e
+だろ	ダロ	d a r o
+ち	チ	ch i
+ちゃんと	チャント	ch a ng t o
+ちょうど	チョウド	ch o u d o
+ちょっと	チョット	ch o q t o
+ぢ	ヂ	j i
+っ	ッ	q
+つ	ツ	ts u
+つける	ツケル	ts u k e r u
+つまらない	ツマラナイ	ts u m a r a n a i
+つまり	ツマリ	ts u m a r i
+て	テ	t e
+てる	テル	t e r u
+で	デ	d e
+でき	デキ	d e k i
+できる	デキル	d e k i r u
+でし	デシ	d e sh i
+でしょ	デショ	d e sh o
+です	デス	d e s u
+でも	デモ	d e m o
+と	ト	t o
+という	トイウ	t o i u
+とき	トキ	t o k i
+ところ	トコロ	t o k o r o
+として	トシテ	t o sh i t e
+とても	トテモ	t o t e m o
+とも	トモ	t o m o
+と共に	トトモニ	t o t o m o n i
+ど	ド	d o
+どう	ドウ	d o long
+どうして	ドウシテ	d o long sh i t e
+どうも	ドウモ	d o u m o
+どこ	ドコ	d o k o
+どちら	ドチラ	d o ch i r a
+どっち	ドッチ	d o q ch i
+どんな	ドンナ	d o ng n a
+な	ナ	n a
+ない	ナイ	n a i
+なかっ	ナカッ	n a k a q
+なかなか	ナカナカ	n a k a n a k a
+ながら	ナガラ	n a g a r a
+なく	ナク	n a k u
+なくなっ	ナクナッ	n a k u n a q
+なけれ	ナケレ	n a k e r e
+なっ	ナッ	n a q
+なら	ナラ	n a r a
+なり	ナリ	n a r i
+なる	ナル	n a r u
+なんて	ナンテ	n a ng t e
+なんで	ナンデ	n a ng d e
+に	ニ	n i
+において	ニオイテ	n i o i t e
+における	ニオケル	n i o k e r u
+について	ニツイテ	n i ts u i t e
+にとって	ニトッテ	n i t o q t e
+によって	ニヨッテ	n i y o q t e
+により	ニヨリ	n i y o r i
+による	ニヨル	n i y o r u
+に対して	ニタイシテ	n i t a i sh i t e
+に対する	ニタイスル	n i t a i s u r u
+ぬ	ヌ	n u
+ね	ネ	n e
+の	ノ	n o
+ので	ノデ	n o d e
+は	ハ	h a
+は	ハ	w a
+はいっ	ハイッ	h a i q
+はじめ	ハジメ	h a j i m e
+はじめまして	ハジメマシテ	h a j i m e m a sh i t e
+はっきり	ハッキリ	h a q k i r i
+ば	バ	b a
+ひ	ヒ	h i
+ひく	ヒク	h i k u
+ひとつ	ヒトツ	h i t o ts u
+ひとり	ヒトリ	h i t o r i
+ひどく	ヒドク	h i d o k u
+ふ	フ	f u
+ふたり	フタリ	f u t a r i
+ぶ	ブ	b u
+へ	ヘ	h e
+べ	ベ	b e
+ほ	ホ	h o
+ほか	ホカ	h o k a
+ほとんど	ホトンド	h o t o ng d o
+ほど	ホド	h o d o
+ぼ	ボ	b o
+ぽ	ポ	p o
+ま	マ	m a
+まし	マシ	m a sh i
+ます	マス	m a s u
+ませ	マセ	m a s e
+また	マタ	m a t a
+または	マタハ	m a t a h a
+まだ	マダ	m a d a
+まったく	マッタク	m a q t a k u
+まで	マデ	m a d e
+まとめる	マトメル	m a t o m e r u
+まるで	マルデ	m a r u d e
+み	ミ	m i
+みんな	ミンナ	m i ng n a
+め	メ	m e
+も	モ	m o
+もう	モウ	m o long
+もちろん	モチロン	m o ch i r o ng
+もの	モノ	m o n o
+もらう	モラウ	m o r a u
+や	ヤ	y a
+やがて	ヤガテ	y a g a t e
+やって来	ヤッテキ	y a q t e k i
+やっと	ヤット	y a q t o
+やっぱり	ヤッパリ	y a q p a r i
+やはり	ヤハリ	y a h a r i
+やる	ヤル	y a r u
+ゆ	ユ	y u
+ゆっくり	ユックリ	y u q k u r i
+よ	ヨ	y o
+よう	ヨウ	y o u
+よかっ	ヨカッ	y o k a q
+よく	ヨク	y o k u
+よろしく	ヨロシク	y o r o sh i k u
+ら	ラ	r a
+らしい	ラシイ	r a sh i i
+られ	ラレ	r a r e
+られる	ラレル	r a r e r u
+り	リ	r i
+る	ル	r u
+れ	レ	r e
+れる	レル	r e r u
+ろ	ロ	r o
+わ	ワ	w a
+わかり	ワカリ	w a k a r i
+わたし	ワタシ	w a t a sh i
+ゐ	ヰ	i
+を	ヲ	o
+ん	ン	ng
+ァ	ァ	a
+アップ	アップ	a q p u
+アニメ	アニメ	a n i m e
+アメリカ	アメリカ	a m e r i k a
+アレルギー	アレルギー	a r e r u g i long
+インターネット	インターネット	i ng t a long n e q t o
+インド	インド	i ng d o
+カフェ	カフェ	k a f e
+カレー	カレー	k a r e long
+ガ	ガ	g a
+ガソリン	ガソリン	g a s o r i ng
+キャンセル	キャンセル	k y a ng s e r u
+キーボード	キーボード	k i long b o long d o
+ギター	ギター	g i t a long
+ク	ク	k u
+クリスマス	クリスマス	k u r i s u m a s u
+クリック	クリック	k u r i q k u
+グラフ	グラフ	g u r a f u
+ケーキ	ケーキ	k e long k i
+ケーブル	ケーブル	k e long b u r u
+ゲーム	ゲーム	g e long m u
+コピー	コピー	k o p i long
+コンサート	コンサート	k o ng s a long t o
+コンビニ	コンビニ	k o ng b i n i
+コーヒー	コーヒー	k o long h i long
+ゴミ	ゴミ	g o m i
+サイエンス	サイエンス	s a i e ng s u
+サッカー	サッカー	s a q k a long
+サラダ	サラダ	s a r a d a
+サービス	サービス	s a long b i s u
+シ	シ	sh i
+システム	システム	sh i s u t e m u
+シモン	シモン	sh i m o ng
+ジャ	ジャ	j a
+ジュース	ジュース	j u long s u
+ジョギング	ジョギング	j o g i ng g u
+ス	ス	s u
+スケジュール	スケジュール	s u k e j u long r u
+ストレッチ	ストレッチ	s u t o r e q ch i
+スライド	スライド	s u r a i d o
+スーパー	スーパー	s u long p a long
+セ	セ	s e
+センサー	センサー	s e ng s a long
+ソ	ソ	s o
+ソフトウェア	ソフトウェア	s o f u t o u a
+タクシー	タクシー	t a k u sh i long
+タワー	タワー	t a w a long
+ダウンロード	ダウンロード	d a u ng r o long d o
+チャンネル	チャンネル	ch a ng n e r u
+チーム	チーム	ch i long m u
+テスト	テスト	t e s u t o
+テニス	テニス	t e n i s u
+テレビ	テレビ	t e r e b i
+デ	デ	d e
+データ	データ	d e long t a
+トイレ	トイレ	t o i r e
+ド	ド	d o
+ナ	ナ	n a
+ネ	ネ	n e
+ノ	ノ	n o
+ノート	ノート	n o long t o
+バス	バス	b a s u
+バスケットボール	バスケットボール	b a s u k e q t o b o long r u
+バック	バック	b a q k u
+パ	パ	p a
+パスタ	パスタ	p a s u t a
+パスワード	パスワード	p a s u w a long d o
+パソコン	パソコン	p a s o k o ng
+パン	パン	p a ng
+ビール	ビール	b i long r u
+ピアノ	ピアノ	p i a n o
+ファ	ファ	f a
+ファイル	ファイル	f a i r u
+フェ	フェ	f e
+プリンター	プリンター	p u r i ng t a long
+プレゼン	プレゼン	p u r e z e ng
+プレゼント	プレゼント	p u r e z e ng t o
+プログラム	プログラム	p u r o g u r a m u
+プロジェクト	プロジェクト	p u r o j i k u t o
+プール	プール	p u long r u
+ヘ	ヘ	e
+ペ	ペ	p e
+ペン	ペン	p e ng
+ホ	ホ	h o
+ホテル	ホテル	h o t e r u
+ホーム	ホーム	h o long m u
+ポ	ポ	p o
+ポケット	ポケット	p o k e q t o
+マウス	マウス	m a u s u
+マニュアル	マニュアル	m a n y u a r u
+マラソン	マラソン	m a r a s o ng
+ミ	ミ	m i
+メール	メール	m e long r u
+モニター	モニター	m o n i t a long
+モーター	モーター	m o long t a long
+ヨ	ヨ	y o
+ヨガ	ヨガ	y o g a
+ラ	ラ	r a
+ラーメン	ラーメン	r a long m e ng
+リ	リ	r i
+リスト	リスト	r i s u t o
+レ	レ	r e
+レストラン	レストラン	r e s u t o r a ng
+レポート	レポート	r e p o long t o
+ロ	ロ	r o
+ロボット	ロボット	r o b o q t o
+ワ	ワ	w a
+ワイン	ワイン	w a i ng
+ヱイ	ヱイ	e i
+ヲ	ヲ	o
+ン	ン	ng
+一	イチ	i ch i
+一つ	ヒトツ	h i t o ts u
+一切	イッサイ	i q s a i
+一度	イチド	i ch i d o
+一方	イッポウ	i q p o u
+一番	イチバン	i ch i b a ng
+一緒	イッショ	i q sh o
+一般	イッパン	i q p a ng
+上	ウエ	u e
+上司	カミツカサ	k a m i ts u k a s a
+下	カ	k a
+不	フ	f u
+不安	フアン	f u a ng
+不思議	フシギ	f u sh i g i
+不足	フソク	f u s o k u
+与え	アタエ	a t a e
+世界	セカイ	s e k a i
+並ん	ナラン	n a r a ng
+中	ナカ	n a k a
+中央	チュウオウ	ch u u o u
+中心	チュウシン	ch u u sh i ng
+主人	シュジン	sh u j i ng
+主体	シュタイ	sh u t a i
+主観	シュカン	sh u k a ng
+久しぶり	ヒサシブリ	h i s a sh i b u r i
+乗り	ノリ	n o r i
+乗り換え	ノリカエ	n o r i k a e
+乗る	ノル	n o r u
+九	キュウ	k y u u
+予定	ヨテイ	y o t e i
+予算	ヨサン	y o s a ng
+予約	ヨヤク	y o y a k u
+予防	ヨボウ	y o b o long
+事実	ジジツ	j i j i ts u
+二	ニ	n i
+二つ	フタツ	f u t a ts u
+云	ウン	u ng
+五	ゴ	g o
+井	イ	i
+井伊	イイ	i i
+井尾	イオ	i o
+井生	イウ	i u
+亜	ア	a
+交換	コウカン	k o long k a ng
+亥	イ	i
+京都	キョウト	k y o long t o
+人	ジン	j i ng
+人々	ヒトビト	h i t o b i t o
+人民	ジンミン	j i ng m i ng
+人気	ニンキ	n i ng k i
+人間	ニンゲン	n i ng g e ng
+今	イマ	i m a
+今年	コトシ	k o t o sh i
+今度	コンド	k o ng d o
+今日	キョウ	k y o long
+今日	コンニチ	k o ng n i ch i
+今月	コンゲツ	k o ng g e ts u
+仕事	シゴト	sh i g o t o
+仕方	シカタ	sh i k a t a
+他	タ	t a
+以上	イジョウ	i j o u
+企画	キカク	k i k a k u
+伊	イ	i
+伍	ゴ	g o
+伐	キ	k i
+休み	ヤスミ	y a s u m i
+休む	ヤスム	y a s u m u
+休憩	キュウケイ	k y u long k e i
+会社	カイシャ	k a i sh a
+会議	カイギ	k a i g i
+似	ニ	n i
+位	イ	i
+低い	ヒクイ	h i k u i
+住む	スム	s u m u
+佐	サ	s a
+体	カラダ	k a r a d a
+体操	タイソウ	t a i s o long
+体温	タイオン	t a i o ng
+体育館	タイイクカン	t a i i k u k a ng
+何	ナニ	n a n i
+何時	イツ	i ts u
+作っ	ツクッ	ts u k u q
+作る	ツクル	ts u k u r u
+作成	サクセイ	s a k u s e i
+使	シ	sh i
+使う	ツカウ	ts u k a u
+使わ	ツカワ	ts u k a w a
+使用	シヨウ	sh i y o u
+依	ヨ	y o
+便利	ベンリ	b e ng r i
+保存	ホゾン	h o z o ng
+信号	シンゴウ	sh i ng g o long
+修正	シュウセイ	sh u long s e i
+個	コ	k o
+個人	コジン	k o j i ng
+個物	コブツ	k o b u ts u
+借	カ	k a
+借りる	カリル	k a r i r u
+偈	ゲ	g e
+停める	トメル	t o m e r u
+健康	ケンコウ	k e ng k o long
+傘	カサ	k a s a
+働く	ハタラク	h a t a r a k u
+僕	ボク	b o k u
+僕ら	ボクラ	b o k u r a
+儀	ギ	g i
+元気	ゲンキ	g e ng k i
+兄	アニ	a n i
+充電	ジュウデン	j u long d e ng
+先生	センセイ	s e ng s e i
+先輩	センパイ	s e ng p a i
+先週	センシュウ	s e ng sh u long
+光る	ヒカル	h i k a r u
+兎	ウ	u
+児	コ	k o
+入	イ	i
+入っ	イッ	i q
+入る	イル	i r u
+入る	ハイル	h a i r u
+入れる	イレル	i r e r u
+入ん	イン	i ng
+入学	ニュウガク	n y u long g a k u
+入院	ニュウイン	n y u long i ng
+全く	マッタク	m a q t a k u
+全て	スベテ	s u b e t e
+全体	ゼンタイ	z e ng t a i
+全然	ゼンゼン	z e ng z e ng
+全部	ゼンブ	z e ng b u
+八	ハチ	h a ch i
+公園	コウエン	k o long e ng
+兵庫	ヒョウゴ	h y o u g o
+兵隊	ヘイタイ	h e i t a i
+具	グ	g u
+具体	グタイ	g u t a i
+内容	ナイヨウ	n a i y o long
+円	エン	e ng
+写真	シャシン	sh a sh i ng
+冬休み	フユヤスミ	f u y u y a s u m i
+凝	コ	k o
+処	ショ	sh o
+出かけ	デカケ	d e k a k e
+出し	ダシ	d a sh i
+出す	ダス	d a s u
+出る	デル	d e r u
+出勤	シュッキン	sh u q k i ng
+出席	シュッセキ	sh u q s e k i
+出張	シュッチョウ	sh u q ch o long
+出来る	デキル	d e k i r u
+出発	シュッパツ	sh u q p a ts u
+刃	ハ	h a
+分析	ブンセキ	b u ng s e k i
+切	キ	k i
+切る	キル	k i r u
+切符	キップ	k i q p u
+刈	カ	k a
+初めて	ハジメテ	h a j i m e t e
+判断	ハンダン	h a ng d a ng
+利用	リヨウ	r i y o u
+刳	ク	k u
+剃	ス	s u
+削除	サクジョ	s a k u j o
+割	ワ	w a
+創造	ソウゾウ	s o u z o u
+力	チカラ	ch i k a r a
+加	カ	k a
+助	ジョ	j o
+助手	ジョシュ	j o sh u
+労働	ロウドウ	r o u d o u
+勉強	ベンキョウ	b e ng k y o long
+動く	ウゴク	u g o k u
+動物	ドウブツ	d o u b u ts u
+動画	ドウガ	d o long g a
+勝つ	カツ	k a ts u
+化	カ	k a
+化学	カガク	k a g a k u
+北海道	ホッカイドウ	h o q k a i d o long
+区	ク	k u
+医	イ	i
+医者	イシャ	i sh a
+十	ジュウ	j u u
+千葉	チバ	ch i b a
+午前	ゴゼン	g o z e ng
+午後	ゴゴ	g o g o
+卒業	ソツギョウ	s o ts u g y o long
+卒論	ソツロン	s o ts u r o ng
+協力	キョウリョク	k y o u r y o k u
+南	ミナミ	m i n a m i
+単なる	タンナル	t a ng n a r u
+単位	タンイ	t a ng i
+博物館	ハクブツカン	h a k u b u ts u k a ng
+卦	ケ	k e
+卯	ウ	u
+卯尾	ウオ	u o
+印	イン	i ng
+印刷	インサツ	i ng s a ts u
+即ち	スナワチ	s u n a w a ch i
+卵	タマゴ	t a m a g o
+原因	ゲンイン	g e ng i ng
+厭い	アイ	a i
+去	サ	s a
+参加	サンカ	s a ng k a
+又は	マタハ	m a t a h a
+友人	ユウジン	y u u j i ng
+友達	トモダチ	t o m o d a ch i
+反	ソ	s o
+反し	ハンシ	h a ng sh i
+反対	ハンタイ	h a ng t a i
+取	ト	t o
+取り	トリ	t o r i
+取る	トル	t o r u
+受ける	ウケル	u k e r u
+叙	ジョ	j o
+口	クチ	k u ch i
+古い	フルイ	f u r u i
+句	ク	k u
+可	カ	k a
+台所	ダイドコロ	d a i d o k o r o
+台風	タイフウ	t a i f u long
+史	シ	sh i
+右	ミギ	m i g i
+合い	アイ	a i
+合え	アエ	a e
+合お	アオ	a o
+合っ	アッ	a q
+合格	ゴウカク	g o long k a k u
+合理	ゴウリ	g o u r i
+吊	ツ	ts u
+同じ	オナジ	o n a j i
+同一	ドウイツ	d o u i ts u
+同僚	ドウリョウ	d o long r y o long
+同時に	ドウジニ	d o u j i n i
+名	ナ	n a
+名刺	メイシ	m e i sh i
+名前	ナマエ	n a m a e
+向かっ	ムカッ	m u k a q
+向け	ムケ	m u k e
+向こう	ムコウ	m u k o u
+君	キミ	k i m i
+否定	ヒテイ	h i t e i
+含ま	フクマ	f u k u m a
+吽	ウン	u ng
+吾輩	ワガハイ	w a g a h a i
+味噌汁	ミソシル	m i s o sh i r u
+呷	アオ	a o
+呼	コ	k o
+呼ぶ	ヨブ	y o b u
+命令	メイレイ	m e i r e i
+和え	アエ	a e
+和歌山	ワカヤマ	w a k a y a m a
+咲い	サイ	s a i
+咲き	サキ	s a k i
+咲く	サク	s a k u
+咳	セキ	s e k i
+品	シナ	sh i n a
+員	イン	i ng
+哲学	テツガク	t e ts u g a k u
+唖々	アア	a a
+唯々	イイ	i i
+唯唯	イイ	i i
+商品	ショウヒン	sh o long h i ng
+問題	モンダイ	m o ng d a i
+喜	キ	k i
+喪	モ	m o
+嗚呼	アア	a long
+嚥	エン	e ng
+回路	カイロ	k a i r o
+因	イン	i ng
+図	ズ	z u
+図書館	トショカン	t o sh o k a ng
+国	クニ	k u n i
+国家	コッカ	k o q k a
+国際	コクサイ	k o k u s a i
+園	エン	e ng
+圓	エン	e ng
+在	ア	a
+在っ	アッ	a q
+在ん	アン	a ng
+地	ジ	j i
+地図	チズ	ch i z u
+地域	チイキ	ch i i k i
+地球	チキュウ	ch i k y u u
+地面	ジメン	j i m e ng
+址	シ	sh i
+城	シロ	sh i r o
+執	ト	t o
+基	キ	k i
+基板	キバン	k i b a ng
+埼玉	サイタマ	s a i t a m a
+報告	ホウコク	h o long k o k u
+場合	バアイ	b a a i
+場所	バショ	b a sh o
+塗	ヌ	n u
+塩	エン	e ng
+増え	フエ	f u e
+墺	オウ	o long
+士	シ	sh i
+売	ウ	u
+売上	ウリアゲ	u r i a g e
+変える	カエル	k a e r u
+変わら	カワラ	k a w a r a
+変化	ヘンカ	h e ng k a
+変更	ヘンコウ	h e ng k o long
+夏休み	ナツヤスミ	n a ts u y a s u m i
+夕方	ユウガタ	y u long g a t a
+外国	ガイコク	g a i k o k u
+多	オオ	o long
+多い	オオイ	o long i
+夜	ヤ	y a
+夢	ユメ	y u m e
+大	オオ	o long
+大きい	オオキイ	o long k i i
+大きく	オオキク	o o k i k u
+大きな	オオキナ	o o k i n a
+大丈夫	ダイジョウブ	d a i j o long b u
+大事	ダイジ	d a i j i
+大分	オオイタ	o o i t a
+大切	タイセツ	t a i s e ts u
+大変	タイヘン	t a i h e ng
+大好き	ダイスキ	d a i s u k i
+大学	ダイガク	d a i g a k u
+大阪	オオサカ	o long s a k a
+天気	テンキ	t e ng k i
+太陽	タイヨウ	t a i y o long
+失敗	シッパイ	sh i q p a i
+失礼	シツレイ	sh i ts u r e i
+奇	キ	k i
+契約	ケイヤク	k e i y a k u
+女	オンナ	o ng n a
+女の子	オンナノコ	o ng n a n o k o
+女性	ジョセイ	j o s e i
+如き	ゴトキ	g o t o k i
+如く	ゴトク	g o t o k u
+妹	イモウト	i m o long t o
+姉	アネ	a n e
+始まり	ハジマリ	h a j i m a r i
+始まる	ハジマル	h a j i m a r u
+始め	ハジメ	h a j i m e
+委	イ	i
+姿	スガタ	s u g a t a
+威	イ	i
+娘	コ	k o
+婦	フ	f u
+婬	イン	i ng
+媒介	バイカイ	b a i k a i
+嫁	カ	k a
+子	コ	k o
+子供	コドモ	k o d o m o
+存在	ソンザイ	s o ng z a i
+季	キ	k i
+孤	コ	k o
+学ぶ	マナブ	m a n a b u
+学校	ガッコウ	g a q k o long
+学生	ガクセイ	g a k u s e i
+宇宙	ウチュウ	u ch u u
+守る	マモル	m a m o r u
+安	アン	a ng
+安い	ヤスイ	y a s u i
+安心	アンシン	a ng sh i ng
+完了	カンリョウ	k a ng r y o long
+完全	カンゼン	k a ng z e ng
+宗教	シュウキョウ	sh u u k y o u
+実在	ジツザイ	j i ts u z a i
+実行	ジッコウ	j i q k o long
+実際	ジッサイ	j i q s a i
+実験	ジッケン	j i q k e ng
+客観	キャッカン	k y a q k a ng
+家	イエ	i e
+家族	カゾク	k a z o k u
+宿題	シュクダイ	sh u k u d a i
+富士山	フジサン	f u j i s a ng
+寒い	サムイ	s a m u i
+寝	ネ	n e
+寝る	ネル	n e r u
+対応	タイオウ	t a i o long
+対立	タイリツ	t a i r i ts u
+対象	タイショウ	t a i sh o u
+射	イ	i
+将来	ショウライ	sh o long r a i
+小	オ	o
+小さい	チイサイ	ch i long s a i
+小さな	チイサナ	ch i i s a n a
+小林	コバヤシ	k o b a y a sh i
+少し	スクナシ	s u k u n a sh i
+少年	ショウネン	sh o u n e ng
+尹	イン	i ng
+尾	オ	o
+屁	ヘ	h e
+居	イ	i
+居酒屋	イザカヤ	i z a k a y a
+届い	トドイ	t o d o i
+届き	トドキ	t o d o k i
+届く	トドク	t o d o k u
+屋	ヤ	y a
+屋上	オクジョウ	o k u j o long
+履く	ハク	h a k u
+山	サン	s a ng
+山	ヤマ	y a m a
+岐阜	ギフ	g i f u
+岡山	オカヤマ	o k a y a m a
+川	カワ	k a w a
+川	ガワ	g a w a
+州都	シュウト	sh u u t o
+巣	ス	s u
+工場	コウジョウ	k o long j o long
+差	サ	s a
+巳	ミ	m i
+巻き込ま	マキコマ	m a k i k o m a
+市	シ	sh i
+布団	フトン	f u t o ng
+師	シ	sh i
+帰っ	カエッ	k a e q
+帰る	カエル	k a e r u
+帰省	キセイ	k i s e i
+常識	ジョウシキ	j o u sh i k i
+帽子	ボウシ	b o long sh i
+干	ヒ	h i
+干す	ホス	h o s u
+幸せ	シアワセ	sh i a w a s e
+広い	ヒロイ	h i r o i
+広島	ヒロシマ	h i r o sh i m a
+序	ジョ	j o
+店	テン	t e ng
+府	フ	f u
+座	ザ	z a
+座っ	スワッ	s u w a q
+座る	スワル	s u w a r u
+庭	ニワ	n i w a
+庵	アン	a ng
+建物	タテモノ	t a t e m o n o
+弁当	ベントウ	b e ng t o long
+弁証法	ベンショウホウ	b e ng sh o u h o u
+引き分け	ヒキワケ	h i k i w a k e
+引っ越し	ヒッコシ	h i q k o sh i
+弟	オトウト	o t o long t o
+弧	コ	k o
+強い	シイ	sh i i
+強く	ツヨク	ts u y o k u
+弾く	ハジク	h a j i k u
+弾く	ヒク	h i k u
+形	カタチ	k a t a ch i
+彫	エ	e
+彫っ	エッ	e q
+彫ん	エン	e ng
+影響	エイキョウ	e i k y o u
+役所	ヤクショ	y a k u sh o
+彼	カレ	k a r e
+彼ら	カレラ	k a r e r a
+彼女	カノジョ	k a n o j o
+彼等	カレラ	k a r e r a
+往ん	イン	i ng
+待っ	マッ	m a q
+待つ	マツ	m a ts u
+後輩	コウハイ	k o long h a i
+徐	ジョ	j o
+得	ウ	u
+得ん	エン	e ng
+御	オ	o
+微	ビ	b i
+徳島	トクシマ	t o k u sh i m a
+心	ココロ	k o k o r o
+心配	シンパイ	sh i ng p a i
+必ず	カナラズ	k a n a r a z u
+必要	ヒツヨウ	h i ts u y o u
+忌ん	イン	i ng
+忘れ	ワスレ	w a s u r e
+忘れ物	ワスレモノ	w a s u r e m o n o
+忙しい	イソガシイ	i s o g a sh i i
+思い	オモイ	o m o i
+思う	オモウ	o m o u
+思っ	オモッ	o m o q
+思わ	オモワ	o m o w a
+急	キュウ	k y u u
+性質	セイシツ	s e i sh i ts u
+恕	ジョ	j o
+恩	オン	o ng
+悪い	ワルイ	w a r u i
+悪魔	アクマ	a k u m a
+情報	ジョウホウ	j o long h o long
+想像	ソウゾウ	s o u z o u
+意	イ	i
+意識	イシキ	i sh i k i
+愚	グ	g u
+愛	アイ	a i
+愛知	アイチ	a i ch i
+感じる	カンジル	k a ng j i r u
+憂	ウ	u
+成功	セイコウ	s e i k o u
+成立	セイリツ	s e i r i ts u
+成績	セイセキ	s e i s e k i
+成長	セイチョウ	s e i ch o u
+我	ガ	g a
+我々	ワレワレ	w a r e w a r e
+戦争	センソウ	s e ng s o u
+戸	コ	k o
+戻っ	モドッ	m o d o q
+所	ショ	sh o
+手	シュ	sh u
+手紙	テガミ	t e g a m i
+手続き	テツヅキ	t e ts u z u k i
+手術	シュジュツ	sh u j u ts u
+打ち合わせ	ウチアワセ	u ch i a w a s e
+打つ	ウツ	u ts u
+承認	ショウニン	sh o long n i ng
+技	ギ	g i
+技術	ギジュツ	g i j u ts u
+把	ワ	w a
+折	オ	o
+折る	オル	o r u
+抽象	チュウショウ	ch u u sh o u
+担当	タントウ	t a ng t o long
+拠	ヨ	y o
+持	ジ	j i
+持つ	モツ	m o ts u
+指示	シジ	sh i j i
+挨拶	アイサツ	a i s a ts u
+振	フ	f u
+捕	ト	t o
+掃除	ソウジ	s o long j i
+授業	ジュギョウ	j u g y o long
+掘	ホ	h o
+採	ト	t o
+探偵	タンテイ	t a ng t e i
+接種	セッシュ	s e q sh u
+描く	エガク	e g a k u
+提出	テイシュツ	t e i sh u ts u
+提案	テイアン	t e i a ng
+揺	ユ	y u
+携帯	ケイタイ	k e i t a i
+摂	ト	t o
+摺	ス	s u
+撃っ	ウッ	u q
+撚	ヨ	y o
+撮	ト	t o
+撮り	トリ	t o r i
+撮る	トル	t o r u
+擂	ス	s u
+改札	カイサツ	k a i s a ts u
+政治	セイジ	s e i j i
+故	コ	k o
+故に	ユエニ	y u e n i
+教え	オシエ	o sh i e
+教室	キョウシツ	k y o long sh i ts u
+教師	キョウシ	k y o u sh i
+教授	キョウジュ	k y o long j u
+教科書	キョウカショ	k y o long k a sh o
+教育	キョウイク	k y o u i k u
+散	チ	ch i
+散歩	サンポ	s a ng p o
+数学	スウガク	s u long g a k u
+文化	ブンカ	b u ng k a
+文章	ブンショウ	b u ng sh o u
+斑	フ	f u
+斗	ト	t o
+料理	リョウリ	r y o long r i
+斬	キ	k i
+新しい	アタラシイ	a t a r a sh i i
+新幹線	シンカンセン	sh i ng k a ng s e ng
+新潟	ニイガタ	n i i g a t a
+新聞	シンブン	sh i ng b u ng
+方向	ホウコウ	h o u k o u
+方法	ホウホウ	h o u h o u
+於い	オイ	o i
+旅行	リョコウ	r y o k o long
+旗	キ	k i
+既に	スデニ	s u d e n i
+日	ヒ	h i
+日常	ニチジョウ	n i ch i j o u
+日本	ニッポン	n i q p o ng
+日本人	ニッポンジン	n i q p o ng j i ng
+日本語	ニッポンゴ	n i q p o ng g o
+日本語	ニホンゴ	n i h o ng g o
+早く	ハヤク	h a y a k u
+明らか	アキラカ	a k i r a k a
+明日	アケビ	a k e b i
+昔	ムカシ	m u k a sh i
+星	ホシ	h o sh i
+映画	エイガ	e i g a
+映画館	エイガカン	e i g a k a ng
+昨日	キノウ	k i n o long
+是	ゼ	z e
+昼	ヒル	h i r u
+時	ジ	j i
+時代	ジダイ	j i d a i
+時計	トケイ	t o k e i
+時間	ジカン	j i k a ng
+晩	バン	b a ng
+普通	フツウ	f u ts u u
+晴れ	ハレ	h a r e
+暇	イトマ	i t o m a
+暑い	アツイ	a ts u i
+暖かく	アタタカク	a t a t a k a k u
+更新	コウシン	k o long sh i ng
+書	カキ	k a k i
+書い	カイ	k a i
+書く	カク	k a k u
+書類	ショルイ	sh o r u i
+曽	ソ	s o
+最も	モットモ	m o q t o m o
+最初	サイショ	s a i sh o
+最大	サイダイ	s a i d a i
+最後	サイゴ	s a i g o
+最高	サイコウ	s a i k o u
+月	ガツ	g a ts u
+月曜日	ゲツヨウビ	g e ts u y o long b i
+有	ア	a
+有する	ユウスル	y u u s u r u
+有名	ユウメイ	y u long m e i
+有給	ユウキュウ	y u long k y u long
+服	フク	f u k u
+朝	アサ	a s a
+朝	チョウ	ch o long
+期	キ	k i
+木	キ	k i
+未来	ミライ	m i r a i
+本	ホン	h o ng
+本	モト	m o t o
+本件	ホンケン	h o ng k e ng
+本当に	ホントウニ	h o ng t o u n i
+本能	ホンノウ	h o ng n o u
+李	イ	i
+杏	アン	a ng
+材料	ザイリョウ	z a i r y o long
+村	ムラ	m u r a
+村長	ソンチョウ	s o ng ch o u
+来	キ	k i
+来る	キタル	k i t a r u
+来週	ライシュウ	r a i sh u long
+東	ヒガシ	h i g a sh i
+東京	トウキョウ	t o long k y o long
+杼	ヒ	h i
+林	ハヤシ	h a y a sh i
+架	カ	k a
+柄	エ	e
+栄	エイ	e i
+校庭	コウテイ	k o long t e i
+根	ネ	n e
+案	アン	a ng
+桜	サクラ	s a k u r a
+梅雨	ツユ	ts u y u
+梱	コ	k o
+森	モリ	m o r i
+植	ウエ	u e
+検査	ケンサ	k e ng s a
+検討	ケントウ	k e ng t o long
+業務	ギョウム	g y o long m u
+楽しい	タノシイ	t a n o sh i i
+楽しみ	タノシミ	t a n o sh i m i
+概念	ガイネン	g a i n e ng
+構造	コウゾウ	k o u z o u
+様子	ヨウス	y o u s u
+様式	ヨウシキ	y o u sh i k i
+横浜	ヨコハマ	y o k o h a m a
+機	キ	k i
+機械	キカイ	k i k a i
+欠席	ケッセキ	k e q s e k i
+次	ジ	j i
+欧	オウ	o long
+止まる	トマル	t o m a r u
+正しい	タダシイ	t a d a sh i i
+歩い	アルイ	a r u i
+歩き	アルキ	a r u k i
+歩く	アルク	a r u k u
+歯	シ	sh i
+歯医者	ハイシャ	h a i sh a
+歴	ヘ	h e
+歴史	レキシ	r e k i sh i
+死	シ	sh i
+残っ	ノコッ	n o k o q
+残業	ザンギョウ	z a ng g y o long
+殷	イン	i ng
+殺	ヤ	y a
+母親	ハハオヤ	h a h a o y a
+毎日	マイニチ	m a i n i ch i
+毎晩	マイバン	m a i b a ng
+毎朝	マイアサ	m a i a s a
+比	ヒ	h i
+比較	ヒカク	h i k a k u
+毛	ケ	k e
+気	キ	k i
+気づい	キヅイ	k i z u i
+気持ち	キモチ	k i m o ch i
+気温	キオン	k i o ng
+水	スイ	s u i
+水族館	スイゾクカン	s u i z o k u k a ng
+水泳	スイエイ	s u i e i
+永	エイ	e i
+求め	モトメ	m o t o m e
+江	エ	e
+江井	エイ	e i
+決める	キメル	k i m e r u
+決定	ケッテイ	k e q t e i
+沖縄	オキナワ	o k i n a w a
+治る	ナオル	n a o r u
+法律	ホウリツ	h o u r i ts u
+泣い	ナイ	n a i
+泣く	ナク	n a k u
+注射	チュウシャ	ch u long sh a
+注意	チュウイ	ch u u i
+注文	チュウモン	ch u u m o ng
+泳ぎ	オヨギ	o y o g i
+泳ぐ	オヨグ	o y o g u
+洗う	アラウ	a r a u
+洗濯	センタク	s e ng t a k u
+津	ツ	ts u
+洩	モ	m o
+派	ハ	h a
+流れ	ナガレ	n a g a r e
+浮い	ウイ	u i
+海	ウミ	u m i
+海	カイ	k a i
+海布	メ	m e
+涼しく	スズシク	s u z u sh i k u
+渋滞	ジュウタイ	j u long t a i
+渡	ド	d o
+渡る	ワタル	w a t a r u
+温泉	オンセン	o ng s e ng
+測る	ハカル	h a k a r u
+測定	ソクテイ	s o k u t e i
+湖	コ	k o
+湯	ユ	y u
+満足	マンゾク	m a ng z o k u
+準備	ジュンビ	j u ng b i
+漏	モ	m o
+濃	コ	k o
+瀬	セ	s e
+火	カ	k a
+炉	ロ	r o
+炊く	タク	t a k u
+炎	エン	e ng
+炒	イ	i
+炒める	イタメル	i t a m e r u
+無	ナ	n a
+無限	ムゲン	m u g e ng
+焼く	ヤク	y a k u
+煉	ネ	n e
+煎	イ	i
+煎っ	イッ	i q
+煎ん	イン	i ng
+煮	ニ	n i
+煮る	ニル	n i r u
+煽	アオ	a o
+熊本	クマモト	k u m a m o t o
+熟ん	ウン	u ng
+熬	イ	i
+熬っ	イッ	i q
+熬ん	イン	i ng
+熱	アツ	a ts u
+父	チチ	ch i ch i
+片付ける	カタヅケル	k a t a z u k e r u
+物事	モノゴト	m o n o g o t o
+物理	ブツリ	b u ts u r i
+物質	ブッシツ	b u q sh i ts u
+特に	トクニ	t o k u n i
+特殊	トクシュ	t o k u sh u
+犬	イヌ	i n u
+犬	ケン	k e ng
+状態	ジョウタイ	j o u t a i
+状況	ジョウキョウ	j o u k y o u
+狩	カ	k a
+独立	ドクリツ	d o k u r i ts u
+狭い	セマイ	s e m a i
+猫	ネコ	n e k o
+獲	エ	e
+玄関	ゲンカン	g e ng k a ng
+王	オウ	o long
+現在	ゲンザイ	g e ng z a i
+現実	ゲンジツ	g e ng j i ts u
+現象	ゲンショウ	g e ng sh o u
+理由	リユウ	r i y u u
+理論	リロン	r i r o ng
+環境	カンキョウ	k a ng k y o u
+甕	ウ	u
+生まれ	ウマレ	u m a r e
+生命	セイメイ	s e i m e i
+生活	セイカツ	s e i k a ts u
+生物	セイブツ	s e i b u ts u
+産ん	ウン	u ng
+甥	オイ	o i
+田	タ	t a
+田舎	イナカ	i n a k a
+申請	シンセイ	sh i ng s e i
+男	オトコ	o t o k o
+町	マチ	m a ch i
+画	エ	e
+画面	ガメン	g a m e ng
+留学	リュウガク	r y u long g a k u
+疲れ	ツカレ	ts u k a r e
+病気	ビョウキ	b y o long k i
+病院	ビョウイン	b y o long i ng
+痔	ジ	j i
+痛い	イタイ	i t a i
+癸	キ	k i
+発展	ハッテン	h a q t e ng
+発表	ハッピョウ	h a q p y o long
+登る	ノボル	n o b o r u
+登録	トウロク	t o long r o k u
+的	テキ	t e k i
+盗	ト	t o
+監督	カントク	k a ng t o k u
+盧	ノ	n o
+目	メ	m e
+目標	モクヒョウ	m o k u h y o long
+目的	モクテキ	m o k u t e k i
+直す	ナオス	n a o s u
+直観	チョッカン	ch o q k a ng
+相	アイ	a i
+相互	ソウゴ	s o u g o
+相手	アイテ	a i t e
+相談	ソウダン	s o long d a ng
+看	ミ	m i
+県	ケン	k e ng
+真に	シンニ	sh i ng n i
+眠い	ネムイ	n e m u i
+眺め	ナガメ	n a g a m e
+眼科	ガンカ	g a ng k a
+眼鏡	ガンキョウ	g a ng k y o long
+着	キ	k i
+着く	ツク	ts u k u
+着る	キル	k i r u
+瞬間	シュンカン	sh u ng k a ng
+矛盾	ムジュン	m u j u ng
+矢	ヤ	y a
+知	シ	sh i
+知ら	シラ	sh i r a
+知れ	シレ	sh i r e
+知識	チシキ	ch i sh i k i
+研究	ケンキュウ	k e ng k y u long
+砥	ト	t o
+碁	ゴ	g o
+碧	アオ	a o
+確かめる	タシカメル	t a sh i k a m e r u
+確認	カクニン	k a k u n i ng
+磨	ス	s u
+社	シャ	sh a
+社長	シャチョウ	sh a ch o long
+祖	ソ	s o
+祝う	イワウ	i w a u
+神奈川	カナガワ	k a n a g a w a
+神社	ジンジャ	j i ng j a
+禁止	キンシ	k i ng sh i
+禍	カ	k a
+福岡	フクオカ	f u k u o k a
+福島	フクシマ	f u k u sh i m a
+私	シ	sh i
+科	カ	k a
+科学	カガク	k a g a k u
+秘	ヒ	h i
+秘密	ヒミツ	h i m i ts u
+移動	イドウ	i d o long
+種	シュ	sh u
+穂	ホ	h o
+積もる	ツモル	ts u m o r u
+穫	カ	k a
+空	カラ	k a r a
+空	クウ	k u long
+空	ソラ	s o r a
+空く	アク	a k u
+空気	クウキ	k u u k i
+空港	クウコウ	k u long k o long
+窓	マド	m a d o
+立つ	タツ	t a ts u
+立て	ダテ	d a t e
+立場	タチバ	t a ch i b a
+立派	リッパ	r i q p a
+笈	オイ	o i
+笑う	ワラウ	w a r a u
+笑ん	エン	e ng
+笥	ケ	k e
+符	フ	f u
+等	ヒトシ	h i t o sh i
+答え	コタエ	k o t a e
+箕	ミ	m i
+管理	カンリ	k a ng r i
+箭	ヤ	y a
+簀	ス	s u
+簡単	カンタン	k a ng t a ng
+簸	ヒ	h i
+簾	ス	s u
+簿	ボ	b o
+粉	コ	k o
+粟生	アオ	a o
+精神	セイシン	s e i sh i ng
+糶	セ	s e
+約束	ヤクソク	y a k u s o k u
+紅茶	コウチャ	k o long ch a
+紅葉	コウヨウ	k o long y o long
+紗	シャ	sh a
+紙	カミ	k a m i
+紙	シ	sh i
+素	ソ	s o
+紳士	シンシ	sh i ng sh i
+終え	オエ	o e
+終わっ	オワッ	o w a q
+終わり	オワリ	o w a r i
+終わる	オワル	o w a r u
+終電	シュウデン	sh u long d e ng
+組み立てる	クミタテル	k u m i t a t e r u
+組む	クム	k u m u
+経済	ケイザイ	k e i z a i
+経験	ケイケン	k e i k e ng
+結合	ケツゴウ	k e ts u g o u
+結婚	ケッコン	k e q k o ng
+結婚式	ケッコンシキ	k e q k o ng sh i k i
+結局	ケッキョク	k e q k y o k u
+結果	ケッカ	k e q k a
+統一	トウイツ	t o u i ts u
+絵	エ	e
+絶対	ゼッタイ	z e q t a i
+絽	ロ	r o
+続け	ツヅケ	ts u z u k e
+続ける	ツヅケル	ts u z u k e r u
+綺麗	キレイ	k i r e i
+緋	ヒ	h i
+緑	ミドリ	m i d o r i
+締め切り	シメキリ	sh i m e k i r i
+練	ネ	n e
+練習	レンシュウ	r e ng sh u long
+繋がる	ツナガル	ts u n a g a r u
+繋ぐ	ツナグ	ts u n a g u
+織	オ	o
+繪	エ	e
+繰	ク	k u
+纓	エイ	e i
+署	ショ	sh o
+羅	ラ	r a
+美	ビ	b i
+美しい	ウツクシイ	u ts u k u sh i i
+美術館	ビジュツカン	b i j u ts u k a ng
+群馬	グンマ	g u ng m a
+義	ギ	g i
+羽	ハ	h a
+翁	オウ	o u
+習慣	シュウカン	sh u u k a ng
+老	オイ	o i
+老い	オイ	o i
+考え	カンガエ	k a ng g a e
+考える	カンガエル	k a ng g a e r u
+者	シャ	sh a
+耳	ミミ	m i m i
+聞く	キク	k i k u
+聞こえ	キコエ	k i k o e
+聴い	キイ	k i i
+聴き	キキ	k i k i
+聴く	キク	k i k u
+肉	ニク	n i k u
+股	コ	k o
+肢	シ	sh i
+胃	イ	i
+背	セ	s e
+胸	ムネ	m u n e
+腑	フ	f u
+腫	シュ	sh u
+膿ん	ウン	u ng
+臥	ガ	g a
+自	ジ	j i
+自分	ジブン	j i b u ng
+自己	ジコ	j i k o
+自由	ジユウ	j i y u u
+自身	ジシン	j i sh i ng
+自転車	ジテンシャ	j i t e ng sh a
+興味	キョウミ	k y o long m i
+舎	シャ	sh a
+舳	ヘ	h e
+良	イ	i
+良い	イイ	i i
+良ぅ	イゥ	i long
+良う	イウ	i long
+艾	アイ	a i
+花	ハナ	h a n a
+芽	メ	m e
+苅	カ	k a
+苑	エン	e ng
+苦	ク	k u
+苦労	クロウ	k u r o u
+苧	オ	o
+英語	エイゴ	e i g o
+茨城	イバラキ	i b a r a k i
+茶	チャ	ch a
+茹でる	ユデル	y u d e r u
+荷	ニ	n i
+荷物	ニモツ	n i m o ts u
+落とし	オトシ	o t o sh i
+葉	ハ	h a
+蒼	アオ	a o
+薬	クスリ	k u s u r i
+藍	アイ	a i
+藺	イ	i
+藻	モ	m o
+蘇	ソ	s o
+虫	チュウ	ch u long
+蚊	カ	k a
+蛾	ガ	g a
+血	チ	ch i
+行う	オコナウ	o k o n a u
+行き	イキ	i k i
+行く	イク	i k u
+行く	ユク	y u k u
+行っ	イッ	i q
+行動	コウドウ	k o u d o u
+行為	コウイ	k o u i
+街	マチ	m a ch i
+衣	イ	i
+表情	ヒョウジョウ	h y o u j o u
+表現	ヒョウゲン	h y o u g e ng
+装置	ソウチ	s o long ch i
+補	ホ	h o
+裳	モ	m o
+製作	セイサク	s e i s a k u
+褻	ケ	k e
+要	イ	i
+要求	ヨウキュウ	y o u k y u u
+要素	ヨウソ	y o u s o
+覇	ハ	h a
+見	ミ	m i
+見せ	ミセ	m i s e
+見つけ	ミツケ	m i ts u k e
+見る	ミル	m i r u
+見学	ケンガク	k e ng g a k u
+見積	ミツモ	m i ts u m o
+視	シ	sh i
+覚え	オボエ	o b o e
+観光	カンコウ	k a ng k o long
+観察	カンサツ	k a ng s a ts u
+解く	トク	t o k u
+解決	カイケツ	k a i k e ts u
+言い	イイ	i i
+言う	イウ	i u
+言え	イエ	i e
+言お	イオ	i o
+言っ	イッ	i q
+言葉	コトバ	k o t o b a
+言語	ゲンゴ	g e ng g o
+訃	フ	f u
+計画	ケイカク	k e i k a k u
+計算	ケイサン	k e i s a ng
+討っ	ウッ	u q
+記	キ	k i
+記録	キロク	k i r o k u
+設計	セッケイ	s e q k e i
+診	ミ	m i
+詠	エイ	e i
+試す	タメス	t a m e s u
+試合	シアイ	sh i a i
+試験	シケン	sh i k e ng
+詩	シ	sh i
+話	ハナシ	h a n a sh i
+話し	ハナシ	h a n a sh i
+話す	ハナス	h a n a s u
+誌	シ	sh i
+認め	ミトメ	m i t o m e
+認識	ニンシキ	n i ng sh i k i
+誕生	タンジョウ	t a ng j o u
+語	カタ	k a t a
+説明	セツメイ	s e ts u m e i
+読み	ヨミ	y o m i
+読む	ヨム	y o m u
+読ん	ヨン	y o ng
+読書	ドクショ	d o k u sh o
+誰	タレ	t a r e
+課	カ	k a
+課長	カチョウ	k a ch o long
+課題	カダイ	k a d a i
+調べる	シラベル	sh i r a b e r u
+調整	チョウセイ	ch o long s e i
+論文	ロンブン	r o ng b u ng
+論理	ロンリ	r o ng r i
+諸	ショ	sh o
+謂	イイ	i long
+謂い	イイ	i i
+謂う	イウ	i u
+謂え	イエ	i e
+謂お	イオ	i o
+謂っ	イッ	i q
+譜	フ	f u
+議	ギ	g i
+豆汁	ゴ	g o
+豆油	ゴ	g o
+負	フ	f u
+負ける	マケル	m a k e r u
+財布	サイフ	s a i f u
+責任	セキニン	s e k i n i ng
+貴	キ	k i
+買い	カイ	k a i
+買い物	カイモノ	k a i m o n o
+買う	カウ	k a u
+費	ヒ	h i
+貼	ハ	h a
+賀	カ	k a
+資	シ	sh i
+資料	シリョウ	sh i r y o long
+賣	ウ	u
+賣っ	ウッ	u q
+賣ん	ウン	u ng
+賦	フ	f u
+質問	シツモン	sh i ts u m o ng
+赤	アカ	a k a
+赤い	アカイ	a k a i
+赤ちゃん	アカチャン	a k a ch a ng
+走っ	ハシッ	h a sh i q
+走る	ハシル	h a sh i r u
+起きる	オキル	o k i r u
+超越	チョウエツ	ch o u e ts u
+趣味	シュミ	sh u m i
+路	ジ	j i
+蹴	ケ	k e
+蹶	ケ	k e
+身	ミ	m i
+身体	シンタイ	sh i ng t a i
+車	クルマ	k u r u m a
+載	ノ	n o
+輻	ヤ	y a
+返事	ヘンジ	h e ng j i
+迷っ	マヨッ	m a y o q
+退勤	タイキン	t a i k i ng
+退院	タイイン	t a i i ng
+送る	オクル	o k u r u
+途	ト	t o
+通う	カヨウ	k a y o u
+通る	トオル	t o long r u
+通勤	ツウキン	ts u long k i ng
+逢う	アウ	a u
+連絡	レンラク	r e ng r a k u
+週末	シュウマツ	sh u long m a ts u
+進ん	ススン	s u s u ng
+進学	シンガク	sh i ng g a k u
+逸	イッ	i q
+遅れ	オクレ	o k u r e
+遇っ	アッ	a q
+遊び	アソビ	a s o b i
+遊ぶ	アソブ	a s o b u
+遊ん	アソン	a s o ng
+運	ウン	u ng
+運ぶ	ハコブ	h a k o b u
+運動	ウンドウ	u ng d o long
+運転	ウンテン	u ng t e ng
+過	カ	k a
+道	ドウ	d o long
+道具	ドウグ	d o u g u
+達成	タッセイ	t a q s e i
+違い	チガイ	ch i g a i
+違う	チガウ	ch i g a u
+違っ	チガッ	ch i g a q
+遣	ヤ	y a
+適応	テキオウ	t e k i o u
+遭い	アイ	a i
+遭う	アウ	a u
+遭え	アエ	a e
+遭お	アオ	a o
+遭っ	アッ	a q
+選挙	センキョ	s e ng k y o
+邑生	オウ	o long
+部	ブ	b u
+部下	ブカ	b u k a
+部分	ブブン	b u b u ng
+部屋	ヘヤ	h e y a
+部長	ブチョウ	b u ch o long
+都	ト	t o
+配線	ハイセン	h a i s e ng
+酢	ス	s u
+醋	ス	s u
+重要	ジュウヨウ	j u u y o u
+野	ノ	n o
+野球	ヤキュウ	y a k y u long
+野菜	ヤサイ	y a s a i
+量	リョウ	r y o u
+金曜日	キンヨウビ	k i ng y o long b i
+釣	ツ	ts u
+釣る	ツル	ts u r u
+銀行	ギンコウ	g i ng k o long
+鋳	イ	i
+鋳ん	イン	i ng
+錬	ネ	n e
+録音	ロクオン	r o k u o ng
+鍵	カギ	k a g i
+長い	ナガイ	n a g a i
+長野	ナガノ	n a g a n o
+閉じる	トジル	t o j i r u
+閉める	シメル	sh i m e r u
+開く	アク	a k u
+開く	ヒラク	h i r a k u
+開け	アケ	a k e
+開ける	アケル	a k e r u
+開ける	ヒラケル	h i r a k e r u
+開発	カイハツ	k a i h a ts u
+間に合う	マニアウ	m a n i a u
+間違い	マチガイ	m a ch i g a i
+関係	カンケイ	k a ng k e i
+降っ	クダッ	k u d a q
+降り	オリ	o r i
+降りる	オリル	o r i r u
+降る	クダル	k u d a r u
+降る	フル	f u r u
+限定	ゲンテイ	g e ng t e i
+陛下	ヘイカ	h e i k a
+院	イン	i ng
+院生	インセイ	i ng s e i
+除	ジョ	j o
+陰	イン	i ng
+階段	カイダン	k a i d a ng
+隣	トナ	t o n a
+雄	オ	o
+集め	アツメ	a ts u m e
+離れ	ハナレ	h a n a r e
+難しい	ムズカシイ	m u z u k a sh i i
+雨	アメ	a m e
+雨	ウ	u
+雪	ススギ	s u s u g i
+雪	セツ	s e ts u
+雪	ユキ	y u k i
+雲	ウン	u ng
+電池	デンチ	d e ng ch i
+電源	デンゲン	d e ng g e ng
+電話	デンワ	d e ng w a
+電車	デンシャ	d e ng sh a
+青	アオ	a o
+青い	アオイ	a o i
+青森	アオモリ	a o m o r i
+静か	シズカ	sh i z u k a
+非	ヒ	h i
+非常	ヒジョウ	h i j o u
+面白い	オモシロイ	o m o sh i r o i
+面相	メンソウ	m e ng s o u
+靴	クツ	k u ts u
+鞄	カバン	k a b a ng
+音声	オンセイ	o ng s e i
+音楽	オンガク	o ng g a k u
+韻	イン	i ng
+頭	アタマ	a t a m a
+風	カザ	k a z a
+風呂	フロ	f u r o
+風邪	カゼ	k a z e
+飛ぶ	トブ	t o b u
+飛行機	ヒコウキ	h i k o long k i
+食べ	タベ	t a b e
+食べる	タベル	t a b e r u
+食事	ショクジ	sh o k u j i
+食器	ショッキ	sh o q k i
+食堂	ショクドウ	sh o k u d o long
+食材	ショクザイ	sh o k u z a i
+飢え	ウエ	u e
+飯	イ	i
+飯井	イイ	i i
+飲	イン	i ng
+飲み	ノミ	n o m i
+飲む	ノム	n o m u
+飽い	アイ	a i
+餓え	ウエ	u e
+餡	アン	a ng
+首	クビ	k u b i
+首都	シュト	sh u t o
+香	カ	k a
+馬	ウマ	u m a
+駄	ダ	d a
+駅	エキ	e k i
+駆	カ	k a
+駈	カ	k a
+駟	シ	sh i
+騎	キ	k i
+高い	タカイ	t a k a i
+高く	タカク	t a k a k u
+高知	コウチ	k o u ch i
+鬆	ス	s u
+魅	ミ	m i
+魏	ギ	g i
+魔	マ	m a
+魚	ウオ	u o
+魚	ギョ	g y o
+魚	サカナ	s a k a n a
+鳥	トリ	t o r i
+鳴	ナ	n a
+鳴く	ナク	n a k u
+鵜	ウ	u
+鹿児島	カゴシマ	k a g o sh i m a
+麸	フ	f u
+黄	キ	k i
+黒い	クロイ	k u r o i
+黒板	コクバン	k o k u b a ng
+鼓	コ	k o
+アパート	アパート	a p a long t o
+イベント	イベント	i b e ng t o
+インストール	インストール	i ng s u t o long r u
+エアコン	エアコン	e a k o ng
+エスカレーター	エスカレーター	e s u k a r e long t a long
+エレベーター	エレベーター	e r e b e long t a long
+カーテン	カーテン	k a long t e ng
+ゴルフ	ゴルフ	g o r u f u
+サンダル	サンダル	s a ng d a r u
+サーバー	サーバー	s a long b a long
+ジャケット	ジャケット	j a k e q t o
+スキー	スキー	s u k i long
+スタート	スタート	s u t a long t o
+ストップ	ストップ	s u t o q p u
+スプーン	スプーン	s u p u long ng
+セット	セット	s e q t o
+ソフト	ソフト	s o f u t o
+チェック	チェック	ch e q k u
+チャレンジ	チャレンジ	ch a r e ng j i
+ディスプレイ	ディスプレイ	d i s u p u r e i
+デパート	デパート	d e p a long t o
+トレーニング	トレーニング	t o r e long n i ng g u
+ドラマ	ドラマ	d o r a m a
+ニュース	ニュース	n y u long s u
+ネットワーク	ネットワーク	n e q t o w a long k u
+パーキング	パーキング	p a long k i ng g u
+フォーク	フォーク	f o long k u
+ブーツ	ブーツ	b u long ts u
+プリント	プリント	p u r i ng t o
+ボトル	ボトル	b o t o r u
+マイク	マイク	m a i k u
+マンション	マンション	m a ng sh o ng
+ミルク	ミルク	m i r u k u
+メモリ	メモリ	m e m o r i
+ラジオ	ラジオ	r a j i o
+リセット	リセット	r i s e q t o
+ログアウト	ログアウト	r o g u a u t o
+ログイン	ログイン	r o g u i ng
+ロビー	ロビー	r o b i long
+笑む	エム	e m u
+綱	ツナ	ts u n a
+藤	フジ	f u j i
+膝	ヒザ	h i z a
+陥	オチイ	o ch i i
+齣	コマ	k o m a
+糞	クソ	k u s o
+姫	ヒメ	h i m e
+里	サト	s a t o
+謎	ナゾ	n a z o
+臍	ヘソ	h e s o
+捲	メク	m e k u
+渠	ミゾ	m i z o
+壷	ツボ	ts u b o
+性	サガ	s a g a
+粘	ネバ	n e b a
+捻	ネジ	n e j i
+徳	イサオ	i s a o
+幣	ヌサ	n u s a
+宮	ミヤ	m i y a
+侘	ワビ	w a b i
+継	ツギ	ts u g i
+滑	スベ	s u b e
+烟	ケブ	k e b u
+鳧	ケリ	k e r i
+惨	ムゴ	m u g o
+廃	スタ	s u t a
+仰	オッシャ	o q sh a
+杵	キネ	k i n e
+潮	ウシオ	u sh i o
+責	セメ	s e m e
+西	ニシ	n i sh i
+鱧	ハモ	h a m o
+嗽	ウガイ	u g a i
+渋	シブ	sh i b u
+鰤	ブリ	b u r i
+刺	トゲ	t o g e
+昇	ノボ	n o b o
+頼	タヨ	t a y o
+婆	ババ	b a b a
+罅	ヒビ	h i b i
+右脳	ウノウ	u n o u
+二院	ニイン	n i i ng
+孺子	ジュシ	j u sh i
+二野	ニノ	n i n o
+目名	メナ	m e n a
+自衛	ジエイ	j i e i
+目上	メウエ	m e u e
+雨林	ウリン	u r i ng
+右腕	ウワン	u w a ng
+案ず	アンズ	a ng z u
+下駄	ゲタ	g e t a
+大場	オオバ	o o b a
+五夜	ゴヤ	g o y a
+已然	イゼン	i z e ng
+雨尾	アマオ	a m a o
+魚瀬	ウオセ	u o s e
+魚津	ウオヅ	u o z u
+雨声	ウセイ	u s e i
+右辺	ウヘン	u h e ng
+右近	ウコン	u k o ng
+援助	エンジョ	e ng j o
+上尾	アゲオ	a g e o
+利他	リタ	r i t a
+利そ	リソ	r i s o
+笑顔	エガオ	e g a o
+橢円	ダエン	d a e ng
+詩夫	ウタオ	u t a o
+上後	ウエゴ	u e g o
+大奮	オフン	o f u ng
+追手	オウテ	o u t e
+五蘊	ゴウン	g o u ng
+少雨	ショウウ	sh o u u
+五部	ゴヘ	g o h e
+印賀	インガ	i ng g a
+大地	オオジ	o o j i
+印譜	インプ	i ng p u
+五黄	ゴオウ	g o o u
+御地	オンチ	o ng ch i
+印磁	インジ	i ng j i
+揚ん	アガン	a g a ng
+詠ぜ	エイゼ	e i z e
+送っ	オクッ	o k u q
+やぼ	ヤボ	y a b o
+井揚	イアゲ	i a g e
+上手	ウエデ	u e d e
+貴女	キジョ	k i j o
+恵方	エホウ	e h o u
+泉尾	イズオ	i z u o
+逃げ	ニゲ	n i g e
+盲唖	モウア	m o u a
+恵心	エシン	e sh i ng
+利運	リウン	r i u ng
+話者	ワシャ	w a sh a
+尚恵	ナオエ	n a o e
+話語	ワゴ	w a g o
+蔵王	ザオウ	z a o u
+鬼王	オニオ	o n i o
+皓雄	アキオ	a k i o
+訴因	ソイン	s o i ng
+憂っ	ウレッ	u r e q
+末雄	スエオ	s u e o
+煙波	エンパ	e ng p a
+揉め	モメ	m o m e
+大呂	オオロ	o o r o
+皇女	オウジョ	o u j o
+雑魚	ザコ	z a k o
+ちと	チト	ch i t o
+布太	フダ	f u d a
+事務	ジム	j i m u
+競ろ	セロ	s e r o
+鬱気	ウッキ	u q k i
+鬱す	ウッス	u q s u
+透っ	トオッ	t o o q
+憎悪	ゾウオ	z o u o
+浦江	ウラエ	u r a e
+討手	ウッテ	u q t e
+臭っ	ニオッ	n i o q
+梅夫	ウメオ	u m e o
+初演	ショエン	sh o e ng
+初歩	ショホ	sh o h o
+相合	アイオウ	a i o u
+憩お	イコオ	i k o o
+言張	イイハ	i i h a
+法会	ホウエ	h o u e
+大府	オオフ	o o f u
+初手	ショテ	sh o t e
+恩顧	オンコ	o ng k o
+雲母	ウンモ	u ng m o
+地縁	チエン	ch i e ng
+消せ	ケセ	k e s e
+い集	イシュウ	i sh u u
+厭え	イトエ	i t o e
+於大	オダイ	o d a i
+雲通	ウズイ	u z u i
+撫せ	ブセ	b u s e
+悦夫	エツオ	e ts u o
+栄寿	エイジュ	e i j u
+辞ん	イナン	i n a ng
+やじ	ヤジ	y a j i
+逸せ	イッセ	i q s e
+辞さ	ジサ	j i s a
+雷雨	ライウ	r a i u
+徐々	ジョジョ	j o j o
+膳所	ゼゼ	z e z e
+横臥	オウガ	o u g a
+御末	オスエ	o s u e
+小池	オイケ	o i k e
+遊屋	ユヤ	y u y a
+在位	ザイイ	z a i i
+歌穂	カホ	k a h o
+運座	ウンザ	u ng z a
+大枝	オエダ	o e d a
+運輸	ウンユ	u ng y u
+悪寒	オカン	o k a ng
+臼尾	ウスオ	u s u o
+圧死	アッシ	a q sh i
+大根	オオネ	o o n e
+曇恵	ドンエ	d o ng e
+仰ぐ	アオグ	a o g u
+疎い	ウトイ	u t o i
+驕ん	オゴン	o g o ng
+土砂	ドシャ	d o sh a
+削ぎ	ソギ	s o g i
+焦っ	アセッ	a s e q
+怪我	ケガ	k e g a
+伊寧	イネイ	i n e i
+撰ん	エラン	e r a ng
+遠下	オンゲ	o ng g e
+遠泳	エンエイ	e ng e i
+授与	ジュヨ	j u y o
+怨せ	エンセ	e ng s e
+留守	ルス	r u s u
+土合	ドアイ	d o a i
+では	デハ	d e h a
+霊位	レイイ	r e i i
+ぜひ	ゼヒ	z e h i
+英里	エイリ	e i r i
+せわ	セワ	s e w a
+遮音	シャオン	sh a o ng
+無韻	ムイン	m u i ng
+画素	ガソ	g a s o
+遺品	イヒン	i h i ng
+避暑	ヒショ	h i sh o
+茂庵	モアン	m o a ng
+小夫	オウブ	o u b u
+久所	グゾ	g u z o
+諳記	アンキ	a ng k i
+ずれ	ズレ	z u r e
+如意	ニョイ	n y o i
+急い	イソイ	i s o i
+守株	シュシュ	sh u sh u
+義母	ギボ	g i b o
+一過	イッカ	i q k a
+郡家	グゲ	g u g e
+由縁	ユエン	y u e ng
+江越	エゴエ	e g o e
+軍医	グンイ	g u ng i
+へぎ	ヘギ	h e g i
+下び	ゲビ	g e b i
+暗雲	アンウン	a ng u ng
+茶々	チャチャ	ch a ch a
+由乃	ユノ	y u n o
+へず	ヘズ	h e z u
+図譜	ズフ	z u f u
+首座	シュザ	sh u z a
+露営	ロエイ	r o e i
+図書	ズショ	z u sh o
+露坐	ロザ	r o z a
+諸田	ショダ	sh o d a
+燻っ	イブッ	i b u q
+車夫	シャフ	sh a f u
+家々	イエイエ	i e i e
+べべ	ベベ	b e b e
+べら	ベラ	b e r a
+ぺけ	ペケ	p e k e
+余所	ヨショ	y o sh o
+茶所	チャジョ	ch a j o
+余瀬	ヨゼ	y o z e
+舎営	シャエイ	sh a e i
+無比	ムヒ	m u h i
+パパ	パパ	p a p a
+パブ	パブ	p a b u
+躄っ	イザッ	i z a q
+ワム	ワム	w a m u
+受話	ジュワ	j u w a
+安吾	アンゴ	a ng g o
+ロケ	ロケ	r o k e
+暗夜	アンヤ	a ng y a
+俊恵	シュンエ	sh u ng e
+レポ	レポ	r e p o
+レテ	レテ	r e t e
+抉っ	エグッ	e g u q
+祷っ	イノッ	i n o q
+飯豊	イイデ	i i d e
+江尾	エノオ	e n o o
+野田	ノタ	n o t a
+座波	ザハ	z a h a
+家野	イエノ	i e n o
+議案	ギアン	g i a ng
+津瀬	ツゼ	ts u z e
+青部	アオベ	a o b e
+ヤヘ	ヤヘ	y a h e
+存意	ゾンイ	z o ng i
+越訴	エッソ	e q s o
+手間	テマ	t e m a
+下女	ゲジョ	g e j o
+メヨ	メヨ	m e y o
+嘶え	イバエ	i b a e
+襲お	オソオ	o s o o
+寧々	ネネ	n e n e
+墓地	ボチ	b o ch i
+理非	リヒ	r i h i
+美酒	ビシュ	b i sh u
+児湯	コユ	k o y u
+入尾	イリオ	i r i o
+お伝	オデン	o d e ng
+奪っ	ウバッ	u b a q
+喘げ	アエゲ	a e g e
+衣紋	エモン	e m o ng
+ベト	ベト	b e t o
+愚者	グシャ	g u sh a
+音韻	オンイン	o ng i ng
+負えれ	オエレ	o e r e
+デュオ	デュオ	d y u o
+売りゃ	ウリャ	u r y a
+エリー	エリー	e r i long
+ピュア	ピュア	p y u a
+ガーン	ガーン	g a long ng
+行きゃ	イキャ	i k y a
+阿津江	アヅエ	a z u e
+めいっ	メイッ	m e i q
+ベアー	ベアー	b e a long
+ツアー	ツアー	ts u a long
+あじっ	アジッ	a j i q
+ビュッ	ビュッ	b y u q
+ボーッ	ボーッ	b o long q
+安部居	アベイ	a b e i
+喜屋武	キャン	k y a ng
+なぁー	ナァー	n a a long
+笑みゃ	エミャ	e m y a
+ヒュー	ヒュー	h y u long
+井手尾	イデオ	i d e o
+おぶお	オブオ	o b u o
+っぽい	ッポイ	q p o i
+メーン	メーン	m e long ng
+出あえ	デアエ	d e a e
+タウン	タウン	t a u ng
+エトー	エトー	e t o long
+ゾーン	ゾーン	z o long ng
+あびん	アビン	a b i ng
+あふっ	アフッ	a f u q
+エッチ	エッチ	e q ch i
+ぎゃあ	ギャア	g y a a
+江和井	エワイ	e w a i
+エッグ	エッグ	e q g u
+ルファ	ルファ	r u f a
+エーゲ	エーゲ	e long g e
+レオン	レオン	r e o ng
+スーッ	スーッ	s u long q
+絵取っ	エドッ	e d o q
+ワーッ	ワーッ	w a long q
+おいど	オイド	o i d o
+アイモ	アイモ	a i m o
+居食い	イグイ	i g u i
+エース	エース	e long s u
+えーと	エート	e long t o
+へーっ	ヘーッ	h e long q
+うーむ	ウーム	u long m u
+へえー	ヘエー	h e e long
+いみい	イミイ	i m i i
+アピア	アピア	a p i a
+せおっ	セオッ	s e o q
+ジュペ	ジュペ	j u p e
+オーラ	オーラ	o long r a
+ジャズ	ジャズ	j a z u
+あえみ	アエミ	a e m i
+ジェフ	ジェフ	j e f u
+アロー	アロー	a r o long
+いやー	イヤー	i y a long
+シーン	シーン	sh i long ng
+伊兵衛	イヘエ	i h e e
+海老江	エビエ	e b i e
+オンス	オンス	o ng s u
+ウッド	ウッド	u q d o
+宇治会	ウジエ	u j i e
+イーダ	イーダ	i long d a
+オッズ	オッズ	o q z u
+ジューン	ジューン	j u long ng
+ファイア	ファイア	f a i a
+オッツェ	オッツェ	o q ts e
+ディアー	ディアー	d i a long
+オファー	オファー	o f a long
+イーオン	イーオン	i long o ng
+チュチェ	チュチェ	ch u ch e
+チュオン	チュオン	ch u o ng
+チェジュ	チェジュ	ch e j u
+エドゥー	エドゥー	e d u long
+アイエー	アイエー	a i e long
+うっちゃ	ウッチャ	u q ch a
+ウーファ	ウーファ	u long f a
+いいいっ	イイイッ	i i i q
+夷	エビス	e b i s u
+照	アキラ	a k i r a
+鶉	ウズラ	u z u r a
+転	ウタテ	u t a t e
+遮	サエギ	s a e g i
+諱	イミナ	i m i n a
+操	アヤツ	a y a ts u
+薊	アザミ	a z a m i
+怠	オコタ	o k o t a
+楓	カエデ	k a e d e
+齢	ヨワイ	y o w a i
+茨	イバラ	i b a r a
+収	オサム	o s a m u
+露	アラワ	a r a w a
+幼	オサナ	o s a n a
+燧	ヒウチ	h i u ch i
+卍	マンジ	m a ng j i
+揃	ソロイ	s o r o i
+鱗	ウロコ	u r o k o
+競	キソウ	k i s o u
+与	アズカ	a z u k a
+窕	ウツロ	u ts u r o
+脂	アブラ	a b u r a
+侮	アナド	a n a d o
+洽	アマネ	a m a n e
+泉	イズミ	i z u m i
+庚	カノエ	k a n o e
+箙	エビラ	e b i r a
+栞	シオリ	sh i o r i
+雛	ヒイナ	h i i n a
+歪	イビツ	i b i ts u
+鱇	アンコウ	a ng k o u
+嵐	アラシ	a r a sh i
+箒	ホウキ	h o u k i
+麗	ウララ	u r a r a
+掟	オキテ	o k i t e
+台	ウテナ	u t e n a
+漆	ウルシ	u r u sh i
+鰯	イワシ	i w a sh i
+榮	サカエ	s a k a e
+囀	サエズ	s a e z u
+偽	イツワ	i ts u w a
+廿	ニジュウ	n i j u u
+鵠	クグイ	k u g u i
+傭	ヤトイ	y a t o i
+傳	ツトウ	ts u t o u
+出	イズル	i z u r u
+鰌	ドジョウ	d o j o u
+噂	ウワサ	u w a s a
+嘲	アザケ	a z a k e
+釦	ボタン	b o t a ng
+疑	ウタグ	u t a g u
+命	イノチ	i n o ch i
+類	タグイ	t a g u i
+勢	イキオイ	i k i o i
+現	ウツツ	u ts u ts u
+錨	イカリ	i k a r i
+筏	イカダ	i k a d a
+鐙	アブミ	a b u m i
+煩	ウルサ	u r u s a
+袿	ウチギ	u ch i g i
+袷	アワセ	a w a s e
+袵	オクミ	o k u m i
+梢	コズエ	k o z u e
+焔	ホノオ	h o n o o
+表	オモテ	o m o t e
+愿	スナオ	s u n a o
+豕	イノコ	i n o k o
+肖	アヤカ	a y a k a
+勇	イサミ	i s a m i
+砺	アラト	a r a t o
+控	ヒカエ	h i k a e
+頁	ページ	p e long j i
+丙	ヒノエ	h i n o e
+瘧	オコリ	o k o r i
+厩	ウマヤ	u m a y a
+樹	イツキ	i ts u k i
+己	オノレ	o n o r e
+蝗	イナゴ	i n a g o
+既	スンデ	s u ng d e
+繊度	センド	s e ng d o
+利市	リイチ	r i i ch i
+宣布	センプ	s e ng p u
+雨田	アメダ	a m e d a
+蔬菜	ソサイ	s o s a i
+味け	アジケ	a j i k e
+文吾	ブンゴ	b u ng g o
+雨氷	ウヒョウ	u h y o u
+泊っ	トマッ	t o m a q
+利夫	トシオ	t o sh i o
+御召	オメシ	o m e sh i
+文司	ブンジ	b u ng j i
+神授	シンジュ	sh i ng j u
+宣江	ノブエ	n o b u e
+文句	モンク	m o ng k u
+神撫	ジンブ	j i ng b u
+呪法	ジュホウ	j u h o u
+御告	オツゲ	o ts u g e
+呪文	ジュモン	j u m o ng
+蔗糖	ショトウ	sh o t o u
+雨具	アマグ	a m a g u
+利刃	リジン	r i j i ng
+利便	リベン	r i b e ng
+文夫	フミオ	f u m i o
+煉瓦	レンガ	r e ng g a
+下風	カフウ	k a f u u
+蔵し	ゾウシ	z o u sh i
+夏央	ナツオ	n a ts u o
+雨龍	ウリュウ	u r y u u
+宣下	センゲ	s e ng g e
+呪お	ノロオ	n o r o o
+利水	リスイ	r i s u i
+難路	ナンロ	n a ng r o
+蔵せ	ゾウセ	z o u s e
+翠蔭	スイイン	s u i i ng
+味到	ミトウ	m i t o u
+別記	ベッキ	b e q k i
+室尾	ムロオ	m u r o o
+本保	ホンボ	h o ng b o
+龍飛	タッピ	t a q p i
+難破	ナンパ	n a ng p a
+山陰	サンイン	s a ng i ng
+貴ぅ	タットゥ	t a q t u
+別派	ベッパ	b e q p a
+翠尾	ミスオ	m i s u o
+翠子	スイコ	s u i k o
+下限	カゲン	k a g e ng
+気疎	ケウト	k e u t o
+神増	カンゾ	k a ng z o
+御大	オンタイ	o ng t a i
+利益	リエキ	r i e k i
+神場	カンバ	k a ng b a
+翔破	ショウハ	sh o u h a
+難儀	ナンギ	n a ng g i
+翔子	ショウコ	sh o u k o
+雪庇	セッピ	s e q p i
+御中	オンチュウ	o ng ch u u
+煎茶	センチャ	s e ng ch a
+御室	オムロ	o m u r o
+気転	キテン	k i t e ng
+変種	ヘンシュ	h e ng sh u
+宣し	センシ	s e ng sh i
+別所	ベッショ	b e q sh o
+煙ぅ	ケムゥ	k e m u u
+貴子	アツコ	a ts u k o
+味明	ミアケ	m i a k e
+神器	ジンギ	j i ng g i
+貯金	チョキン	ch o k i ng
+愛育	アイイク	a i i k u
+翻案	ホンアン	h o ng a ng
+口伝	クデン	k u d e ng
+味水	アジミ	a j i m i
+神和	シンワ	sh i ng w a
+御せ	ギョセ	g y o s e
+貴慮	キリョ	k i r y o
+本に	ホンニ	h o ng n i
+貯蔵	チョゾウ	ch o z o u
+離散	リサン	r i s a ng
+文乃	アヤノ	a y a n o
+御岳	オタケ	o t a k e
+煙害	エンガイ	e ng g a i
+御し	ギョシ	g y o sh i
+煙村	エンソン	e ng s o ng
+貯水	チョスイ	ch o s u i
+習知	シュウチ	sh u u ch i
+周縁	シュウエン	sh u u e ng
+貴注	キチュウ	k i ch u u
+得難	エガタ	e g a t a
+味醂	ミリン	m i r i ng
+検案	ケンアン	k e ng a ng
+神保	シンボ	sh i ng b o
+煙筒	エントウ	e ng t o u
+艇庫	テイコ	t e i k o
+岑生	ミネオ	m i n e o
+到ろ	イタロ	i t a r o
+神乃	ジンノ	j i ng n o
+神目	コウメ	k o u m e
+末谷	スエヤ	s u e y a
+雑貨	ザッカ	z a q k a
+判子	ハンコ	h a ng k o
+判ん	ワカン	w a k a ng
+御座	ギョザ	g y o z a
+蕃地	バンチ	b a ng ch i
+判ぜ	ハンゼ	h a ng z e
+文案	ブンアン	b u ng a ng
+制さ	セイサ	s e i s a
+敷居	シキイ	sh i k i i
+宥和	ユウワ	y u u w a
+蕃社	バンシャ	b a ng sh a
+宥恕	ユウジョ	y u u j o
+法主	ホウシュ	h o u sh u
+雑種	ザッシュ	z a q sh u
+雲上	ウンジョウ	u ng j o u
+煤煙	バイエン	b a i e ng
+雑歌	ゾウカ	z o u k a
+制野	セイノ	s e i n o
+不一	フイツ	f u i ts u
+貫首	カンジュ	k a ng j u
+初絵	ハツエ	h a ts u e
+貫目	カンメ	k a ng m e
+祝意	シュクイ	sh u k u i
+雲南	ウンナン	u ng n a ng
+焼絵	ヤキエ	y a k i e
+周布	シュウフ	sh u u f u
+御徒	オカチ	o k a ch i
+実車	ジッシャ	j i q sh a
+下郎	ゲロウ	g e r o u
+曳船	エイセン	e i s e ng
+周夫	チカオ	ch i k a o
+呻か	ウメカ	u m e k a
+初田	ハッタ	h a q t a
+初産	ウイザン	u i z a ng
+不便	フベン	f u b e ng
+法印	ホウイン	h o u i ng
+不信	フシン	f u sh i ng
+打倒	ダトウ	d a t o u
+実費	ジッピ	j i q p i
+蕩児	トウジ	t o u j i
+焼津	ヤイヅ	y a i z u
+蓮尾	ハスオ	h a s u o
+岡場	オカバ	o k a b a
+従者	ジュウシャ	j u u sh a
+初春	ショシュン	sh o sh u ng
+祝わ	イワワ	i w a w a
+蕪村	ブソン	b u s o ng
+祝ひ	ホガイ	h o g a i
+雲斎	ウンサイ	u ng s a i
+不動	フドウ	f u d o u
+夕げ	ユウゲ	y u u g e
+初婚	ショコン	sh o k o ng
+雲泥	ウンデイ	u ng d e i
+雲浜	ウンピン	u ng p i ng
+初回	ショカイ	sh o k a i
+愛牛	アイウシ	a i u sh i
+羽音	ハオト	h a o t o
+嬲っ	ナブッ	n a b u q
+文目	アヤメ	a y a m e
+雲舟	ウンシュウ	u ng sh u u
+呑吐	ドント	d o ng t o
+口座	コウザ	k o u z a
+雲谷	ウノヤ	u n o y a
+従事	ジュウジ	j u u j i
+嫌疑	ケンギ	k e ng g i
+薄き	ウスキ	u s u k i
+気配	ケハイ	k e h a i
+気重	キオモ	k i o m o
+不在	フザイ	f u z a i
+老儒	ロウジュ	r o u j u
+羽蟻	ハアリ	h a a r i
+列車	レッシャ	r e q sh a
+嫌気	イヤキ	i y a k i
+徒長	トチョウ	t o ch o u
+照影	ショウエイ	sh o u e i
+神韻	シンイン	sh i ng i ng
+御旅	オタビ	o t a b i
+が床	ガショウ	g a sh o u
+下賎	ゲセン	g e s e ng
+徒輩	トハイ	t o h a i
+零度	レイド	r e i d o
+曲っ	マガッ	m a g a q
+老妓	ロウギ	r o u g i
+有髪	ウハツ	u h a ts u
+列せ	レッセ	r e q s e
+蒼鉛	ソウエン	s o u e ng
+老婆	ロウバ	r o u b a
+不平	フヘイ	f u h e i
+刑訴	ケイソ	k e i s o
+刑務	ケイム	k e i m u
+蒼社	ソウシャ	s o u sh a
+祟っ	タタッ	t a t a q
+雷火	ライカ	r a i k a
+不念	ブネン	b u n e ng
+徒名	アダナ	a d a n a
+貨幣	カヘイ	k a h e i
+御旗	オハタ	o h a t a
+徐行	ジョコウ	j o k o u
+椿井	ツバイ	ts u b a i
+気前	キマエ	k i m a e
+煩さ	ハンサ	h a ng s a
+岡戸	オカド	o k a d o
+集お	ツドオ	ts u d o o
+御杉	オスギ	o s u g i
+呼号	コゴウ	k o g o u
+薄ま	ウスマ	u s u m a
+雅馴	ガジュン	g a j u ng
+電炉	デンロ	d e ng r o
+文蔵	ブゾウ	b u z o u
+有馬	アリマ	a r i m a
+不易	フエキ	f u e k i
+雅雄	マサオ	m a s a o
+子分	コブン	k o b u ng
+実意	ジツイ	j i ts u i
+貧打	ヒンダ	h i ng d a
+呼損	コソン	k o s o ng
+祖宗	ソソウ	s o s o u
+呼集	コシュウ	k o sh u u
+貧せ	ヒンセ	h i ng s e
+命ず	メイズ	m e i z u
+曜日	ヨウビ	y o u b i
+末美	スエミ	s u e m i
+曙山	ショザン	sh o z a ng
+楊井	ヤギイ	y a g i i
+祓っ	ハラッ	h a r a q
+薄れ	ウスレ	u s u r e
+曖昧	アイマイ	a i m a i
+雅兄	ガケイ	g a k e i
+命運	メイウン	m e i u ng
+末社	マッシャ	m a q sh a
+雄飛	ユウヒ	y u u h i
+咄嗟	トッサ	t o q s a
+羽帯	ハオビ	h a o b i
+打当	ウットウ	u q t o u
+数輩	スハイ	s u h a i
+数詞	スウシ	s u u sh i
+需品	ジュヒン	j u h i ng
+雄琴	オゴト	o g o t o
+祥絵	サチエ	s a ch i e
+嫌っ	キラッ	k i r a q
+沼尾	ヌマオ	n u m a o
+雄島	オジマ	o j i m a
+不粋	ブスイ	b u s u i
+削っ	ケズッ	k e z u q
+焦れ	アセレ	a s e r e
+も本	モホン	m o h o ng
+和ん	ナゴン	n a g o ng
+愛憐	アイレン	a i r e ng
+和上	ワジョウ	w a j o u
+曇っ	クモッ	k u m o q
+売津	ウルヅ	u r u z u
+楓湖	フウコ	f u u k o
+前之	マエノ	m a e n o
+和全	ワゼン	w a z e ng
+数夫	カズオ	k a z u o
+叙勲	ジョクン	j o k u ng
+売手	ウリテ	u r i t e
+打歩	ウチブ	u ch i b u
+羽合	ハワイ	h a w a i
+御玉	オダマ	o d a m a
+叙任	ジョニン	j o n i ng
+嫌が	イヤガ	i y a g a
+鼻腔	ビコウ	b i k o u
+呈せ	テイセ	t e i s e
+受験	ジュケン	j u k e ng
+夾ん	ハサン	h a s a ng
+霊園	レイエン	r e i e ng
+売女	バイタ	b a i t a
+売場	ウリバ	u r i b a
+受難	ジュナン	j u n a ng
+暴徒	ボウト	b o u t o
+子平	シヘイ	sh i h e i
+受身	ウケミ	u k e m i
+前古	ゼンコ	z e ng k o
+愛宕	アタゴ	a t a g o
+楚南	ソナン	s o n a ng
+打田	ウチタ	u ch i t a
+与一	ヨイチ	y o i ch i
+雁皮	ガンピ	g a ng p i
+与件	ヨケン	y o k e ng
+与信	ヨシン	y o sh i ng
+前夜	ゼンヤ	z e ng y a
+暴れ	アバレ	a b a r e
+雁書	ガンショ	g a ng sh o
+暴こ	アバコ	a b a k o
+老鋪	ロウホ	r o u h o
+無風	ムフウ	m u f u u
+財津	ザイツ	z a i ts u
+後住	ゴジュウ	g o j u u
+無題	ムダイ	m u d a i
+受粉	ジュフン	j u f u ng
+隼雄	ハヤオ	h a y a o
+羯鼓	カッコ	k a q k o
+義金	ギキン	g i k i ng
+熱さ	ネッサ	n e q s a
+熱っ	ホテッ	h o t e q
+和本	ワホン	w a h o ng
+義軍	ギグン	g i g u ng
+熱れ	イキレ	i k i r e
+暮風	ボフウ	b o f u u
+治郎	ジロウ	j i r o u
+祷ら	イノラ	i n o r a
+与能	ヨノウ	y o n o u
+打粉	ウチコ	u ch i k o
+隣家	リンカ	r i ng k a
+熱池	ニイケ	n i i k e
+熱田	アツタ	a ts u t a
+民音	ミンオン	m i ng o ng
+船江	フナエ	f u n a e
+与論	ヨロン	y o r o ng
+隣保	リンポ	r i ng p o
+無銘	ムメイ	m u m e i
+暮鐘	ボショウ	b o sh o u
+奉膳	ブンゼ	b u ng z e
+熱郛	ネップ	n e q p u
+薫ず	クンズ	k u ng z u
+民雄	タミオ	t a m i o
+考案	コウアン	k o u a ng
+隠顕	インケン	i ng k e ng
+隠遁	イントン	i ng t o ng
+受書	ウケショ	u k e sh o
+隠忍	インニン	i ng n i ng
+愛吟	アイギン	a i g i ng
+隠居	インキョ	i ng k y o
+熾す	オコス	o k o s u
+民訴	ミンソ	m i ng s o
+隠坊	オンボウ	o ng b o u
+受戒	ジュカイ	j u k a i
+熾火	オキビ	o k i b i
+後で	アトデ	a t o d e
+御職	オショク	o sh o k u
+貸潮	カシオ	k a sh i o
+貸費	タイヒ	t a i h i
+律雄	リツオ	r i ts u o
+下絵	シタエ	sh i t a e
+鼠入	ソイリ	s o i r i
+失地	シッチ	sh i q ch i
+霞ん	カスン	k a s u ng
+丑田	ウシダ	u sh i d a
+前歯	マエバ	m a e b a
+失そ	シッソ	sh i q s o
+律詩	リッシ	r i q sh i
+障ん	サワン	s a w a ng
+世上	セジョウ	s e j o u
+世人	セジン	s e j i ng
+燃油	ネンユ	n e ng y u
+禁ぜ	キンゼ	k i ng z e
+燃費	ネンピ	n e ng p i
+律す	リッス	r i q s u
+世尊	セソン	s e s o ng
+宝馬	ホウマ	h o u m a
+民地	ミンチ	m i ng ch i
+義方	ギホウ	g i h o u
+際せ	サイセ	s a i s e
+御苑	ギョエン	g y o e ng
+藉口	シャコウ	sh a k o u
+霧散	ムサン	m u s a ng
+義挙	ギキョ	g i k y o
+藍色	アイイロ	a i i r o
+燕一	エンイチ	e ng i ch i
+随鴎	ズイオウ	z u i o u
+随時	ズイジ	z u i j i
+敬和	ケイワ	k e i w a
+分目	フンメ	f u ng m e
+鼎坐	テイザ	t e i z a
+前目	マエメ	m a e m e
+暗鬱	アンウツ	a ng u ts u
+藤和	トウワ	t o u w a
+貼付	チョウフ	ch o u f u
+岩出	イワデ	i w a d e
+分布	ブンプ	b u ng p u
+社線	シャセン	sh a s e ng
+民主	ミンシュ	m i ng sh u
+害さ	ガイサ	g a i s a
+害し	ガイシ	g a i sh i
+露天	ロテン	r o t e ng
+禁固	キンコ	k i ng k o
+燻さ	イブサ	i b u s a
+燻し	イブシ	i b u sh i
+扮し	フンシ	f u ng sh i
+扮す	フンス	f u ng s u
+宵寝	ヨイネ	y o i n e
+燻れ	イブレ	i b u r e
+宵田	ヨイダ	y o i d a
+本屋	ホンヤ	h o ng y a
+社屋	シャオク	sh a o k u
+和習	ワシュウ	w a sh u u
+法華	ホッケ	h o q k e
+世襲	セシュウ	s e sh u u
+暗算	アンザン	a ng z a ng
+露悪	ロアク	r o a k u
+露盤	ロバン	r o b a ng
+世間	セケン	s e k e ng
+社団	シャダン	sh a d a ng
+才見	サイミ	s a i m i
+和製	ワセイ	w a s e i
+批准	ヒジュン	h i j u ng
+家中	イエジュウ	i e j u u
+批判	ヒハン	h i h a ng
+御門	ゴモン	g o m o ng
+蘋園	ヒンエン	h i ng e ng
+社友	シャユウ	sh a y u u
+岩子	イワコ	i w a k o
+蘭奢	ランジャ	r a ng j a
+技芸	ギゲイ	g i g e i
+才羽	サイバ	s a i b a
+耐子	タエコ	t a e k o
+虎夫	トラオ	t o r a o
+剛夫	タケオ	t a k e o
+禁輸	キンユ	k i ng y u
+太間	タイマ	t a i m a
+社内	シャナイ	sh a n a i
+葦辺	アシベ	a sh i b e
+険所	ケンショ	k e ng sh o
+往郷	オウゴウ	o u g o u
+陸雄	ムツオ	m u ts u o
+出資	シュッシ	sh u q sh i
+出荷	シュッカ	sh u q k a
+往歳	オウサイ	o u s a i
+出花	イデカ	i d e k a
+禅味	ゼンミ	z e ng m i
+家奥	イエオク	i e o k u
+毬絵	マリエ	m a r i e
+陸湯	オカユ	o k a y u
+出羽	イズハ	i z u h a
+契印	ケイイン	k e i i ng
+本手	ホンテ	h o ng t e
+太郎	タロウ	t a r o u
+陶砂	ドウサ	d o u s a
+手順	テジュン	t e j u ng
+陳謝	チンシャ	ch i ng sh a
+虎魚	オコゼ	o k o z e
+虐め	イジメ	i j i m e
+陰陽	インヨウ	i ng y o u
+出番	デバン	d e b a ng
+御髪	オグシ	o g u sh i
+子犬	コイヌ	k o i n u
+出湯	イデユ	i d e y u
+出海	デウミ	d e u m i
+貞雄	サダオ	s a d a o
+青岡	アオオカ	a o o k a
+青岩	アオイワ	a o i w a
+虚字	キョジ	k y o j i
+群舞	グンブ	g u ng b u
+奠都	テント	t e ng t o
+陰惨	インサン	i ng s a ng
+礼文	レブン	r e b u ng
+斗煥	ドファン	d o f a ng
+抉ら	エグラ	e g u r a
+出様	デヨウ	d e y o u
+奢ら	オゴラ	o g o r a
+嫁い	トツイ	t o ts u i
+椎野	シイノ	sh i i n o
+礼奈	レイナ	r e i n a
+礼受	レウケ	r e u k e
+椎谷	シイヤ	sh i i y a
+毟っ	ムシッ	m u sh i q
+山王	サンオウ	s a ng o u
+下相	オリアイ	o r i a i
+椎津	シイヅ	sh i i z u
+把手	トッテ	t o q t e
+家紋	カモン	k a m o ng
+外侮	ガイブ	g a i b u
+出府	シュップ	sh u q p u
+黙ん	ダマン	d a m a ng
+礒田	イソダ	i s o d a
+役務	エキム	e k i m u
+賛美	サンビ	s a ng b i
+毛裏	ケウラ	k e u r a
+青石	アオイシ	a o i sh i
+家賃	ヤチン	y a ch i ng
+賜う	タマウ	t a m a u
+著名	チョメイ	ch o m e i
+毛穴	ケアナ	k e a n a
+除数	ジョスウ	j o s u u
+循子	ジュンコ	j u ng k o
+役せ	エキセ	e k i s e
+除去	ジョキョ	j o k y o
+磯部	イソベ	i s o b e
+業苦	ゴウク	g o u k u
+水巴	スイハ	s u i h a
+下男	ゲナン	g e n a ng
+末木	ウラキ	u r a k i
+宛字	アテジ	a t e j i
+貞婦	テイフ	t e i f u
+青苗	アオナエ	a o n a e
+末期	マッキ	m a q k i
+除い	ノゾイ	n o z o i
+出世	シュッセ	sh u q s e
+毛唐	ケトウ	k e t o u
+蛇体	ジャタイ	j a t a i
+影像	エイゾウ	e i z o u
+磯津	イソヅ	i s o z u
+無勢	ブゼイ	b u z e i
+咲織	サオリ	s a o r i
+蛇池	ジャイケ	j a i k e
+奥乃	オクノ	o k u n o
+並居	ナミイ	n a m i i
+楳津	ウメツ	u m e ts u
+斡旋	アッセン	a q s e ng
+微減	ビゲン	b i g e ng
+著う	シルウ	sh i r u u
+治勲	チクン	ch i k u ng
+磯子	イソゴ	i s o g o
+凹版	オウハン	o u h a ng
+凹ん	ヘコン	h e k o ng
+福生	フッサ	f u q s a
+治乱	チラン	ch i r a ng
+並置	ヘイチ	h e i ch i
+波動	ハドウ	h a d o u
+有野	アリノ	a r i n o
+耽っ	フケッ	f u k e q
+水江	ミズエ	m i z u e
+微粉	ビフン	b i f u ng
+院内	インナイ	i ng n a i
+微細	ビサイ	b i s a i
+抓っ	ツネッ	ts u n e q
+宿っ	ヤドッ	y a d o q
+外夫	ソトオ	s o t o o
+山根	サンネ	s a ng n e
+彩雲	サイウン	s a i u ng
+凡打	ボンダ	b o ng d a
+暖簾	ノレン	n o r e ng
+凡手	ボンシュ	b o ng sh u
+外宮	ゲクウ	g e k u u
+凡そ	オヨソ	o y o s o
+外尾	ソデオ	s o d e o
+聖油	セイユ	s e i y u
+落魚	オチウオ	o ch i u o
+凍る	コオル	k o o r u
+片雲	ヘンウン	h e ng u ng
+中万	チュウマ	ch u u m a
+愚鈍	グドン	g u d o ng
+美談	ビダン	b i d a ng
+落部	オチベ	o ch i b e
+聘す	ヘイス	h e i s u
+形影	ケイエイ	k e i e i
+治し	ナオシ	n a o sh i
+投ず	トウズ	t o u z u
+凌い	シノイ	sh i n o i
+投与	トウヨ	t o u y o
+有路	アリジ	a r i j i
+焙炉	ホイロ	h o i r o
+植苗	ウエナエ	u e n a e
+禾津	イナツ	i n a ts u
+凄ん	スゴン	s u g o ng
+手製	テセイ	t e s e i
+奥屋	オクヤ	o k u y a
+秀也	シュウヤ	sh u u y a
+当部	トウベ	t o u b e
+愚民	グミン	g u m i ng
+航路	コウロ	k o u r o
+牛久	ウシク	u sh i k u
+力夫	リキオ	r i k i o
+手薄	テウス	t e u s u
+阿鉄	アテツ	a t e ts u
+奥州	オウシュウ	o u sh u u
+阿達	アダチ	a d a ch i
+水腫	スイシュ	s u i sh u
+員弁	イナベ	i n a b e
+員数	インズウ	i ng z u u
+油送	ユソウ	y u s o u
+非人	ヒニン	h i n i ng
+手芸	シュゲイ	sh u g e i
+阿漕	アコギ	a k o g i
+非凡	ヒボン	h i b o ng
+下水	ゲスイ	g e s u i
+極意	ゴクイ	g o k u i
+中呂	チュウロ	ch u u r o
+破片	ハヘン	h a h e ng
+加え	クワエ	k u w a e
+冲せ	チュウセ	ch u u s e
+冬衛	フユエ	f u y u e
+破ん	ヤブン	y a b u ng
+哲太	テッタ	t e q t a
+落田	オチダ	o ch i d a
+婚期	コンキ	k o ng k i
+士寸	シスン	sh i s u ng
+投網	トアミ	t o a m i
+豚舎	トンシャ	t o ng sh a
+徹し	テッシ	t e q sh i
+本譜	ホンプ	h o ng p u
+断種	ダンシュ	d a ng sh u
+阿品	アジナ	a j i n a
+阿原	アハラ	a h a r a
+冨江	トミエ	t o m i e
+植房	ウエボウ	u e b o u
+面ば	メンバ	m e ng b a
+植岡	ウエオカ	u e o k a
+螺鈿	ラデン	r a d e ng
+徹ら	トオラ	t o o r a
+赤屋	アカヤ	a k a y a
+未満	ミマン	m i m a ng
+泥ん	ナズン	n a z u ng
+落地	オロチ	o r o ch i
+油池	ユイケ	y u i k e
+愚か	オロカ	o r o k a
+美潮	ミシオ	m i sh i o
+防音	ボウオン	b o u o ng
+赤毛	アカゲ	a k a g e
+写せ	ウツセ	u ts u s e
+植大	ウエダイ	u e d a i
+面河	オモゴ	o m o g o
+油断	ユダン	y u d a ng
+唄わ	ウタワ	u t a w a
+冗費	ジョウヒ	j o u h i
+書林	ショリン	sh o r i ng
+墳墓	フンボ	f u ng b o
+墨絵	スミエ	s u m i e
+手相	テソウ	t e s o u
+彌蔵	ヤゾウ	y a z o u
+油圧	ユアツ	y u a ts u
+点者	テンジャ	t e ng j a
+赤部	アカブ	a k a b u
+美景	ビケイ	b i k e i
+円陣	エンジン	e ng j i ng
+円錐	エンスイ	e ng s u i
+水鶏	クイナ	k u i n a
+新出	シンデ	sh i ng d e
+岱野	タイノ	t a i n o
+円融	エンユウ	e ng y u u
+墜死	ツイシ	ts u i sh i
+聯句	レンク	r e ng k u
+石鏡	イジカ	i j i k a
+石野	イシノ	i sh i n o
+円盤	エンバン	e ng b a ng
+閲兵	エッペイ	e q p e i
+石賀	イシガ	i sh i g a
+手桶	テオケ	t e o k e
+智謀	チボウ	ch i b o u
+手本	テホン	t e h o ng
+手斧	チョウナ	ch o u n a
+点ぜ	テンゼ	t e ng z e
+下戸	オリト	o r i t o
+比内	ヒナイ	h i n a i
+敗訴	ハイソ	h a i s o
+円う	マルウ	m a r u u
+内需	ナイジュ	n a i j u
+聳え	ソビエ	s o b i e
+血膿	チウミ	ch i u m i
+秋津	アキツ	a k i ts u
+弾い	ハジイ	h a j i i
+石瀬	イシゼ	i sh i z e
+新多	ニイダ	n i i d a
+音域	オンイキ	o ng i k i
+炭素	タンソ	t a ng s o
+内記	ナイキ	n a i k i
+折出	オリデ	o r i d e
+音水	オンズイ	o ng z u i
+物故	ブッコ	b u q k o
+音田	オトダ	o t o d a
+内瀬	ナイゼ	n a i z e
+衆生	シュジョウ	sh u j o u
+手打	テウチ	t e u ch i
+新実	ニイミ	n i i m i
+科挙	カキョ	k a k y o
+音訓	オンクン	o ng k u ng
+谷茶	タンチャ	t a ng ch a
+娶ん	メトン	m e t o ng
+音部	オトベ	o t o b e
+内帑	ナイド	n a i d o
+太宰	ダザイ	d a z a i
+手当	テアテ	t e a t e
+閔妃	ビンビ	b i ng b i
+内出	ウチデ	u ch i d e
+劣位	レツイ	r e ts u i
+寄居	ヨリイ	y o r i i
+秘露	ペルー	p e r u long
+唯美	ユイビ	y u i b i
+兼雄	カネオ	k a n e o
+租税	ソゼイ	s o z e i
+谷江	タニエ	t a n i e
+順守	ジュンシュ	j u ng sh u
+矩形	クケイ	k u k e i
+唸ろ	ウナロ	u n a r o
+炬火	キョカ	k y o k a
+救お	スクオ	s u k u o
+手垢	テアカ	t e a k a
+色合	イロアイ	i r o a i
+須天	スアマ	s u a m a
+具眼	グガン	g u g a ng
+具有	グユウ	g u y u u
+朱欒	ザボン	z a b o ng
+萬和	マンワ	m a ng w a
+助言	ジョゲン	j o g e ng
+犬来	イヌグ	i n u g u
+犬田	イヌタ	i n u t a
+犬目	イヌメ	i n u m e
+羅山	ラザン	r a z a ng
+萩尾	ハギオ	h a g i o
+劫初	ゴウショ	g o u sh o
+狂え	クルエ	k u r u e
+越中	エッチュウ	e q ch u u
+毎夜	マイヨ	m a i y o
+墓域	ボイキ	b o i k i
+知手	シッテ	sh i q t e
+越井	コシイ	k o sh i i
+六腑	ロップ	r o q p u
+移入	イニュウ	i n y u u
+母袋	モタイ	m o t a i
+罰そ	バッソ	b a q s o
+存ず	ゾンズ	z o ng z u
+母船	ボセン	b o s e ng
+移築	イチク	i ch i k u
+狙い	ネライ	n e r a i
+存せ	ソンセ	s o ng s e
+六日	ムイカ	m u i k a
+越戸	オツト	o ts u t o
+置碁	オキゴ	o k i g o
+置数	チスウ	ch i s u u
+朴野	ホウノ	h o u n o
+置戸	オケト	o k e t o
+宗家	ソウケ	s o u k e
+萌黄	モエギ	m o e g i
+河童	カッパ	k a q p a
+色瀬	イロセ	i r o s e
+榎並	エナミ	e n a m i
+萌子	モエコ	m o e k o
+麻田	アサダ	a s a d a
+萌出	モエデ	m o e d e
+讒せ	ザンセ	z a ng s e
+榎木	エノキ	e n o k i
+越権	エッケン	e q k e ng
+越生	オゴセ	o g o s e
+存否	ソンピ	s o ng p i
+六つ	ムッツ	m u q ts u
+屠っ	ホフッ	h o f u q
+行場	イキバ	i k i b a
+行子	イクコ	i k u k o
+行宮	アングウ	a ng g u u
+越路	コイジ	k o i j i
+麻寺	アサジ	a s a j i
+問屋	トイヤ	t o i y a
+毀っ	コボッ	k o b o q
+行灯	アンドン	a ng d o ng
+否応	イヤオウ	i y a o u
+足助	アスケ	a s u k e
+足寄	アショロ	a sh o r o
+矢落	ヤオチ	y a o ch i
+譲ん	ユズン	y u z u ng
+展延	テンエン	t e ng e ng
+頑愚	ガング	g a ng g u
+独歩	ドッポ	d o q p o
+菱江	ヒシエ	h i sh i e
+独狐	トッコ	t o q k o
+衒え	テラエ	t e r a e
+足湯	アシユ	a sh i y u
+頓悟	トンゴ	t o ng g o
+故買	コバイ	k o b a i
+多年	タネン	t a n e ng
+足羽	アスワ	a s u w a
+塩部	シオベ	sh i o b e
+新曽	ニイゾ	n i i z o
+麦雨	バクウ	b a k u u
+勇武	ユウブ	y u u b u
+華鈴	カリン	k a r i ng
+杉井	スギイ	s u g i i
+津秋	ツアキ	ts u a k i
+跡地	アトチ	a t o ch i
+纏お	マトオ	m a t o o
+八辺	ヤッペ	y a q p e
+麦生	ムギウ	m u g i u
+峻輝	シュンキ	sh u ng k i
+津越	ツゴエ	ts u g o e
+吠陀	ベーダ	b e long d a
+門衛	モンエイ	m o ng e i
+路傍	ロボウ	r o b o u
+門派	モンパ	m o ng p a
+路恵	ミチエ	m i ch i e
+門書	モンショ	m o ng sh o
+稗田	ヒエタ	h i e t a
+華奢	キャシャ	k y a sh a
+門尾	カドオ	k a d o o
+華厳	ケゴン	k e g o ng
+門前	モンゼ	m o ng z e
+動ぜ	ドウゼ	d o u z e
+長部	オサベ	o s a b e
+択ば	エラバ	e r a b a
+稚魚	チギョ	ch i g y o
+頭巾	ズキン	z u k i ng
+披閲	ヒエツ	h i e ts u
+矢声	ヤゴエ	y a g o e
+天狗	テング	t e ng g u
+猪篠	イザサ	i z a s a
+踊る	オドル	o d o r u
+表意	ヒョウイ	h y o u i
+譏っ	ソシッ	s o sh i q
+お釣	オツリ	o ts u r i
+吟味	ギンミ	g i ng m i
+多数	タスウ	t a s u u
+織砂	オリサ	o r i s a
+威さ	オドサ	o d o s a
+洲江	スノエ	s u n o e
+吟ず	ギンズ	g i ng z u
+塩田	エンデン	e ng d e ng
+火浦	ヒウラ	h i u r a
+お萩	オハギ	o h a g i
+猶も	ナオモ	n a o m o
+杓え	シャクエ	sh a k u e
+頭重	ズオモ	z u o m o
+猿尾	サルオ	s a r u o
+火桶	ヒオケ	h i o k e
+塩津	シオツ	sh i o ts u
+お節	オセチ	o s e ch i
+塩梅	アンバイ	a ng b a i
+種生	タナオ	t a n a o
+抱く	イダク	i d a k u
+君恩	クンオン	k u ng o ng
+安黒	アグロ	a g u r o
+玄田	ゲンダ	g e ng d a
+お櫃	オヒツ	o h i ts u
+繁雄	シゲオ	sh i g e o
+塩子	シオゴ	sh i o g o
+忌部	イムベ	i m u b e
+喋っ	シャベッ	sh a b e q
+お平	オヒラ	o h i r a
+八出	ヤイデ	y a i d e
+裁い	サバイ	s a b a i
+芋場	イモバ	i m o b a
+稲生	イナオイ	i n a o i
+天座	アマザ	a m a z a
+繁務	ハンム	h a ng m u
+着衣	チャクイ	ch a k u i
+芋煮	イモニ	i m o n i
+八つ	ヤッツ	y a q ts u
+活魚	イケウオ	i k e u o
+全音	ゼンオン	z e ng o ng
+鎮護	チンゴ	ch i ng g o
+お下	オシモ	o sh i m o
+お七	オシチ	o sh i ch i
+塗絵	ヌリエ	n u r i e
+縷陳	ルチン	r u ch i ng
+喜入	キイレ	k i i r e
+装い	ヨソイ	y o s o i
+沢海	ソウミ	s o u m i
+入部	イリブ	i r i b u
+躄れ	イザレ	i z a r e
+丹下	タンゲ	t a ng g e
+入歯	イレバ	i r e b a
+段田	ダンダ	d a ng d a
+縫目	ヌイメ	n u i m e
+木賃	キチン	k i ch i ng
+入子	イレコ	i r e k o
+孟母	モウボ	m o u b o
+永眠	エイミン	e i m i ng
+段歩	タンブ	t a ng b u
+押場	オシバ	o sh i b a
+題画	ダイガ	d a i g a
+裏野	ウラノ	u r a n o
+班渓	バンケ	b a ng k e
+夜中	ヤチュウ	y a ch u u
+募ん	ツノン	ts u n o ng
+募兵	ボヘイ	b o h e i
+喪中	モチュウ	m o ch u u
+居舟	イフネ	i f u n e
+没せ	ボッセ	b o q s e
+喫さ	キッサ	k i q s a
+夜半	ヤハン	y a h a ng
+季春	キシュン	k i sh u ng
+来尾	キタオ	k i t a o
+勢家	セイケ	s e i k e
+担う	ニナウ	n i n a u
+諺文	オンモン	o ng m o ng
+顕家	アキイエ	a k i i e
+願う	ネガウ	n e g a u
+軋っ	キシッ	k i sh i q
+鋳掛	イカケ	i k a k e
+諸江	モロエ	m o r o e
+真鯉	マコイ	m a k o i
+久住	クジュウ	k u j u u
+縁遠	エンドオ	e ng d o o
+寝棺	ネカン	n e k a ng
+包ん	ツツン	ts u ts u ng
+類せ	ルイセ	r u i s e
+寝汗	ネアセ	n e a s e
+類句	ルイク	r u i k u
+大麻	オオアサ	o o a s a
+夜明	ヨアケ	y o a k e
+類書	ルイショ	r u i sh o
+汐田	シオタ	sh i o t a
+嗣夫	ツグオ	ts u g u o
+銘茶	メイチャ	m e i ch a
+寝相	ネゾウ	n e z o u
+居尻	イジリ	i j i r i
+塁打	ルイダ	r u i d a
+軍手	グンテ	g u ng t e
+風び	フウビ	f u u b i
+諷諭	フウユ	f u u y u
+莇野	アゾノ	a z o n o
+銃後	ジュウゴ	j u u g o
+模様	モヨウ	m o y o u
+是認	ゼニン	z e n i ng
+理財	リザイ	r i z a i
+荻須	オギス	o g i s u
+荻野	オギノ	o g i n o
+育っ	ソダッ	s o d a q
+風波	フウハ	f u u h a
+招い	マネイ	m a n e i
+真苗	マナエ	m a n a e
+悼む	イタム	i t a m u
+銀波	ギンパ	g i ng p a
+芦生	アシオイ	a sh i o i
+拝み	オガミ	o g a m i
+育児	イクジ	i k u j i
+悶え	モダエ	m o d a e
+大頓	オオトン	o o t o ng
+風雲	フウウン	f u u u ng
+察さ	サッサ	s a q s a
+空母	クウボ	k u u b o
+荻生	オギュウ	o g y u u
+兄貴	アニキ	a n i k i
+擦っ	コスッ	k o s u q
+察知	サッチ	s a q ch i
+育種	イクシュ	i k u sh u
+緩う	ユルウ	y u r u u
+括ん	ククン	k u k u ng
+拭う	ヌグウ	n u g u u
+汗し	アセシ	a s e sh i
+編著	ヘンチョ	h e ng ch o
+残土	ザンド	z a ng d o
+襟花	エリカ	e r i k a
+穿と	ウガト	u g a t o
+鈴江	スズエ	s u z u e
+激っ	タギッ	t a g i q
+大雨	オオアメ	o o a m e
+悲痛	ヒツウ	h i ts u u
+編戸	アミド	a m i d o
+澪子	ミオコ	m i o k o
+北京	ペキン	p e k i ng
+志願	シガン	sh i g a ng
+瑞雲	ズイウン	z u i u ng
+鈍し	ドンシ	d o ng sh i
+汗す	アセス	a s e s u
+房雄	フサオ	f u s a o
+瑪瑙	メノウ	m e n o u
+鈍い	ニブイ	n i b u i
+嘘字	ウソジ	u s o j i
+瓜巣	ウリス	u r i s u
+鵜殿	ウドノ	u d o n o
+寵愛	チョウアイ	ch o u a i
+突ぱ	ツッパ	ts u q p a
+汗疣	アセモ	a s e m o
+上部	ウワベ	u w a b e
+鵜坂	ウサカ	u s a k a
+胃壁	イヘキ	i h e k i
+上輪	アゲワ	a g e w a
+尾鰭	オビレ	o b i r e
+寸書	スンショ	s u ng sh o
+尾駮	オブチ	o b u ch i
+弑せ	シイセ	sh i i s e
+寸話	スンワ	s u ng w a
+億劫	オックウ	o q k u u
+尾附	オヅク	o z u k u
+巡ら	ジュンラ	j u ng r a
+緒沢	オザワ	o z a w a
+名親	ナオヤ	n a o y a
+尾関	オゼキ	o z e k i
+東雲	アズモ	a z u m o
+横尾	ヨコオ	y o k o o
+荷馬	ニウマ	n i u m a
+甘水	アモズ	a m o z u
+甘煮	ウマニ	u m a n i
+潤も	ウルモ	u r u m o
+弁疏	ベンソ	b e ng s o
+名簿	メイボ	m e i b o
+木樋	キトイ	k i t o i
+弁務	ベンム	b e ng m u
+潤っ	ウルオッ	u r u o q
+応挙	オウキョ	o u k y o
+対す	タイス	t a i s u
+上見	ウワミ	u w a m i
+傳え	ツタエ	ts u t a e
+悪運	アクウン	a k u u ng
+上蛇	ジョウジャ	j o u j a
+乗務	ジョウム	j o u m u
+梶江	カジエ	k a j i e
+春雲	シュンウン	sh u ng u ng
+傍陽	ソエヒ	s o e h i
+金間	キンマ	k i ng m a
+偽電	ギデン	g i d e ng
+悪漢	アッカン	a q k a ng
+偽悪	ギアク	g i a k u
+輪ね	リンネ	r i ng n e
+偶詠	グウエイ	g u u e i
+輪厚	ワアツ	w a a ts u
+綾衣	アヤギ	a y a g i
+悪戸	アクド	a k u d o
+持尾	モチオ	m o ch i o
+撮ん	ツマン	ts u m a ng
+有河	アルガ	a r u g a
+戸磯	トイソ	t o i s o
+乙種	オツシュ	o ts u sh u
+有毛	アリゲ	a r i g e
+江下	エシタ	e sh i t a
+金生	カナウ	k a n a u
+輸銀	ユギン	y u g i ng
+尾白	オジロ	o j i r o
+安然	アンネン	a ng n e ng
+致せ	イタセ	i t a s e
+尾沼	オヌマ	o n u m a
+忠庵	チュウアン	ch u u a ng
+省い	ハブイ	h a b u i
+参れ	マイレ	m a i r e
+春画	シュンガ	sh u ng g a
+大道	オオドウ	o o d o u
+倦む	アグム	a g u m u
+封ぜ	フウゼ	f u u z e
+廟宇	ビョウウ	b y o u u
+替地	カエチ	k a e ch i
+春浦	シュンポ	sh u ng p o
+つ折	ツオリ	ts u o r i
+尾垂	オダレ	o d a r e
+倒せ	タオセ	t a o s e
+大跡	オオアト	o o a t o
+大足	オオアシ	o o a sh i
+漁父	ギョフ	g y o f u
+網田	アミタ	a m i t a
+大越	オオコエ	o o k o e
+四会	ヨツエ	y o ts u e
+堀津	ホッツ	h o q ts u
+網戸	アジト	a j i t o
+漁ろ	アサロ	a s a r o
+網干	アボシ	a b o sh i
+堀江	ホリエ	h o r i e
+快癒	カイユ	k a i y u
+江住	エスミ	e s u m i
+江別	エベツ	e b e ts u
+江刺	エサシ	e s a sh i
+悦治	エツジ	e ts u j i
+梅治	ウメジ	u m e j i
+悦哉	エツヤ	e ts u y a
+巨歩	キョホ	k y o h o
+乳井	ニュウイ	n y u u i
+江口	エグチ	e g u ch i
+射水	イミズ	i m i z u
+女衒	ゼゲン	z e g e ng
+生湯	ウブユ	u b u y u
+忽諸	コッショ	k o q sh o
+野秋	ノアキ	n o a k i
+飯合	イイゴウ	i i g o u
+飯喰	イックイ	i q k u i
+飯岡	イイオカ	i i o k a
+生簀	イケス	i k e s u
+野浦	ノウラ	n o u r a
+歪も	イガモ	i g a m o
+挑み	イドミ	i d o m i
+奴隷	ドレイ	d o r e i
+飯降	イフリ	i f u r i
+挙る	アガル	a g a r u
+歩廊	ホロウ	h o r o u
+板場	イタバ	i t a b a
+樹齢	ジュレイ	j u r e i
+辻井	ツジイ	ts u j i i
+滅す	メッス	m e q s u
+江持	エモチ	e m o ch i
+生野	イカノ	i k a n o
+怖ぅ	コワゥ	k o w a u
+名内	ナウチ	n a u ch i
+誘こ	オビコ	o b i k o
+旅費	リョヒ	r y o h i
+保有	ホユウ	h o y u u
+臭う	クサウ	k u s a u
+溢れ	アフレ	a f u r e
+迎車	ゲイシャ	g e i sh a
+絶家	ゼッケ	z e q k e
+保っ	タモッ	t a m o q
+挙句	アゲク	a g e k u
+挙手	キョシュ	k y o sh u
+春夢	シュンム	sh u ng m u
+江永	エナガ	e n a g a
+安室	アズチ	a z u ch i
+摩っ	サスッ	s a s u q
+重苦	ジュウク	j u u k u
+産女	ウブメ	u b u m e
+序品	ジョボン	j o b o ng
+憂ひ	ウレヒ	u r e h i
+序で	ツイデ	ts u i d e
+姉茶	アネチャ	a n e ch a
+憂ふ	ウレフ	u r e f u
+便座	ベンザ	b e ng z a
+木売	キウリ	k i u r i
+能家	ノウゲ	n o u g e
+小さ	チイサ	ch i i s a
+産着	ウブギ	u b u g i
+絵絹	エギヌ	e g i n u
+絵筆	エフデ	e f u d e
+月尾	ツキオ	ts u k i o
+絵巻	エマキ	e m a k i
+返そ	カエソ	k a e s o
+上擦	ウワズ	u w a z u
+絵具	エノグ	e n o g u
+搾っ	シボッ	sh i b o q
+絵付	エツケ	e ts u k e
+能部	ノンベ	n o ng b e
+尖ん	トガン	t o g a ng
+憂わ	ウレワ	u r e w a
+笑子	エミコ	e m i k o
+笑窪	エクボ	e k u b o
+憂世	ウキヨ	u k i y o
+笑羽	エミハ	e m i h a
+因循	インジュン	i ng j u ng
+姉御	アネゴ	a n e g o
+目偏	メヘン	m e h e ng
+桃雄	モモオ	m o m o o
+餌食	エジキ	e j i k i
+団野	ダンノ	d a ng n o
+五十	ゴジッ	g o j i q
+十一	ジュウイッ	j u u i q
+鮎瀬	アユセ	a y u s e
+魯魚	ロギョ	r o g y o
+魯鈍	ロドン	r o d o ng
+大壇	オオダン	o o d a ng
+釈家	シャッケ	sh a q k e
+采女	ウネメ	u n e m e
+田岡	タオカ	t a o k a
+易者	エキシャ	e k i sh a
+援軍	エングン	e ng g u ng
+筆甫	ヒッポ	h i q p o
+え目	エノメ	e n o m e
+一事	イチジ	i ch i j i
+握っ	ニギッ	n i g i q
+茶庭	チャテイ	ch a t e i
+湯淺	ユアサ	y u a s a
+茶売	チャウリ	ch a u r i
+田歌	タウタ	t a u t a
+筆記	ヒッキ	h i q k i
+田海	タウミ	t a u m i
+魔神	マジン	m a j i ng
+一員	イチイン	i ch i i ng
+揚縁	アゲエン	a g e e ng
+魔法	マホウ	m a h o u
+一夜	イチヤ	i ch i y a
+一天	イッテン	i q t e ng
+追訴	ツイソ	ts u i s o
+一寸	イッスン	i q s u ng
+追貝	オッカイ	o q k a i
+詠歎	エイタン	e i t a ng
+一心	イッシン	i q sh i ng
+酒悦	シュエツ	sh u e ts u
+明野	アケノ	a k e n o
+井丸	イマル	i m a r u
+枝葉	エダハ	e d a h a
+図面	ズメン	z u m e ng
+井堀	イボリ	i b o r i
+枝野	エダノ	e d a n o
+佐弁	サベン	s a b e ng
+江花	エバナ	e b a n a
+井延	イノブ	i n o b u
+井早	イハヤ	i h a y a
+芸妓	ゲイギ	g e i g i
+根芋	ネイモ	n e i m o
+卯吉	ウキチ	u k i ch i
+井芹	イセリ	i s e r i
+井越	イゴシ	i g o sh i
+都岡	ツオカ	ts u o k a
+一献	イッコン	i q k o ng
+捕虜	ホリョ	h o r y o
+証そ	アカソ	a k a s o
+郷田	ゴウダ	g o u d a
+芹井	セリイ	s e r i i
+明田	アケタ	a k e t a
+市毛	イチゲ	i ch i g e
+浮び	ウカビ	u k a b i
+小向	オブケ	o b u k e
+部内	ブナイ	b u n a i
+鬼津	オニヅ	o n i z u
+日医	ニチイ	n i ch i i
+大瓶	オオビン	o o b i ng
+邪論	ジャロン	j a r o ng
+邪悪	ジャアク	j a a k u
+温顔	オンガン	o ng g a ng
+一通	イッツウ	i q ts u u
+交喙	イスカ	i s u k a
+平雄	ヒラオ	h i r a o
+小塚	オツカ	o ts u k a
+自尊	ジソン	j i s o ng
+鬼屋	オニヤ	o n i y a
+温ん	ヌルン	n u r u ng
+馬琴	バキン	b a k i ng
+千畝	チウネ	ch i u n e
+捩っ	スジッ	s u j i q
+丁未	テイミ	t e i m i
+似顔	ニガオ	n i g a o
+細江	ホソエ	h o s o e
+千結	チユイ	ch i y u i
+京枝	キョウエ	k y o u e
+小安	オヤス	o y a s u
+浮名	ウキナ	u k i n a
+遺骨	イコツ	i k o ts u
+正手	ショウデ	sh o u d e
+渡江	トノエ	t o n o e
+馬齢	バレイ	b a r e i
+鬱憤	ウップン	u q p u ng
+透し	トオシ	t o o sh i
+紡い	ツムイ	ts u m u i
+透す	トオス	t o o s u
+伝授	デンジュ	d e ng j u
+坊や	ボウヤ	b o u y a
+伝右	デンネ	d e ng n e
+大峠	オオタオ	o o t a o
+上乙	ウエオツ	u e o ts u
+小峯	オミネ	o m i n e
+欧米	オウベイ	o u b e i
+上丙	ウエヘイ	u e h e i
+小貫	オヌキ	o n u k i
+駄馬	ダウマ	d a u m a
+英逸	エイイツ	e i i ts u
+駅員	エキイン	e k i i ng
+万延	マンエン	m a ng e ng
+親子	オヤコ	o y a k o
+駅路	エキロ	e k i r o
+畔名	アゼナ	a z e n a
+親田	オヤダ	o y a d a
+息も	イキモ	i k i m o
+通が	ツウガ	ts u u g a
+半音	ハンオン	h a ng o ng
+土偶	ドグウ	d o g u u
+卒し	ソッシ	s o q sh i
+卒す	ソッス	s o q s u
+地雨	ジアメ	j i a m e
+小萱	オガヤ	o g a y a
+怨む	ウラム	u r a m u
+遠野	トオノ	t o o n o
+通ず	ツウズ	ts u u z u
+留萌	ルモイ	r u m o i
+朝湯	アサユ	a s a y u
+池部	イケベ	i k e b e
+遠縁	トオエン	t o o e ng
+遠目	トオメ	t o o m e
+池間	イケマ	i k e m a
+遠慮	エンリョ	e ng r y o
+土宇	ツチウ	ts u ch i u
+畝傍	ウネビ	u n e b i
+海辺	ウミベ	u m i b e
+畝田	ウネダ	u n e d a
+海野	ウミノ	u m i n o
+栗生	クリオ	k u r i o
+憩わ	イコワ	i k o w a
+畝野	ウネノ	u n e n o
+違え	タガエ	t a g a e
+渇せ	カッセ	k a q s e
+通所	ツウショ	ts u u sh o
+畦布	アゼフ	a z e f u
+大沖	オオオキ	o o o k i
+浸っ	ヒタッ	h i t a q
+苗穂	ナエボ	n a e b o
+米夫	ヨネオ	y o n e o
+苗間	ナエマ	n a e m a
+日浅	ヒアサ	h i a s a
+妖雲	ヨウウン	y o u u ng
+帯地	オビジ	o b i j i
+清雄	キヨオ	k i y o o
+日田	ニッタ	n i q t a
+小揚	コアゲ	k o a g e
+通院	ツウイン	ts u u i ng
+平叙	ヘイジョ	h e i j o
+任務	ニンム	n i ng m u
+土民	ドミン	d o m i ng
+懸念	ケネン	k e n e ng
+籾井	モミイ	m o m i i
+今宵	コヨイ	k o y o i
+納所	ナッショ	n a q sh o
+恋せ	コイセ	k o i s e
+粒江	ツブエ	ts u b u e
+三入	ミイリ	m i i r i
+道二	ドウニ	d o u n i
+発す	ハッス	h a q s u
+紅蓮	グレン	g u r e ng
+恋愛	レンアイ	r e ng a i
+恋慕	レンボ	r e ng b o
+疎む	ウトム	u t o m u
+癒そ	イヤソ	i y a s o
+日辺	ニッペ	n i q p e
+疎通	ソツウ	s o ts u u
+液肥	エキヒ	e k i h i
+添田	ソエタ	s o e t a
+圧勝	アッショウ	a q sh o u
+代目	ダイメ	d a i m e
+圧延	アツエン	a ts u e ng
+淀江	ヨドエ	y o d o e
+地歌	ジウタ	j i u t a
+仏社	ブッシャ	b u q sh a
+三甘	ミアマ	m i a m a
+淵江	フチエ	f u ch i e
+疼こ	ウズコ	u z u k o
+粟国	アグニ	a g u n i
+歌司	ウタシ	u t a sh i
+小橋	オバセ	o b a s e
+糸魚	イトヨ	i t o y o
+疾駆	シック	sh i q k u
+糸洲	イトス	i t o s u
+仕上	シアガ	sh i a g a
+遇す	グウス	g u u s u
+遅鈍	チドン	ch i d o ng
+淡き	アワキ	a w a k i
+遅出	オソデ	o s o d e
+粟賀	アワガ	a w a g a
+痒い	カユイ	k a y u i
+在野	ザイヤ	z a i y a
+地声	ジゴエ	j i g o e
+小浮	コオケ	k o o k e
+びんた	ビンタ	b i ng t a
+ぴんと	ピント	p i ng t o
+ぬえよ	ヌエヨ	n u e y o
+下馬尾	ゲバオ	g e b a o
+びびん	ビビン	b i b i ng
+ぬえれ	ヌエレ	n u e r e
+ノイズ	ノイズ	n o i z u
+付きゃ	ツキャ	ts u k y a
+ふかあ	フカア	f u k a a
+宇奈根	ウナネ	u n a n e
+推せよ	オセヨ	o s e y o
+推せる	オセル	o s e r u
+ノック	ノック	n o q k u
+妬きゃ	ヤキャ	y a k y a
+シビア	シビア	sh i b i a
+宇多院	ウダイン	u d a i ng
+糶りゃ	セリャ	s e r y a
+宣りゃ	ノリャ	n o r y a
+小江尾	コエビ	k o e b i
+ネポン	ネポン	n e p o ng
+ノース	ノース	n o long s u
+気負わ	キオワ	k i o w a
+打てよ	ウテヨ	u t e y o
+ネピア	ネピア	n e p i a
+ノーマ	ノーマ	n o long m a
+やばう	ヤバウ	y a b a u
+小生田	オブタ	o b u t a
+添えよ	ソエヨ	s o e y o
+添える	ソエル	s o e r u
+過ぎっ	ヨギッ	y o g i q
+イボタ	イボタ	i b o t a
+ひりゃ	ヒリャ	h i r y a
+打てれ	ウテレ	u t e r e
+小田野	オタノ	o t a n o
+ネグん	ネグン	n e g u ng
+うだり	ウダリ	u d a r i
+たおろ	タオロ	t a o r o
+ぬぎゃ	ヌギャ	n u g y a
+仰ぎゃ	アオギャ	a o g y a
+御布施	オフセ	o f u s e
+うかせ	ウカセ	u k a s e
+仰向い	アオムイ	a o m u i
+今朝雄	ケサオ	k e s a o
+ザール	ザール	z a long r u
+イサザ	イサザ	i s a z a
+ネエヤ	ネエヤ	n e e y a
+ヌード	ヌード	n u long d o
+伊与戸	イヨト	i y o t o
+宇留部	ウルベ	u r u b e
+仇しょ	アダショ	a d a sh o
+ヌゾー	ヌゾー	n u z o long
+ふみゃ	フミャ	f u m y a
+米渡尾	メドオ	m e d o o
+三重田	ミエダ	m i e d a
+消えろ	キエロ	k i e r o
+宇納間	ウナマ	u n a m a
+伊佐布	イサブ	i s a b u
+怯えん	オビエン	o b i e ng
+歌えん	ウタエン	u t a e ng
+そみゃ	ソミャ	s o m y a
+ヌガー	ヌガー	n u g a long
+いろは	イロハ	i r o h a
+大江戸	オオエド	o o e d o
+いろど	イロド	i r o d o
+伊勢大	イセオオ	i s e o o
+仁江戸	ニエド	n i e d o
+伊勢屋	イセヤ	i s e y a
+伊勢根	イセネ	i s e n e
+言寄っ	イイヨッ	i i y o q
+サーモ	サーモ	s a long m o
+ひねっ	ヒネッ	h i n e q
+そっ歯	ソッパ	s o q p a
+サーブ	サーブ	s a long b u
+ハッジ	ハッジ	h a q j i
+仁宇布	ニウプ	n i u p u
+ひどっ	ヒドッ	h i d o q
+伊津部	イツブ	i ts u b u
+仁世宇	ニセウ	n i s e u
+シース	シース	sh i long s u
+シート	シート	sh i long t o
+伊茶仁	イチャニ	i ch a n i
+伊藤伊	イトウイ	i t o u i
+希里江	キリエ	k i r i e
+そぐっ	ソグッ	s o g u q
+大油子	オユゴ	o y u g o
+いらち	イラチ	i r a ch i
+土佐絵	トサエ	t o s a e
+アレム	アレム	a r e m u
+ヌイユ	ヌイユ	n u i y u
+遣れん	ヤレン	y a r e ng
+そいつ	ソイツ	s o i ts u
+英賀保	アガホ	a g a h o
+息吹く	イブク	i b u k u
+這えろ	ハエロ	h a e r o
+がたぅ	ガタゥ	g a t a u
+不入り	フイリ	f u i r i
+浴びる	アビル	a b i r u
+浴びよ	アビヨ	a b i y o
+浴びせ	アビセ	a b i s e
+ニーナ	ニーナ	n i long n a
+ニーズ	ニーズ	n i long z u
+がなっ	ガナッ	g a n a q
+ちえこ	チエコ	ch i e k o
+ジニア	ジニア	j i n i a
+芽立っ	メダッ	m e d a q
+宇都美	ウツミ	u ts u m i
+ジミー	ジミー	j i m i long
+うふふ	ウフフ	u f u f u
+遷しゃ	ウツシャ	u ts u sh a
+宇野気	ウノケ	u n o k e
+せびっ	セビッ	s e b i q
+根問い	ネドイ	n e d o i
+呼びゃ	ヨビャ	y o b y a
+芽生え	メバエ	m e b a e
+千重里	チエリ	ch i e r i
+祝えん	イワエン	i w a e ng
+かむっ	カムッ	k a m u q
+せせっ	セセッ	s e s e q
+エゴマ	エゴマ	e g o m a
+ハネー	ハネー	h a n e long
+芽吹い	メブイ	m e b u i
+せがん	セガン	s e g a ng
+かみゃ	カミャ	k a m y a
+ちぬっ	チヌッ	ch i n u q
+不味い	マズイ	m a z u i
+エステ	エステ	e s u t e
+がりゃ	ガリャ	g a r y a
+ハノイ	ハノイ	h a n o i
+いびろ	イビロ	i b i r o
+サリー	サリー	s a r i long
+小野津	オノツ	o n o ts u
+ジレー	ジレー	j i r e long
+いはほ	イハホ	i h a h o
+エチル	エチル	e ch i r u
+にこん	ニコン	n i k o ng
+捨てん	ステン	s u t e ng
+ジーク	ジーク	j i long k u
+ギャグ	ギャグ	g y a g u
+羽織ら	ハオラ	h a o r a
+祖父江	ソフエ	s o f u e
+不得手	フエテ	f u e t e
+ジーマ	ジーマ	j i long m a
+サモア	サモア	s a m o a
+ギャロ	ギャロ	g y a r o
+気受け	キウケ	k i u k e
+アテネ	アテネ	a t e n e
+アテろ	アテロ	a t e r o
+サマー	サマー	s a m a long
+エナ子	エナコ	e n a k o
+鬼篭野	オロノ	o r o n o
+サボっ	サボッ	s a b o q
+っきり	ッキリ	q k i r i
+アダム	アダム	a d a m u
+ってか	ッテカ	q t e k a
+佐世男	サセオ	s a s e o
+っぷり	ップリ	q p u r i
+っぽく	ッポク	q p o k u
+ぷいと	プイト	p u i t o
+うれろ	ウレロ	u r e r o
+へあが	ヘアガ	h e a g a
+いつよ	イツヨ	i ts u y o
+思しゃ	オボシャ	o b o sh a
+思えん	オモエン	o m o e ng
+井手上	イデウエ	i d e u e
+千代江	チヨエ	ch i y o e
+サヌア	サヌア	s a n u a
+つえ子	ツエコ	ts u e k o
+アスノ	アスノ	a s u n o
+佐志生	サシウ	s a sh i u
+へしお	ヘシオ	h e sh i o
+すっご	スッゴ	s u q g o
+アジズ	アジズ	a j i z u
+佐江戸	サエド	s a e d o
+スコア	スコア	s u k o a
+見抜い	ミヌイ	m i n u i
+宇久須	ウグス	u g u s u
+井之上	イノウエ	i n o u e
+煮え湯	ニエユ	n i e y u
+へばっ	ヘバッ	h e b a q
+気に入	キニイ	k i n i i
+つがっ	ツガッ	ts u g a q
+五野井	ゴノイ	g o n o i
+えづき	エヅキ	e z u k i
+えどら	エドラ	e d o r a
+えばり	エバリ	e b a r i
+えびの	エビノ	e b i n o
+湯引い	ユビイ	y u b i i
+えみし	エミシ	e m i sh i
+酔えろ	ヨエロ	y o e r o
+アコム	アコム	a k o m u
+えりも	エリモ	e r i m o
+五百瀬	イモゼ	i m o z e
+湯浴み	ユアミ	y u a m i
+ぺてん	ペテン	p e t e ng
+打合っ	ウチアッ	u ch i a q
+エホバ	エホバ	e h o b a
+見張っ	ミハッ	m i h a q
+ハーグ	ハーグ	h a long g u
+ハード	ハード	h a long d o
+揺すっ	ユスッ	y u s u q
+江無田	エムタ	e m u t a
+田尾寺	タオジ	t a o j i
+江瀬美	エセビ	e s e b i
+田出井	タデイ	t a d e i
+小久米	オグメ	o g u m e
+じわっ	ジワッ	j i w a q
+見好い	ミヨイ	m i y o i
+やい子	ヤイコ	y a i k o
+五位野	ゴイノ	g o i n o
+五位田	ゴイデ	g o i d e
+給びゃ	タビャ	t a b y a
+エルグ	エルグ	e r u g u
+エルナ	エルナ	e r u n a
+スパン	スパン	s u p a ng
+右犠飛	ウギヒ	u g i h i
+ひえれ	ヒエレ	h i e r e
+ひえよ	ヒエヨ	h i e y o
+ニオブ	ニオブ	n i o b u
+エルメ	エルメ	e r u m e
+エレキ	エレキ	e r e k i
+区切っ	クギッ	k u g i q
+目明き	メアキ	m e a k i
+茶請け	チャウケ	ch a u k e
+ワープ	ワープ	w a long p u
+ぱくん	パクン	p a k u ng
+里緒菜	リオナ	r i o n a
+ねいら	ネイラ	n e i r a
+目盛っ	メモッ	m e m o q
+エレラ	エレラ	e r e r a
+スペア	スペア	s u p e a
+じまお	ジマオ	j i m a o
+エロス	エロス	e r o s u
+バザー	バザー	b a z a long
+目見え	メミエ	m e m i e
+上意江	ジョウイエ	j o u i e
+じじい	ジジイ	j i j i i
+バシー	バシー	b a sh i long
+ローブ	ローブ	r o long b u
+ロード	ロード	r o long d o
+スラー	スラー	s u r a long
+見切っ	ミキッ	m i k i q
+ロング	ロング	r o ng g u
+江波戸	エバト	e b a t o
+ロミオ	ロミオ	r o m i o
+悔いよ	クイヨ	k u i y o
+いざと	イザト	i z a t o
+サグー	サグー	s a g u long
+ロッジ	ロッジ	r o q j i
+ロゾー	ロゾー	r o z o long
+ロシア	ロシア	r o sh i a
+ロガー	ロガー	r o g a long
+与兵衛	ヨヘエ	y o h e e
+羽二生	ハニウ	h a n i u
+御祝い	オイワイ	o i w a i
+レーザ	レーザ	r e long z a
+スンニ	スンニ	s u ng n i
+レマン	レマン	r e m a ng
+いこめ	イコメ	i k o m e
+見上ぐ	ミアグ	m i a g u
+レバー	レバー	r e b a long
+憂き目	ウキメ	u k i m e
+レッツ	レッツ	r e q ts u
+江比間	エヒマ	e h i m a
+ほめん	ホメン	h o m e ng
+安富祖	アフソ	a f u s o
+レゲエ	レゲエ	r e g e e
+レオマ	レオマ	r e o m a
+スープ	スープ	s u long p u
+レイプ	レイプ	r e i p u
+憂えん	ウレエン	u r e e ng
+名乗っ	ナノッ	n a n o q
+ルーペ	ルーペ	r u long p e
+もやっ	モヤッ	m o y a q
+ルーフ	ルーフ	r u long f u
+ルート	ルート	r u long t o
+ズック	ズック	z u q k u
+ルンバ	ルンバ	r u ng b a
+ルンド	ルンド	r u ng d o
+ルンゲ	ルンゲ	r u ng g e
+おこも	オコモ	o k o m o
+サウナ	サウナ	s a u n a
+バッハ	バッハ	b a q h a
+ルピー	ルピー	r u p i long
+バトン	バトン	b a t o ng
+ルビオ	ルビオ	r u b i o
+相うと	アイウト	a i u t o
+サウジ	サウジ	s a u j i
+ルノー	ルノー	r u n o long
+野夫井	ノフイ	n o f u i
+リーベ	リーベ	r i long b e
+リーグ	リーグ	r i long g u
+怒鳴っ	ドナッ	d o n a q
+リンツ	リンツ	r i ng ts u
+リリー	リリー	r i r i long
+ぼやい	ボヤイ	b o y a i
+荏子田	エコダ	e k o d a
+飯土井	イイドイ	i i d o i
+ぽきゃ	ポキャ	p o k y a
+世づい	ヨヅイ	y o z u i
+つよい	ツヨイ	ts u y o i
+受合っ	ウケアッ	u k e a q
+ゴンタ	ゴンタ	g o ng t a
+セーヌ	セーヌ	s e long n u
+費えん	ツイエン	ts u i e ng
+相寄ん	アイヨン	a i y o ng
+セーラ	セーラ	s e long r a
+リコー	リコー	r i k o long
+リグー	リグー	r i g u long
+胡散う	ウサンウ	u s a ng u
+リアル	リアル	r i a r u
+ゼビオ	ゼビオ	z e b i o
+荒れよ	アレヨ	a r e y o
+ラー油	ラーユ	r a long y u
+荒れ地	アレチ	a r e ch i
+ラーマ	ラーマ	r a long m a
+おじぎ	オジギ	o j i g i
+鳴けん	ナケン	n a k e ng
+ランプ	ランプ	r a ng p u
+大豆生	マメオ	m a m e o
+ラミー	ラミー	r a m i long
+相成っ	アイナッ	a i n a q
+ソキア	ソキア	s o k i a
+ソテー	ソテー	s o t e long
+網戸瀬	アドセ	a d o s e
+ソニー	ソニー	s o n i long
+ゴドー	ゴドー	g o d o long
+ラウル	ラウル	r a u r u
+ゴッホ	ゴッホ	g o q h o
+つんと	ツント	ts u ng t o
+オマハ	オマハ	o m a h a
+づらぅ	ヅラゥ	z u r a u
+オムツ	オムツ	o m u ts u
+ライト	ライト	r a i t o
+オメガ	オメガ	o m e g a
+まくっ	マクッ	m a k u q
+ヨーコ	ヨーコ	y o long k o
+背縫い	セヌイ	s e n u i
+ゾアビ	ゾアビ	z o a b i
+負わそ	オワソ	o w a s o
+ゾンガ	ゾンガ	z o ng g a
+ゾンデ	ゾンデ	z o ng d e
+てきゃ	テキャ	t e k y a
+ユーロ	ユーロ	y u long r o
+コーポ	コーポ	k o long p o
+バーレ	バーレ	b a long r e
+ユーザ	ユーザ	y u long z a
+パイプ	パイプ	p a i p u
+ユニー	ユニー	y u n i long
+おでこ	オデコ	o d e k o
+ユトー	ユトー	y u t o long
+ヤーベ	ヤーベ	y a long b e
+ざらい	ザライ	z a r a i
+てめぇ	テメェ	t e m e e
+おどけ	オドケ	o d o k e
+ヤフー	ヤフー	y a f u long
+コンペ	コンペ	k o ng p e
+パウロ	パウロ	p a u r o
+パエト	パエト	p a e t o
+コンブ	コンブ	k o ng b u
+ヤダー	ヤダー	y a d a long
+モーカ	モーカ	m o long k a
+モヘア	モヘア	m o h e a
+でかぅ	デカゥ	d e k a u
+モッブ	モッブ	m o q b u
+受け手	ウケテ	u k e t e
+鵜の戸	ウノト	u n o t o
+甘えん	アマエン	a m a e ng
+メード	メード	m e long d o
+メンテ	メンテ	m e ng t e
+メンツ	メンツ	m e ng ts u
+パタン	パタン	p a t a ng
+東洋雄	トヨオ	t o y o o
+メラー	メラー	m e r a long
+タブー	タブー	t a b u long
+さそえ	サソエ	s a s o e
+パッド	パッド	p a q d o
+メシア	メシア	m e sh i a
+大いに	オオイニ	o o i n i
+まびい	マビイ	m a b i i
+ムーサ	ムーサ	m u long s a
+ドーフ	ドーフ	d o long f u
+穿ちゃ	ウガチャ	u g a ch a
+志美男	シミオ	sh i m i o
+ターボ	ターボ	t a long b o
+パラオ	パラオ	p a r a o
+ターム	ターム	t a long m u
+場打て	バウテ	b a u t e
+剥ぎゃ	ハギャ	h a g y a
+寝起き	ネオキ	n e o k i
+パリッ	パリッ	p a r i q
+ドリア	ドリア	d o r i a
+マンボ	マンボ	m a ng b o
+ダニー	ダニー	d a n i long
+ダバオ	ダバオ	d a b a o
+さえれ	サエレ	s a e r e
+とちっ	トチッ	t o ch i q
+寝取っ	ネトッ	n e t o q
+ダラー	ダラー	d a r a long
+なめう	ナメウ	n a m e u
+ダーク	ダーク	d a long k u
+ダート	ダート	d a long t o
+ダーリ	ダーリ	d a long r i
+りう子	リウコ	r i u k o
+瀬戸井	セトイ	s e t o i
+はぐん	ハグン	h a g u ng
+彼の世	アノヨ	a n o y o
+コナー	コナー	k o n a long
+パンク	パンク	p a ng k u
+ドスン	ドスン	d o s u ng
+押入ん	オシイン	o sh i i ng
+マギー	マギー	m a g i long
+こらぁ	コラァ	k o r a a
+丹生地	ニウジ	n i u j i
+入れ毛	イレゲ	i r e g e
+ポーズ	ポーズ	p o long z u
+ドイル	ドイル	d o i r u
+ポリオ	ポリオ	p o r i o
+ポツン	ポツン	p o ts u ng
+ポエム	ポエム	p o e m u
+カヌー	カヌー	k a n u long
+ボーロ	ボーロ	b o long r o
+ボーメ	ボーメ	b o long m e
+パーザ	パーザ	p a long z a
+ボレー	ボレー	b o r e long
+パース	パース	p a long s u
+押えん	オサエン	o s a e ng
+ボソッ	ボソッ	b o s o q
+睨めん	ネメン	n e m e ng
+ボギー	ボギー	b o g i long
+ボウル	ボウル	b o u r u
+ボイス	ボイス	b o i s u
+ボアズ	ボアズ	b o a z u
+八尾木	ヨオギ	y o o g i
+ホルン	ホルン	h o r u ng
+ホラー	ホラー	h o r a long
+ゲーテ	ゲーテ	g e long t e
+ホセア	ホセア	h o s e a
+ペンス	ペンス	p e ng s u
+トンビ	トンビ	t o ng b i
+ペリア	ペリア	p e r i a
+ペニー	ペニー	p e n i long
+ベーゼ	ベーゼ	b e long z e
+蛇ノ尾	ジャノオ	j a n o o
+ゲイツ	ゲイツ	g e i ts u
+チータ	チータ	ch i long t a
+ベルン	ベルン	b e r u ng
+ベビー	ベビー	b e b i long
+あふひ	アフヒ	a f u h i
+ケープ	ケープ	k e long p u
+八重洲	ヤエス	y a e s u
+八重田	ヤエダ	y a e d a
+ヘレン	ヘレン	h e r e ng
+ヘッド	ヘッド	h e q d o
+キエフ	キエフ	k i e f u
+のめっ	ノメッ	n o m e q
+ツリー	ツリー	ts u r i long
+ケニア	ケニア	k e n i a
+プレー	プレー	p u r e long
+行合っ	イキアッ	i k i a q
+ケエ子	ケエコ	k e e k o
+プラン	プラン	p u r a ng
+どおり	ドオリ	d o o r i
+ブーケ	ブーケ	b u long k e
+ブレア	ブレア	b u r e a
+ブルー	ブルー	b u r u long
+けちっ	ケチッ	k e ch i q
+フーガ	フーガ	f u long g a
+テナー	テナー	t e n a long
+どよん	ドヨン	d o y o ng
+ねつぅ	ネツゥ	n e ts u u
+グッチ	グッチ	g u q ch i
+グッズ	グッズ	g u q z u
+どーぞ	ドーゾ	d o long z o
+ど阿呆	ドアホ	d o a h o
+グアム	グアム	g u a m u
+グアノ	グアノ	g u a n o
+ガーナ	ガーナ	g a long n a
+クーラ	クーラ	k u long r a
+ぐふっ	グフッ	g u f u q
+ぐちっ	グチッ	g u ch i q
+ガーゼ	ガーゼ	g a long z e
+落合う	オチアウ	o ch i a u
+美江寺	ミエジ	m i e j i
+ゆんべ	ユンベ	y u ng b e
+もぐん	モグン	m o g u ng
+古安曽	コアソ	k o a s o
+デポー	デポー	d e p o long
+ヒーブ	ヒーブ	h i long b u
+阿久根	アクネ	a k u n e
+敢ない	アエナイ	a e n a i
+ピーチ	ピーチ	p i long ch i
+ピラー	ピラー	p i r a long
+ピュレ	ピュレ	p y u r e
+ガビー	ガビー	g a b i long
+ピチッ	ピチッ	p i ch i q
+ピコイ	ピコイ	p i k o i
+ピアフ	ピアフ	p i a f u
+阿知賀	アチガ	a ch i g a
+ビーバ	ビーバ	b i long b a
+ビード	ビード	b i long d o
+ねびん	ネビン	n e b i ng
+阿野田	アノダ	a n o d a
+ビオラ	ビオラ	b i o r a
+ビッグ	ビッグ	b i q g u
+ビジー	ビジー	b i j i long
+ビゴー	ビゴー	b i g o long
+あざとぅ	アザトゥ	a z a t u
+ピジョン	ピジョン	p i j o ng
+ピッツァ	ピッツァ	p i q ts a
+シチュー	シチュー	sh i ch u long
+ああなん	アアナン	a a n a ng
+シティー	シティー	sh i t i long
+ファジー	ファジー	f a j i long
+イージー	イージー	i long j i long
+デディエ	デディエ	d e d i e
+ウインク	ウインク	u i ng k u
+インレー	インレー	i ng r e long
+ガウディ	ガウディ	g a u d i
+フェザー	フェザー	f e z a long
+フェーズ	フェーズ	f e long z u
+フォロア	フォロア	f o r o a
+ディーニ	ディーニ	d i long n i
+ディエゴ	ディエゴ	d i e g o
+折れ合う	オレアウ	o r e a u
+インター	インター	i ng t a long
+シャッポ	シャッポ	sh a q p o
+エッセー	エッセー	e q s e long
+ウェッズ	ウェッズ	u e q z u
+プジョー	プジョー	p u j o long
+プッシュ	プッシュ	p u q sh u
+ティーサ	ティーサ	t i long s a
+ベチャッ	ベチャッ	b e ch a q
+ベージュ	ベージュ	b e long j u
+ウェーク	ウェーク	u e long k u
+トーイン	トーイン	t o long i ng
+パーティ	パーティ	p a long t i
+チューブ	チューブ	ch u long b u
+ウエイト	ウエイト	u e i t o
+チャーチ	チャーチ	ch a long ch i
+チャンス	チャンス	ch a ng s u
+チャルー	チャルー	ch a r u long
+言い当て	イイアテ	i i a t e
+ポシャっ	ポシャッ	p o sh a q
+シェーレ	シェーレ	sh e long r e
+シェーマ	シェーマ	sh e long m a
+チャオズ	チャオズ	ch a o z u
+チャイム	チャイム	ch a i m u
+シューズ	シューズ	sh u long z u
+チャイナ	チャイナ	ch a i n a
+シューバ	シューバ	sh u long b a
+ぎっちょ	ギッチョ	g i q ch o
+コショー	コショー	k o sh o long
+ドゥーマ	ドゥーマ	d u long m a
+おりゃん	オリャン	o r y a ng
+ごっちゃ	ゴッチャ	g o q ch a
+マフィア	マフィア	m a f i a
+シェイク	シェイク	sh e i k u
+ショーツ	ショーツ	sh o long ts u
+ショーワ	ショーワ	sh o long w a
+ありえん	アリエン	a r i e ng
+うかしゃ	ウカシャ	u k a sh a
+カアーッ	カアーッ	k a a long q
+イオン化	イオンカ	i o ng k a
+イオニア	イオニア	i o n i a
+イエロー	イエロー	i e r o long
+おめぇー	オメェー	o m e e long
+パフェー	パフェー	p a f e long
+アーロン	アーロン	a long r o ng
+オープン	オープン	o long p u ng
+アーマン	アーマン	a long m a ng
+アーヘン	アーヘン	a long h e ng
+アーニー	アーニー	a long n i long
+オーバー	オーバー	o long b a long
+パティオ	パティオ	p a t i o
+ちょんぎ	チョンギ	ch o ng g i
+キューン	キューン	k y u long ng
+アーサー	アーサー	a long s a long
+アンペア	アンペア	a ng p e a
+おねしょ	オネショ	o n e sh o
+ウニオン	ウニオン	u n i o ng
+オーシー	オーシー	o long sh i long
+オーケー	オーケー	o long k e long
+ウヒャー	ウヒャー	u h y a long
+オーエス	オーエス	o long e s u
+オンリー	オンリー	o ng r i long
+アンダー	アンダー	a ng d a long
+アッパー	アッパー	a q p a long
+おっさん	オッサン	o q s a ng
+オリオン	オリオン	o r i o ng
+ジェコー	ジェコー	j e k o long
+ジェノア	ジェノア	j e n o a
+ウーメン	ウーメン	u long m e ng
+エアカー	エアカー	e a k a long
+オマーン	オマーン	o m a long ng
+アレアー	アレアー	a r e a long
+ソシュー	ソシュー	s o sh u long
+オハイオ	オハイオ	o h a i o
+おじゃら	オジャラ	o j a r a
+ランチョ	ランチョ	r a ng ch o
+ランディ	ランディ	r a ng d i
+エイジア	エイジア	e i j i a
+オッジー	オッジー	o q j i long
+ゴーディ	ゴーディ	g o long d i
+しゃあな	シャアナ	sh a a n a
+アルジェ	アルジェ	a r u j e
+相うちゃ	アイウチャ	a i u ch a
+ジャガー	ジャガー	j a g a long
+レディー	レディー	r e d i long
+しょびい	ショビイ	sh o b i i
+ジャパン	ジャパン	j a p a ng
+エーザイ	エーザイ	e long z a i
+ジャミン	ジャミン	j a m i ng
+おぎゃー	オギャー	o g y a long
+ローツェ	ローツェ	r o long ts e
+ジャンル	ジャンル	j a ng r u
+ジュエル	ジュエル	j u e r u
+っていう	ッテイウ	q t e i u
+ふんじゃ	フンジャ	f u ng j a
+ちっちゃ	チッチャ	ch i q ch a
+サンエー	サンエー	s a ng e long
+アセアン	アセアン	a s e a ng
+ジュリア	ジュリア	j u r i a
+アイガー	アイガー	a i g a long
+おいやっ	オイヤッ	o i y a q
+ジューキ	ジューキ	j u long k i
+クイーン	クイーン	k u i long ng
+アイトー	アイトー	a i t o long
+アスティ	アスティ	a s u t i
+アイビー	アイビー	a i b i long
+アパチャ	アパチャ	a p a ch a
+アサイン	アサイン	a s a i ng
+アジアン	アジアン	a j i a ng
+おいちゃん	オイチャン	o i ch a ng
+エンチョー	エンチョー	e ng ch o long
+オーシャン	オーシャン	o long sh a ng
+オーディオ	オーディオ	o long d i o
+チェチェン	チェチェン	ch e ch e ng
+シャンツェ	シャンツェ	sh a ng ts e
+ティシュー	ティシュー	t i sh u long
+ティッシュ	ティッシュ	t i q sh u
+ウェッシェ	ウェッシェ	u e q sh e
+インディー	インディー	i ng d i long
+ウインディ	ウインディ	u i ng d i
+エッシャー	エッシャー	e q sh a long
+穣	ミノル	m i n o r u
+皐	サツキ	s a ts u k i
+叺	カマス	k a m a s u
+筵	ムシロ	m u sh i r o
+甲	カブト	k a b u t o
+捧	ササゲ	s a s a g e
+卜	ウラナイ	u r a n a i
+祠	ホコラ	h o k o r a
+妾	ソバメ	s o b a m e
+湊	ミナト	m i n a t o
+捗	ハカド	h a k a d o
+皷	ツヅミ	ts u z u m i
+茵	シトネ	sh i t o n e
+紲	キズナ	k i z u n a
+盈	ミツル	m i ts u r u
+桂	カツラ	k a ts u r a
+幽	カソケ	k a s o k e
+欅	ケヤキ	k e y a k i
+結	ムスブ	m u s u b u
+醜	ミニク	m i n i k u
+醪	モロミ	m o r o m i
+佛	ホトケ	h o t o k e
+巷	チマタ	ch i m a t a
+鮃	ヒラメ	h i r a m e
+櫓	ヤグラ	y a g u r a
+鮖	カジカ	k a j i k a
+檜	ヒノキ	h i n o k i
+佃	ツクダ	ts u k u d a
+貪	ムサボ	m u s a b o
+鯀	クジラ	k u j i r a
+楔	クサビ	k u s a b i
+匣	クシゲ	k u sh i g e
+柏	カシワ	k a sh i w a
+蓍	メドギ	m e d o g i
+鯣	スルメ	s u r u m e
+迪	ススム	s u s u m u
+鯰	ナマズ	n a m a z u
+細	コマカ	k o m a k a
+蕾	ツボミ	ts u b o m i
+貢	ミツギ	m i ts u g i
+盲	メクラ	m e k u r a
+誂	アツラエ	a ts u r a e
+俄	ニワカ	n i w a k a
+導	シルベ	sh i r u b e
+鱸	スズキ	s u z u k i
+誉	ホマレ	h o m a r e
+保	タモツ	t a m o ts u
+薪	タキギ	t a k i g i
+半	ナカバ	n a k a b a
+伜	セガレ	s e g a r e
+了	サトル	s a t o r u
+髻	タブサ	t a b u s a
+妃	キサキ	k i s a k i
+悠	ハルカ	h a r u k a
+腓	コブラ	k o b u r a
+鼠	ネズミ	n e z u m i
+誠	マコト	m a k o t o
+滋	シゲシ	sh i g e sh i
+童	ワラベ	w a r a b e
+髢	カモジ	k a m o j i
+厨	クリヤ	k u r i y a
+樸	シラキ	sh i r a k i
+鳳	オオトリ	o o t o r i
+樵	キコリ	k i k o r i
+簓	ササラ	s a s a r a
+胖	ユタカ	y u t a k a
+薺	ナズナ	n a z u n a
+燕	ツバメ	ts u b a m e
+轡	クツワ	k u ts u w a
+倭	ヤマト	y a m a t o
+左	ヒダリ	h i d a r i
+偏	カタヨ	k a t a y o
+嚔	クサメ	k u s a m e
+憤	イキドオ	i k i d o o
+渚	ナギサ	n a g i s a
+鴎	カモメ	k a m o m e
+眇	スガメ	s u g a m e
+籬	マガキ	m a g a k i
+誼	ヨシミ	y o sh i m i
+輪	ハナワ	h a n a w a
+鼈	スッポン	s u q p o ng
+忠	キヨシ	k i y o sh i
+竈	カマド	k a m a d o
+梺	フモト	f u m o t o
+釛	コガネ	k o g a n e
+刀	カタナ	k a t a n a
+鴿	ドバト	d o b a t o
+賂	マイナイ	m a i n a i
+瓢	ヒサゴ	h i s a g o
+寳	タカラ	t a k a r a
+諍	イサカイ	i s a k a i
+襷	タスキ	t a s u k i
+襲	カサネ	k a s a n e
+椚	クヌギ	k u n u g i
+擒	トリコ	t o r i k o
+諭	サトシ	s a t o sh i
+艀	ハシケ	h a sh i k e
+軛	クビキ	k u b i k i
+鶲	ヒタキ	h i t a k i
+琢	ミガク	m i g a k u
+裸	ハダカ	h a d a k a
+畷	ナワテ	n a w a t e
+拙	ツタナ	ts u t a n a
+拘	カカワ	k a k a w a
+究	キワム	k i w a m u
+顰	ヒソミ	h i s o m i
+匏	フクベ	f u k u b e
+禊	ミソギ	m i s o g i
+擽	クスグ	k u s u g u
+涙	ナミダ	n a m i d a
+扉	トビラ	t o b i r a
+柳	ヤナギ	y a n a g i
+癩	カッタイ	k a q t a i
+標	シメギ	sh i m e g i
+眩	マバユ	m a b a y u
+縮	チヂミ	ch i j i m i
+眼	マナコ	m a n a k o
+帷	トバリ	t o b a r i
+孟	タケシ	t a k e sh i
+鏡	カガミ	k a g a m i
+袴	ハカマ	h a k a m a
+蹇	アシナエ	a sh i n a e
+骸	ムクロ	m u k u r o
+蹄	ヒズメ	h i z u m e
+踵	カカト	k a k a t o
+惠	メグミ	m e g u m i
+蔀	シトミ	sh i t o m i
+疥	ハタケ	h a t a k e
+睫	マツゲ	m a ts u g e
+菘	スズナ	s u z u n a
+瞬	マドカ	m a d o k a
+瞼	マブタ	m a b u t a
+袂	タモト	t a m o t o
+麋	オウシカ	o u sh i k a
+崩	クズレ	k u z u r e
+狼	オオカミ	o o k a m i
+狢	ムジナ	m u j i n a
+讓	ユズル	y u z u r u
+榊	サカキ	s a k a k i
+狐	キツネ	k i ts u n e
+罵	ノノシ	n o n o sh i
+葎	ムグラ	m u g u r a
+密	ヒソカ	h i s o k a
+膠	ニカワ	n i k a w a
+羆	ヒグマ	h i g u m a
+羊	ヒツジ	h i ts u j i
+萬	ヨロズ	y o r o z u
+屯	タムロ	t a m u r o
+秣	マグサ	m a g u s a
+愈	イヨイヨ	i y o i y o
+蛟	ミズチ	m i z u ch i
+響	ヒビキ	h i b i k i
+古	イニシエ	i n i sh i e
+粲	ツバラ	ts u b a r a
+蛻	モヌケ	m o n u k e
+粽	チマキ	ch i m a k i
+蝮	マムシ	m a m u sh i
+徴	シルシ	sh i r u sh i
+劔	ツルギ	ts u r u g i
+文名	ブンメイ	b u ng m e i
+神慮	シンリョ	sh i ng r y o
+貴ん	タットン	t a q t o ng
+神幸	シンコウ	sh i ng k o u
+神房	カンボウ	k a ng b o u
+神帆	カミホ	k a m i h o
+文台	ブンダイ	b u ng d a i
+変針	ヘンシン	h e ng sh i ng
+山霊	サンレイ	s a ng r e i
+貴代	タカヨ	t a k a y o
+神峰	カミネ	k a m i n e
+神屋	カギヤ	k a g i y a
+変遷	ヘンセン	h e ng s e ng
+夏場	ナツバ	n a ts u b a
+変造	ヘンゾウ	h e ng z o u
+下須	シモス	sh i m o s u
+神木	カミキ	k a m i k i
+文室	フムロ	f u m u r o
+夏実	ナツミ	n a ts u m i
+山鹿	ヤマガ	y a m a g a
+変通	ヘンツウ	h e ng ts u u
+山門	サンモン	s a ng m o ng
+貰わ	モラワ	m o r a w a
+神変	シンペン	sh i ng p e ng
+神域	シンイキ	sh i ng i k i
+夏月	カヅキ	k a z u k i
+岐宿	キシク	k i sh i k u
+貴島	キジマ	k i j i m a
+変災	ヘンサイ	h e ng s a i
+貯蓄	チョチク	ch o ch i k u
+貯留	チョリュウ	ch o r y u u
+文中	ブンチュウ	b u ng ch u u
+神水	カンズイ	k a ng z u i
+神南	ジンナン	j i ng n a ng
+貴本	キモト	k i m o t o
+山部	ヤマブ	y a m a b u
+貴様	キサマ	k i s a m a
+文一	ブンイチ	b u ng i ch i
+神渕	カブチ	k a b u ch i
+敷設	フセツ	f u s e ts u
+神内	コウナイ	k o u n a i
+神爪	カヅメ	k a z u m e
+敷田	シキダ	sh i k i d a
+神佑	シンユウ	sh i ng y u u
+検問	ケンモン	k e ng m o ng
+責苦	セメク	s e m e k u
+神代	カクミ	k a k u m i
+敷根	シキネ	sh i k i n e
+検品	ケンピン	k e ng p i ng
+検収	ケンシュウ	k e ng sh u u
+検分	ケンブン	k e ng b u ng
+変形	ヘンケイ	h e ng k e i
+山貴	ヤマキ	y a m a k i
+変圧	ヘンアツ	h e ng a ts u
+敷布	シキフ	sh i k i f u
+文樹	フミキ	f u m i k i
+文民	ブンミン	b u ng m i ng
+祝賀	シュクガ	sh u k u g a
+山蘭	サンラン	s a ng r a ng
+神船	シブネ	sh i b u n e
+山葵	ワサビ	w a s a b i
+神西	ジンザイ	j i ng z a i
+山菜	サンサイ	s a ng s a i
+変乱	ヘンラン	h e ng r a ng
+祝田	イワイタ	i w a i t a
+岡前	オカゼン	o k a z e ng
+検疫	ケンエキ	k e ng e k i
+貫通	カンツウ	k a ng ts u u
+貫見	ヌクミ	n u k u m i
+下里	サガリ	s a g a r i
+祝戸	イワイド	i w a i d o
+貫田	ヌキタ	n u k i t a
+貫津	ヌクヅ	n u k u z u
+貫戸	ヌクド	n u k u d o
+夏足	ナタセ	n a t a s e
+不仲	フナカ	f u n a k a
+貫一	カンイチ	k a ng i ch i
+下達	カタツ	k a t a ts u
+不休	フキュウ	f u k y u u
+文献	ブンケン	b u ng k e ng
+不出	フシュツ	f u sh u ts u
+祝そ	シュクソ	sh u k u s o
+貶さ	ケナサ	k e n a s a
+貶し	ケナシ	k e n a sh i
+検閲	ケンエツ	k e ng e ts u
+文田	フミタ	f u m i t a
+神長	カナガ	k a n a g a
+貪婪	ドンラン	d o ng r a ng
+下足	ゲソク	g e s o k u
+文盲	モンモウ	m o ng m o u
+祖述	ソジュツ	s o j u ts u
+文箱	フバコ	f u b a k o
+不吹	フブキ	f u b u k i
+不埒	フラチ	f u r a ch i
+不学	フガク	f u g a k u
+敵営	テキエイ	t e k i e i
+敵そ	テキソ	t e k i s o
+販推	ハンスイ	h a ng s u i
+神髄	シンズイ	sh i ng z u i
+整頓	セイトン	s e i t o ng
+祖浜	ソハマ	s o h a m a
+祟れ	タタレ	t a t a r e
+貧道	ヒンドウ	h i ng d o u
+整然	セイゼン	s e i z e ng
+整数	セイスウ	s e i s u u
+壺屋	ツボヤ	ts u b o y a
+祖業	ソギョウ	s o g y o u
+岡新	オカシン	o k a sh i ng
+椿山	チンザン	ch i ng z a ng
+祖式	ソジキ	s o j i k i
+祥一	ショウイチ	sh o u i ch i
+岡本	オカホン	o k a h o ng
+整一	セイイチ	s e i i ch i
+不服	フフク	f u f u k u
+祥代	サチヨ	s a ch i y o
+椿東	チントウ	ch i ng t o u
+不様	ブザマ	b u z a m a
+山畑	ヤバタ	y a b a t a
+文観	モンカン	m o ng k a ng
+文言	モンゴン	m o ng g o ng
+貧寒	ヒンカン	h i ng k a ng
+岡添	オカゾエ	o k a z o e
+貧乏	ビンボウ	b i ng b o u
+祖国	ソコク	s o k o k u
+不漁	フリョウ	f u r y o u
+敲こ	タタコ	t a t a k o
+不為	フタメ	f u t a m e
+貢献	コウケン	k o u k e ng
+貢川	クガワ	k u g a w a
+下落	ゲラク	g e r a k u
+数須	カズス	k a z u s u
+祥瑞	ショウズイ	sh o u z u i
+数行	スウコウ	s u u k o u
+祐造	ユウゾウ	y u u z o u
+数牛	カソシ	k a s o sh i
+買上	カイアゲ	k a i a g e
+数屋	カズヤ	k a z u y a
+楓溪	フウケイ	f u u k e i
+売春	バイシュン	b a i sh u ng
+夕映	ユウバエ	y u u b a e
+祐市	ユウイチ	y u u i ch i
+下茶	シモチャ	sh i m o ch a
+椛木	カバキ	k a b a k i
+祭ろ	マツロ	m a ts u r o
+岡郷	オカゴウ	o k a g o u
+売市	ウルイチ	u r u i ch i
+売声	ウリゴエ	u r i g o e
+与し	クミシ	k u m i sh i
+夕汐	ユウシオ	y u u sh i o
+売品	バイヒン	b a i h i ng
+与す	クミス	k u m i s u
+売名	バイメイ	b a i m e i
+数回	スウカイ	s u u k a i
+数件	スウケン	s u u k e ng
+楚川	ソガワ	s o g a w a
+祭典	サイテン	s a i t e ng
+岩三	イワゾウ	i w a z o u
+与八	ヨハチ	y o h a ch i
+与助	ヨスケ	y o s u k e
+財経	ザイケイ	z a i k e i
+与北	ヨギタ	y o g i t a
+財用	ザイヨウ	z a i y o u
+財産	ザイサン	z a i s a ng
+与原	ヨハラ	y o h a r a
+財源	ザイゲン	z a i g e ng
+与口	ヨグチ	y o g u ch i
+与奪	ヨダツ	y o d a ts u
+与床	ヨドコ	y o d o k o
+祭神	サイジン	s a i j i ng
+与本	ヨモト	y o m o t o
+与縄	ヨナワ	y o n a w a
+敬譲	ケイジョウ	k e i j o u
+貸手	カシテ	k a sh i t e
+丑蔵	ウシゾウ	u sh i z o u
+楠乃	クスノ	k u s u n o
+下級	カキュウ	k a k y u u
+世俗	セゾク	s e z o k u
+社領	シャリョウ	sh a r y o u
+社辺	コソベ	k o s o b e
+社説	シャセツ	sh a s e ts u
+岩内	イワウチ	i w a u ch i
+世持	ヨモチ	y o m o ch i
+貼用	チョウヨウ	ch o u y o u
+社畜	シャチク	sh a ch i k u
+楠瀬	クスセ	k u s u s e
+楠田	クスダ	k u s u d a
+貿易	ボウエキ	b o u e k i
+社歴	シャレキ	sh a r e k i
+禁圧	キンアツ	k i ng a ts u
+禁城	キンジョウ	k i ng j o u
+禁廷	キンテイ	k i ng t e i
+禁断	キンダン	k i ng d a ng
+敬人	ヨシト	y o sh i t o
+禁漁	キンギョ	k i ng g y o
+社日	シャニチ	sh a n i ch i
+賀数	カカズ	k a k a z u
+社宅	シャタク	sh a t a k u
+世継	ヨツギ	y o ts u g i
+世評	セヒョウ	s e h y o u
+賃金	チンギン	ch i ng g i ng
+賃銭	チンセン	ch i ng s e ng
+楠葉	クズハ	k u z u h a
+敬っ	ウヤマッ	u y a m a q
+丞相	ジョウショウ	j o u sh o u
+楡生	ニリョウ	n i r y o u
+楢下	ナラゲ	n a r a g e
+両個	リャンコ	r y a ng k o
+両出	リョウデ	r y o u d e
+楢津	ナラツ	n a r a ts u
+夕顔	ユウガオ	y u u g a o
+両夫	リョウフ	r y o u f u
+両子	フタゴ	f u t a g o
+礼金	レイキン	r e i k i ng
+夕飯	ユウハン	y u u h a ng
+禅堂	ゼンドウ	z e ng d o u
+礼遇	レイグウ	r e i g u u
+資質	シシツ	sh i sh i ts u
+外さ	ハズサ	h a z u s a
+外し	ハズシ	h a z u sh i
+楢葉	ナラハ	n a r a h a
+禅林	ゼンリン	z e ng r i ng
+両所	リョウショ	r y o u sh o
+岩岡	イワオカ	i w a o k a
+礼装	レイソウ	r e i s o u
+両機	リョウキ	r y o u k i
+岩崎	イワサイ	i w a s a i
+賊す	ゾクス	z o k u s u
+両派	リョウハ	r y o u h a
+賊徒	ゾクト	z o k u t o
+禎瑞	テイズイ	t e i z u i
+業主	ギョウシュ	g y o u sh u
+福与	フクヨ	f u k u y o
+斗掻	トカキ	t o k a k i
+礼拝	ライハイ	r a i h a i
+貞美	サダミ	s a d a m i
+敦煌	トンコウ	t o ng k o u
+福二	フクジ	f u k u j i
+両院	リョウイン	r y o u i ng
+外れ	ハズレ	h a z u r e
+並び	ナラビ	n a r a b i
+賎民	センミン	s e ng m i ng
+礼厳	レイゴン	r e i g o ng
+下着	シタギ	sh i t a g i
+貞祐	テイユウ	t e i y u u
+散銭	サンセン	s a ng s e ng
+示野	シメノ	sh i m e n o
+貞田	サダタ	s a d a t a
+示達	ジタツ	j i t a ts u
+外乱	ガイラン	g a i r a ng
+賓礼	ヒンレイ	h i ng r e i
+外二	ソトジ	s o t o j i
+山瀬	ヤマセ	y a m a s e
+散逸	サンイツ	s a ng i ts u
+椎池	シイイケ	sh i i i k e
+示寂	ジジャク	j i j a k u
+示せ	シメセ	sh i m e s e
+礎石	ソセキ	s o s e k i
+散文	サンブン	s a ng b u ng
+貞慶	ジョウケイ	j o u k e i
+賜わ	タマワ	t a m a w a
+磯貝	イソガイ	i s o g a i
+貞宝	テイホウ	t e i h o u
+業風	ゴウフウ	g o u f u u
+賞嘆	ショウタン	sh o u t a ng
+福手	フグテ	f u g u t e
+外周	ガイシュウ	g a i sh u u
+賞金	ショウキン	sh o u k i ng
+楮根	カゾネ	k a z o n e
+磯浦	イソウラ	i s o u r a
+並存	ヘイソン	h e i s o ng
+福栖	フクス	f u k u s u
+賢台	ケンダイ	k e ng d a i
+磯岡	イソオカ	i s o o k a
+賢子	サトコ	s a t o k o
+賢明	ケンメイ	k e ng m e i
+外圧	ガイアツ	g a i a ts u
+外在	ガイザイ	g a i z a i
+並称	ヘイショウ	h e i sh o u
+外坪	トツボ	t o ts u b o
+磨滅	マメツ	m a m e ts u
+壱畝	ヒトセ	h i t o s e
+外套	ガイトウ	g a i t o u
+質さ	タダサ	t a d a s a
+椎倉	シグラ	sh i g u r a
+貝類	カイルイ	k a i r u i
+磁束	ジソク	j i s o k u
+質美	シツミ	sh i ts u m i
+植谷	ウエタニ	u e t a n i
+福谷	ウキガイ	u k i g a i
+植草	ウエクサ	u e k u s a
+碾茶	ヒキチャ	h i k i ch a
+外征	ガイセイ	g a i s e i
+中上	ナカウエ	n a k a u e
+声聞	ショウモン	sh o u m o ng
+声涙	セイルイ	s e i r u i
+斬罪	ザンザイ	z a ng z a i
+極り	キマリ	k i m a r i
+確保	カクホ	k a k u h o
+声声	コエゴエ	k o e g o e
+福音	フクイン	f u k u i ng
+確か	タシカ	t a sh i k a
+禦が	フセガ	f u s e g a
+碩子	ヒロコ	h i r o k o
+碩儒	セキジュ	s e k i j u
+碧雲	ヘキウン	h e k i u ng
+声問	コエトイ	k o e t o i
+賭博	トバク	t o b a k u
+賺さ	スカサ	s u k a s a
+禰次	ネツギ	n e ts u g i
+碑石	ヒセキ	h i s e k i
+購い	アガナイ	a g a n a i
+碑殿	ヒドノ	h i d o n o
+碎こ	クダコ	k u d a k o
+植芝	ウエシバ	u e sh i b a
+植竹	ウエタケ	u e t a k e
+植畑	ウエハタ	u e h a t a
+壮齢	ソウレイ	s o u r e i
+贄浦	ニエウラ	n i e u r a
+秀人	ヒデト	h i d e t o
+壮観	ソウカン	s o u k a ng
+硼酸	ホウサン	h o u s a ng
+外様	トザマ	t o z a m a
+豪邸	ゴウテイ	g o u t e i
+豪農	ゴウノウ	g o u n o u
+中保	ナカホ	n a k a h o
+豪快	ゴウカイ	g o u k a i
+中元	チュウゲン	ch u u g e ng
+壮大	ソウダイ	s o u d a i
+秀吟	シュウギン	sh u u g i ng
+硬水	コウスイ	k o u s u i
+秀哉	ヒデヤ	h i d e y a
+贈答	ゾウトウ	z o u t o u
+贈賄	ゾウワイ	z o u w a i
+硬め	カタメ	k a t a m e
+植槻	ウエツキ	u e ts u k i
+秀実	ヒデミ	h i d e m i
+秀家	ヒデイエ	h i d e i e
+贋造	ガンゾウ	g a ng z o u
+秀峰	シュウホウ	sh u u h o u
+秀平	シュウヘイ	sh u u h e i
+極右	キョクウ	k y o k u u
+植栗	ウエグリ	u e g u r i
+中印	ナカイン	n a k a i ng
+硫安	リュウアン	r y u u a ng
+硫化	リュウカ	r y u u k a
+植松	ウエマツ	u e m a ts u
+植村	ウエムラ	u e m u r a
+硝子	ガラス	g a r a s u
+植本	ウエモト	u e m o t o
+贓品	ゾウヒン	z o u h i ng
+中台	チュウタイ	ch u u t a i
+下毛	シモゲ	sh i m o g e
+秀才	シュウサイ	sh u u s a i
+中味	ナカミ	n a k a m i
+破鏡	ハキョウ	h a k y o u
+断切	タチキ	t a ch i k i
+象眼	ゾウガン	z o u g a ng
+象徴	ショウチョウ	sh o u ch o u
+破裂	ハレツ	h a r e ts u
+破篭	ワリゴ	w a r i g o
+断層	ダンソウ	d a ng s o u
+断崖	ダンガイ	d a ng g a i
+破獄	ハゴク	h a g o k u
+破瀬	ワレセ	w a r e s e
+岩盤	ガンバン	g a ng b a ng
+破ろ	ヤブロ	y a b u r o
+士爵	シシャク	sh i sh a k u
+士族	シゾク	sh i z o k u
+楸邨	シュウソン	sh u u s o ng
+士幌	シホロ	sh i h o r o
+外花	トバナ	t o b a n a
+断片	ダンペン	d a ng p e ng
+岩稲	イワイネ	i w a i n e
+岩穴	イワアナ	i w a a n a
+破け	ヤブケ	y a b u k e
+岩織	イワオリ	i w a o r i
+赤前	アカマエ	a k a m a e
+豊饒	ブニョウ	b u n y o u
+断簡	ダンカン	d a ng k a ng
+豊間	トヨマ	t o y o m a
+豊部	トヨベ	t o y o b e
+砲声	ホウセイ	h o u s e i
+秀逸	シュウイツ	sh u u i ts u
+士別	シベツ	sh i b e ts u
+砥草	トクサ	t o k u s a
+砥粉	トノコ	t o n o k o
+植山	ウエヤマ	u e y a m a
+壟断	ロウダン	r o u d a ng
+教諭	キョウユ	k y o u y u
+豊潤	ホウジュン	h o u j u ng
+赤岡	アカオカ	a k a o k a
+赤岩	アカイワ	a k a i w a
+砥堀	トホリ	t o h o r i
+研師	トギシ	t o g i sh i
+壊れ	コワレ	k o w a r e
+赤枝	アカエダ	a k a e d a
+私塾	シジュク	sh i j u k u
+壊し	コワシ	k o w a sh i
+壊さ	コワサ	k o w a s a
+赤池	アカイケ	a k a i k e
+植園	ウエソノ	u e s o n o
+壁谷	カベヤ	k a b e y a
+壁画	ヘキガ	h e k i g a
+砂辺	スナベ	s u n a b e
+豊津	トヨツ	t o y o ts u
+砂見	スナミ	s u n a m i
+赤浦	アカウラ	a k a u r a
+赤海	アコウミ	a k o u m i
+壁書	ヘキショ	h e k i sh o
+外里	トザト	t o z a t o
+壁巣	カベス	k a b e s u
+新万	シンマン	sh i ng m a ng
+下期	シモキ	sh i m o k i
+赤牛	アカウシ	a k a u sh i
+砂粒	サリュウ	s a r y u u
+豊治	トヨジ	t o y o j i
+私的	シテキ	sh i t e k i
+赤痢	セキリ	s e k i r i
+墾田	コンデン	k o ng d e ng
+砂漠	サバク	s a b a k u
+砂湯	スナユ	s u n a y u
+墳頂	フンチョウ	f u ng ch o u
+中宮	チュウグウ	ch u u g u u
+教子	キョウコ	k y o u k o
+墨痕	ボッコン	b o q k o ng
+墨田	スミダ	s u m i d a
+砂山	サヤマ	s a y a m a
+楽に	ラクニ	r a k u n i
+教唆	キョウサ	k y o u s a
+私部	キサベ	k i s a b e
+赤貝	アカガイ	a k a g a i
+豊島	テシマ	t e sh i m a
+赤連	アカレン	a k a r e ng
+岬之	ハナノ	h a n a n o
+石鯛	イシダイ	i sh i d a i
+秋分	シュウブン	sh u u b u ng
+秋台	アキダイ	a k i d a i
+教代	ノリヨ	n o r i y o
+秋堂	アキドウ	a k i d o u
+赦せ	ユルセ	y u r u s e
+夙に	ツトニ	ts u t o n i
+石臼	イシウス	i sh i u s u
+植下	ウエシモ	u e sh i m o
+下拙	ゲセツ	g e s e ts u
+石腸	イシチョウ	i sh i ch o u
+増間	マスマ	m a s u m a
+楽円	ラクエン	r a k u e ng
+下折	ソソリ	s o s o r i
+植上	ウエカミ	u e k a m i
+岳父	ガクフ	g a k u f u
+山中	サンチュウ	s a ng ch u u
+赴い	オモムイ	o m o m u i
+秋末	アキスエ	a k i s u e
+増野	マシノ	m a sh i n o
+岳谷	タケヤ	t a k e y a
+石琴	セッキン	s e q k i ng
+敗残	ハイザン	h a i z a ng
+岸呂	キシロ	k i sh i r o
+石浦	イシウラ	i sh i u r a
+敗報	ハイホウ	h a i h o u
+石榴	ザクロ	z a k u r o
+岸田	キシタ	k i sh i t a
+中州	ナカス	n a k a s u
+石打	イシウチ	i sh i u ch i
+岸見	キシミ	k i sh i m i
+谷間	タニアイ	t a n i a i
+岸辺	キシベ	k i sh i b e
+石応	コクボ	k o k u b o
+石庵	セキアン	s e k i a ng
+楽員	ガクイン	g a k u i ng
+増穂	マスホ	m a s u h o
+増税	ゾウゼイ	z o u z e i
+楽士	ガクシ	g a k u sh i
+増田	マシタ	m a sh i t a
+救護	キュウゴ	k y u u g o
+救援	キュウエン	k y u u e ng
+科白	セリフ	s e r i f u
+楽屋	ガクヤ	g a k u y a
+石偏	イシヘン	i sh i h e ng
+中旬	チュウジュン	ch u u j u ng
+増治	マスジ	m a s u j i
+楽座	ラクザ	r a k u z a
+増悪	ゾウアク	z o u a k u
+谷田	タニタ	t a n i t a
+ど経	ドキョウ	d o k y o u
+矮林	ワイリン	w a i r i ng
+秘仏	ヒブツ	h i b u ts u
+救わ	スクワ	s u k u w a
+短見	タンケン	t a ng k e ng
+谷津	タニツ	t a n i ts u
+楽界	ガッカイ	g a q k a i
+租借	ソシャク	s o sh a k u
+短慮	タンリョ	t a ng r y o
+短大	タンダイ	t a ng d a i
+峯木	ミネキ	m i n e k i
+起伏	キフク	k i f u k u
+増利	マサリ	m a s a r i
+増分	ゾウブン	z o u b u ng
+谷峨	コクガ	k o k u g a
+峯田	ミネタ	m i n e t a
+起業	キギョウ	k i g y o u
+秩序	チツジョ	ch i ts u j o
+秩父	チチブ	ch i ch i b u
+起立	キリツ	k i r i ts u
+知里	チサト	ch i s a t o
+谷子	タニコ	t a n i k o
+超人	チョウジン	ch o u j i ng
+谷塚	ヤツカ	y a ts u k a
+超凡	チョウボン	ch o u b o ng
+超然	チョウゼン	ch o u z e ng
+知花	チバナ	ch i b a n a
+知美	トモミ	t o m o m i
+敏腕	ビンワン	b i ng w a ng
+知永	チナガ	ch i n a g a
+墓表	ボヒョウ	b o h y o u
+墓穴	ボケツ	b o k e ts u
+知春	チハル	ch i h a r u
+下宿	ゲシュク	g e sh u k u
+敏治	トシジ	t o sh i j i
+知徳	チトク	ch i t o k u
+島出	シマデ	sh i m a d e
+越佐	コツサ	k o ts u s a
+越前	エチゼン	e ch i z e ng
+概ね	オオムネ	o o m u n e
+と腹	トフク	t o f u k u
+と絶	トゼツ	t o z e ts u
+越原	オッバラ	o q b a r a
+と殺	トサツ	t o s a ts u
+知寛	チヒロ	ch i h i r o
+知守	チモリ	ch i m o r i
+越年	エツネン	e ts u n e ng
+越廼	コシノ	k o sh i n o
+島名	シマナ	sh i m a n a
+島地	シマジ	sh i m a j i
+知合	シリアイ	sh i r i a i
+知加	トモカ	t o m o k a
+知人	シリト	sh i r i t o
+中米	チュウベイ	ch u u b e i
+屠ろ	ホフロ	h o f u r o
+越津	コシヅ	k o sh i z u
+島民	トウミン	t o u m i ng
+榎見	ヨノミ	y o n o m i
+程よ	ホドヨ	h o d o y o
+塾せ	ジュクセ	j u k u s e
+程合	ホドアイ	h o d o a i
+塾し	ジュクシ	j u k u sh i
+越賀	コシカ	k o sh i k a
+程田	ホドタ	h o d o t a
+越郎	エツロウ	e ts u r o u
+塹壕	ザンゴウ	z a ng g o u
+趨勢	スウセイ	s u u s e i
+税制	ゼイセイ	z e i s e i
+填ろ	ハマロ	h a m a r o
+税収	ゼイシュウ	z e i sh u u
+属地	ゾクチ	z o k u ch i
+矢頃	ヤゴロ	y a g o r o
+護藤	ゴンドウ	g o ng d o u
+矢間	ヤザマ	y a z a m a
+矢道	ヤミチ	y a m i ch i
+税関	ゼイカン	z e i k a ng
+矢越	ヤゴシ	y a g o sh i
+展望	テンボウ	t e ng b o u
+矢谷	ヤタニ	y a t a n i
+矢船	ヤフネ	y a f u n e
+展子	ノブコ	n o b u k o
+展也	タツヤ	t a ts u y a
+矢筒	ヤヅツ	y a z u ts u
+矢筈	ヤハズ	y a h a z u
+矢種	ヤダネ	y a d a n e
+足芸	アシゲイ	a sh i g e i
+新替	シンガエ	sh i ng g a e
+足跡	アシアト	a sh i a t o
+矢目	ヤノメ	y a n o m e
+下大	シモオオ	sh i m o o o
+矢留	ヤドミ	y a d o m i
+跋語	バツゴ	b a ts u g o
+議決	ギケツ	g i k e ts u
+矢洗	ヤアライ	y a a r a i
+矢沢	ヤサワ	y a s a w a
+跨ぎ	マタギ	m a t a g i
+峻厳	シュンゲン	sh u ng g e ng
+峻嶺	シュンレイ	sh u ng r e i
+峻拒	シュンキョ	sh u ng k y o
+跫音	キョウオン	k y o u o ng
+路代	ミチヨ	m i ch i y o
+路側	ロソク	r o s o k u
+榮助	エイスケ	e i s u k e
+路肩	ロカタ	r o k a t a
+榮吉	エイキチ	e i k i ch i
+故実	コジツ	k o j i ts u
+新本	シンホン	sh i ng h o ng
+矢徳	ヤトク	y a t o k u
+矢引	ヤビキ	y a b i k i
+稚拙	チセツ	ch i s e ts u
+崎戸	サキト	s a k i t o
+矢庭	ヤニワ	y a n i w a
+政談	セイダン	s e i d a ng
+崎田	サキダ	s a k i d a
+崎辺	サキベ	s a k i b e
+矢幅	ヤハバ	y a h a b a
+矢嶋	ヤジマ	y a j i m a
+崩し	クズシ	k u z u sh i
+識語	シキゴ	sh i k i g o
+矢尻	ヤジリ	y a j i r i
+矢守	ヤモリ	y a m o r i
+矢坪	ヤツボ	y a ts u b o
+譏ろ	ソシロ	s o sh i r o
+崩そ	クズソ	k u z u s o
+種具	タネグ	t a n e g u
+椋名	ムクナ	m u k u n a
+矢作	ヤサク	y a s a k u
+矢代	ヤシロ	y a sh i r o
+政津	マサツ	m a s a ts u
+矢中	ヤナカ	y a n a k a
+崩御	ホウギョ	h o u g y o
+塩納	シオノウ	sh i o n o u
+屋平	ヤヒラ	y a h i r a
+多欲	タヨク	t a y o k u
+種材	タネキ	t a n e k i
+塩新	シオアラ	sh i o a r a
+嵩む	カサム	k a s a m u
+屋外	オクガイ	o k u g a i
+嵩張	カサバ	k a s a b a
+種目	シュモク	sh u m o k u
+瞑ろ	ツブロ	ts u b u r o
+種苗	シュビョウ	sh u b y o u
+下司	クダシ	k u d a sh i
+串戸	クシド	k u sh i d o
+睨も	ニラモ	n i r a m o
+串間	クシマ	k u sh i m a
+踏瀬	フマセ	f u m a s e
+放電	ホウデン	h o u d e ng
+放論	ホウロン	h o u r o ng
+槌屋	ツチヤ	ts u ch i y a
+蹂躙	ジュウリン	j u u r i ng
+謫居	タッキョ	t a q k y o
+屋入	ヤニュウ	y a n y u u
+蹣跚	マンサン	m a ng s a ng
+丸み	マルミ	m a r u m i
+睦月	ムツキ	m u ts u k i
+睦家	ムツヤ	m u ts u y a
+稲牛	イナウシ	i n a u sh i
+睦め	ムツメ	m u ts u m e
+睥睨	ヘイゲイ	h e i g e i
+多病	タビョウ	t a b y o u
+稲童	イナドウ	i n a d o u
+多発	タハツ	t a h a ts u
+睡蓮	スイレン	s u i r e ng
+謝花	ジャハナ	j a h a n a
+丸和	マルワ	m a r u w a
+謝敷	ジャシキ	j a sh i k i
+睡ろ	ネムロ	n e m u r o
+丸子	マリコ	m a r i k o
+着飾	キカザ	k i k a z a
+着金	チャッキン	ch a q k i ng
+蹴破	ケヤブ	k e y a b u
+塞げ	フサゲ	f u s a g e
+着手	チャクシュ	ch a k u sh u
+槻木	ツキギ	ts u k i g i
+謝ん	アヤマン	a y a m a ng
+着工	チャッコウ	ch a q k o u
+塚野	ツカノ	ts u k a n o
+蹴込	ケコミ	k e k o m i
+稼が	カセガ	k a s e g a
+着丈	キタケ	k i t a k e
+塚地	ツカジ	ts u k a j i
+下伏	ゲブセ	g e b u s e
+樋山	ヒヤマ	h i y a m a
+稿本	コウホン	k o u h o ng
+塗料	トリョウ	t o r y o u
+丸野	マルノ	m a r u n o
+穂並	ホナミ	h o n a m i
+穂先	ホサキ	h o s a k i
+穂出	ホノデ	h o n o d e
+穂刈	ホカリ	h o k a r i
+穂別	ホベツ	h o b e ts u
+穂北	ホキタ	h o k i t a
+森野	モリノ	m o r i n o
+穂状	スイジョウ	s u i j o u
+穂積	ホヅミ	h o z u m i
+穂綿	ホワタ	h o w a t a
+多血	タケツ	t a k e ts u
+丹南	タンナン	t a ng n a ng
+森部	モリブ	m o r i b u
+屈葬	クッソウ	k u q s o u
+穂谷	ホタニ	h o t a n i
+躑躅	ツツジ	ts u ts u j i
+丹塗	ニヌリ	n i n u r i
+謙澄	ケンチョウ	k e ng ch o u
+穂香	ホニオイ	h o n i o i
+丹尾	タンノオ	t a ng n o o
+穂高	ホタカ	h o t a k a
+攻寄	セメヨ	s e m e y o
+屈性	クッセイ	k u q s e i
+穂麦	ホムギ	h o m u g i
+眩も	クラモ	k u r a m o
+新盆	アラボン	a r a b o ng
+樋沢	ヒサワ	h i s a w a
+屈伸	クッシン	k u q sh i ng
+下之	シタノ	sh i t a n o
+眠気	ネムケ	n e m u k e
+改造	カイゾウ	k a i z o u
+改訂	カイテイ	k a i t e i
+丹韵	タンユウ	t a ng y u u
+身幅	ミハバ	m i h a b a
+積子	セキコ	s e k i k o
+身柄	ミガラ	m i g a r a
+身柱	チリケ	ch i r i k e
+積荷	ツミニ	ts u m i n i
+改易	カイエキ	k a i e k i
+身空	ミソラ	m i s o r a
+改新	カイシン	k a i sh i ng
+身篭	ミゴモ	m i g o m o
+身罷	ミマカ	m i m a k a
+諾否	ダクヒ	d a k u h i
+諾っ	ウベナッ	u b e n a q
+諾せ	ダクセ	d a k u s e
+標さ	シルサ	sh i r u s a
+穎脱	エイダツ	e i d a ts u
+主客	シュカク	sh u k a k u
+主従	シュウジュウ	sh u u j u u
+身銭	ミゼニ	m i z e n i
+穢す	ケガス	k e g a s u
+諸鹿	モロガ	m o r o g a
+夜宮	ヨミヤ	y o m i y a
+躱そ	カワソ	k a w a s o
+川出	カワデ	k a w a d e
+居然	キョゼン	k y o z e ng
+諸訳	ショワケ	sh o w a k e
+主軸	シュジク	sh u j i k u
+乃白	ノシラ	n o sh i r a
+森目	モリメ	m o r i m e
+諸色	ショシキ	sh o sh i k i
+標茶	シベチャ	sh i b e ch a
+標葉	シネハ	sh i n e h a
+塔頭	タッチュウ	t a q ch u u
+真鼻	マバナ	m a b a n a
+諸数	ショカズ	sh o k a z u
+真鴨	マガモ	m a g a m o
+軍人	グンジン	g u ng j i ng
+真頼	マヨリ	m a y o r i
+久二	キュウジ	k y u u j i
+穴居	ケッキョ	k e q k y o
