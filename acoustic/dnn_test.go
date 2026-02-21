@@ -10,6 +10,20 @@ import (
 	"github.com/ieee0824/transcript-go/internal/blas"
 )
 
+func testXavierInit(rng *rand.Rand, w []float64, fanIn, fanOut int) {
+	scale := math.Sqrt(2.0 / float64(fanIn+fanOut))
+	for i := range w {
+		w[i] = rng.NormFloat64() * scale
+	}
+}
+
+func testHeInit(rng *rand.Rand, w []float64, fanIn, _ int) {
+	scale := math.Sqrt(2.0 / float64(fanIn))
+	for i := range w {
+		w[i] = rng.NormFloat64() * scale
+	}
+}
+
 func TestDNNForward_Dimensions(t *testing.T) {
 	d := NewDNN(39, 16, 3, 2, 0.0, false)
 	T := 10
@@ -222,7 +236,7 @@ func TestDNNContextWindow_EdgePadding(t *testing.T) {
 
 func TestDNNTraining_LossDecreases(t *testing.T) {
 	// Create a small DNN and synthetic data with clear class structure
-	rand.Seed(42)
+	rng := rand.New(rand.NewSource(42))
 	featureDim := 4
 	hiddenDim := 16
 	contextLen := 0 // no context for simplicity
@@ -239,7 +253,7 @@ func TestDNNTraining_LossDecreases(t *testing.T) {
 		targets[i] = c
 		for j := 0; j < inputDim; j++ {
 			// Class-dependent signal + noise
-			inputs[i*inputDim+j] = float64(c)*0.5 + rand.NormFloat64()*0.1
+			inputs[i*inputDim+j] = float64(c)*0.5 + rng.NormFloat64()*0.1
 		}
 	}
 
@@ -257,7 +271,7 @@ func TestDNNTraining_LossDecreases(t *testing.T) {
 }
 
 func TestBackpropBatch_GradientCheck(t *testing.T) {
-	rand.Seed(123)
+	rng := rand.New(rand.NewSource(123))
 	// Small DNN for numerical gradient checking
 	d := &DNN{
 		Layers: []DNNLayer{
@@ -272,14 +286,14 @@ func TestBackpropBatch_GradientCheck(t *testing.T) {
 		LogPrior:    make([]float64, 3),
 		PhonemeList: AllPhonemes(),
 	}
-	xavierInit(d.Layers[0].W, 6, 4)
-	xavierInit(d.Layers[1].W, 4, 4)
-	xavierInit(d.Layers[2].W, 4, 3)
+	testXavierInit(rng, d.Layers[0].W, 6, 4)
+	testXavierInit(rng, d.Layers[1].W, 4, 4)
+	testXavierInit(rng, d.Layers[2].W, 4, 3)
 
 	bs := 4
 	xBatch := make([]float64, bs*6)
 	for i := range xBatch {
-		xBatch[i] = rand.NormFloat64() * 0.5
+		xBatch[i] = rng.NormFloat64() * 0.5
 	}
 	batchTargets := []int{0, 1, 2, 1}
 
@@ -513,7 +527,7 @@ func TestDNNSaveLoad_VariableLayers(t *testing.T) {
 }
 
 func TestBackpropBatch_GradientCheck_4Layers(t *testing.T) {
-	rand.Seed(456)
+	rng := rand.New(rand.NewSource(456))
 	d := &DNN{
 		Layers: []DNNLayer{
 			{W: make([]float64, 4*6), B: make([]float64, 4), InDim: 6, OutDim: 4},
@@ -529,13 +543,13 @@ func TestBackpropBatch_GradientCheck_4Layers(t *testing.T) {
 		PhonemeList: AllPhonemes(),
 	}
 	for i := range d.Layers {
-		xavierInit(d.Layers[i].W, d.Layers[i].InDim, d.Layers[i].OutDim)
+		testXavierInit(rng, d.Layers[i].W, d.Layers[i].InDim, d.Layers[i].OutDim)
 	}
 
 	bs := 4
 	xBatch := make([]float64, bs*6)
 	for i := range xBatch {
-		xBatch[i] = rand.NormFloat64() * 0.5
+		xBatch[i] = rng.NormFloat64() * 0.5
 	}
 	batchTargets := []int{0, 1, 2, 1}
 
@@ -572,7 +586,7 @@ func TestBackpropBatch_GradientCheck_4Layers(t *testing.T) {
 // --- Label smoothing tests ---
 
 func TestBackpropBatch_GradientCheck_LabelSmooth(t *testing.T) {
-	rand.Seed(789)
+	rng := rand.New(rand.NewSource(789))
 	d := &DNN{
 		Layers: []DNNLayer{
 			{W: make([]float64, 4*6), B: make([]float64, 4), InDim: 6, OutDim: 4},
@@ -585,13 +599,13 @@ func TestBackpropBatch_GradientCheck_LabelSmooth(t *testing.T) {
 		LogPrior:    make([]float64, 3),
 		PhonemeList: AllPhonemes(),
 	}
-	xavierInit(d.Layers[0].W, 6, 4)
-	xavierInit(d.Layers[1].W, 4, 3)
+	testXavierInit(rng, d.Layers[0].W, 6, 4)
+	testXavierInit(rng, d.Layers[1].W, 4, 3)
 
 	bs := 4
 	xBatch := make([]float64, bs*6)
 	for i := range xBatch {
-		xBatch[i] = rand.NormFloat64() * 0.5
+		xBatch[i] = rng.NormFloat64() * 0.5
 	}
 	batchTargets := []int{0, 1, 2, 1}
 	labelSmooth := 0.1
@@ -691,7 +705,7 @@ func TestCosineLRSchedule(t *testing.T) {
 }
 
 func TestDNNTraining_WithLabelSmoothing(t *testing.T) {
-	rand.Seed(42)
+	rng := rand.New(rand.NewSource(42))
 	d := NewDNN(4, 16, 0, 2, 0.0, false)
 
 	N := 500
@@ -702,7 +716,7 @@ func TestDNNTraining_WithLabelSmoothing(t *testing.T) {
 		c := i % d.OutputDim
 		targets[i] = c
 		for j := 0; j < inputDim; j++ {
-			inputs[i*inputDim+j] = float64(c)*0.5 + rand.NormFloat64()*0.1
+			inputs[i*inputDim+j] = float64(c)*0.5 + rng.NormFloat64()*0.1
 		}
 	}
 
@@ -720,7 +734,7 @@ func TestDNNTraining_WithLabelSmoothing(t *testing.T) {
 }
 
 func TestDNNTraining_WithCosineLR(t *testing.T) {
-	rand.Seed(42)
+	rng := rand.New(rand.NewSource(42))
 	d := NewDNN(4, 16, 0, 2, 0.0, false)
 
 	N := 500
@@ -731,7 +745,7 @@ func TestDNNTraining_WithCosineLR(t *testing.T) {
 		c := i % d.OutputDim
 		targets[i] = c
 		for j := 0; j < inputDim; j++ {
-			inputs[i*inputDim+j] = float64(c)*0.5 + rand.NormFloat64()*0.1
+			inputs[i*inputDim+j] = float64(c)*0.5 + rng.NormFloat64()*0.1
 		}
 	}
 
@@ -773,7 +787,7 @@ func TestDNNDropout_InferenceDeterministic(t *testing.T) {
 }
 
 func TestDNNTraining_WithDropout(t *testing.T) {
-	rand.Seed(42)
+	rng := rand.New(rand.NewSource(42))
 	d := NewDNN(4, 16, 0, 2, 0.3, false)
 
 	N := 500
@@ -784,7 +798,7 @@ func TestDNNTraining_WithDropout(t *testing.T) {
 		c := i % d.OutputDim
 		targets[i] = c
 		for j := 0; j < inputDim; j++ {
-			inputs[i*inputDim+j] = float64(c)*0.5 + rand.NormFloat64()*0.1
+			inputs[i*inputDim+j] = float64(c)*0.5 + rng.NormFloat64()*0.1
 		}
 	}
 
@@ -1019,7 +1033,7 @@ func computeLossBN(d *DNN, xBatch []float64, targets []int, bs int, ws *dnnWorks
 }
 
 func TestBackpropBatch_GradientCheck_BatchNorm(t *testing.T) {
-	rand.Seed(999)
+	rng := rand.New(rand.NewSource(999))
 	d := &DNN{
 		Layers: []DNNLayer{
 			{W: make([]float64, 4*6), B: make([]float64, 4), InDim: 6, OutDim: 4},
@@ -1040,7 +1054,7 @@ func TestBackpropBatch_GradientCheck_BatchNorm(t *testing.T) {
 		dim := 4
 		gamma := make([]float64, dim)
 		for j := range gamma {
-			gamma[j] = 1.0 + rand.NormFloat64()*0.1
+			gamma[j] = 1.0 + rng.NormFloat64()*0.1
 		}
 		d.BN[i] = BatchNormParams{
 			Gamma:       gamma,
@@ -1050,20 +1064,20 @@ func TestBackpropBatch_GradientCheck_BatchNorm(t *testing.T) {
 			Dim:         dim,
 		}
 		for j := range d.BN[i].Beta {
-			d.BN[i].Beta[j] = rand.NormFloat64() * 0.1
+			d.BN[i].Beta[j] = rng.NormFloat64() * 0.1
 		}
 		for j := range d.BN[i].RunningVar {
 			d.BN[i].RunningVar[j] = 1.0
 		}
 	}
 	for i := range d.Layers {
-		heInit(d.Layers[i].W, d.Layers[i].InDim, d.Layers[i].OutDim)
+		testHeInit(rng, d.Layers[i].W, d.Layers[i].InDim, d.Layers[i].OutDim)
 	}
 
 	bs := 8 // need reasonable batch size for BN stats stability
 	xBatch := make([]float64, bs*6)
 	for i := range xBatch {
-		xBatch[i] = rand.NormFloat64() * 0.5
+		xBatch[i] = rng.NormFloat64() * 0.5
 	}
 	batchTargets := make([]int, bs)
 	for i := range batchTargets {
@@ -1179,7 +1193,7 @@ func TestBackpropBatch_GradientCheck_BatchNorm(t *testing.T) {
 }
 
 func TestDNNTraining_WithBatchNorm(t *testing.T) {
-	rand.Seed(42)
+	rng := rand.New(rand.NewSource(42))
 	d := NewDNN(4, 16, 0, 2, 0.0, true)
 
 	N := 500
@@ -1190,7 +1204,7 @@ func TestDNNTraining_WithBatchNorm(t *testing.T) {
 		c := i % d.OutputDim
 		targets[i] = c
 		for j := 0; j < inputDim; j++ {
-			inputs[i*inputDim+j] = float64(c)*0.5 + rand.NormFloat64()*0.1
+			inputs[i*inputDim+j] = float64(c)*0.5 + rng.NormFloat64()*0.1
 		}
 	}
 
@@ -1236,7 +1250,7 @@ func BenchmarkDNNForward_300frames(b *testing.B) {
 }
 
 func BenchmarkDNNTraining(b *testing.B) {
-	rand.Seed(42)
+	rng := rand.New(rand.NewSource(42))
 	d := NewDNN(39, 256, 5, 2, 0.0, false) // production-size DNN
 	N := 100000
 	inputDim := d.InputDim
@@ -1245,7 +1259,7 @@ func BenchmarkDNNTraining(b *testing.B) {
 	for i := 0; i < N; i++ {
 		targets[i] = i % d.OutputDim
 		for j := 0; j < inputDim; j++ {
-			inputs[i*inputDim+j] = rand.NormFloat64() * 0.1
+			inputs[i*inputDim+j] = rng.NormFloat64() * 0.1
 		}
 	}
 
