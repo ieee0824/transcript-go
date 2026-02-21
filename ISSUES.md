@@ -36,13 +36,14 @@ Wikipedia日本語ダンプ → `cmd/wikitext` + `cmd/lmtext` で辞書フィル
 | ~~中~~ | ~~Label Smoothing~~ | ~~汎化性能向上~~ → **不採用**: ε=0.05/0.1共にデコーダ認識不可。HMM-DNNハイブリッドではlogitのダイナミックレンジ低下が致命的 |
 | ~~中~~ | ~~辞書5,000〜7,000語拡張~~ | ~~外来語カバレッジ~~ → **5,000語が上限**: 5,000語はMT=3000+WP=5で70/90維持。7,000語は67/90に劣化、音響混同の累積が閾値超過 |
 | ~~中~~ | ~~デコーダパラメータ最適化~~ | ~~語彙拡大耐性~~ → **実施済み: +10〜+21pt**。tunerグリッドサーチで最適WP/MT/LW探索。全語彙サイズで大幅改善 |
+| ~~中~~ | ~~Batch Normalization~~ | ~~内部共変量シフト抑制~~ → **v18で実施: IC +2, 合計 +2** (val_acc 84.0%→85.4%、IC 28/30→30/30、74/90) |
 | 低 | コーパスのドメイン拡張（医療・IT等） | 未知文カバレッジ向上 |
 
 ## 現在の推奨構成
 
 ```
 AM:   models/v15/am.gob (55話者 5,794発話, 5-way augment, 4-mix GMM, トライフォン)
-DNN:  models/v15/dnn.gob (4層×512, Dropout 0.2, Cosine LR, 50エポック, val_acc 84.0%)
+DNN:  models/v18/dnn.gob (4層×512, Dropout 0.2, BatchNorm, Cosine LR, 50エポック, val_acc 85.4%)
 LM:   models/v15/lm.arpa (トライグラム、14,643文: テンプレート14,250 + Wikipedia393)
 Dict: models/v15/dict.txt (1,694語、混同フィルタ済)
 
@@ -50,19 +51,19 @@ Dict: models/v15/dict.txt (1,694語、混同フィルタ済)
 LM:   models/v16/lm.arpa (トライグラム、29,774文: テンプレート18,367 + Wikipedia11,407)
 Dict: models/v16/dict.txt (2,000語 = v15 1,694語 + 外来語51 + fill 255)
 
-認識コマンド (v15, 1,694語, チューニング済):
+認識コマンド (v18, 1,694語, チューニング済):
 /tmp/transcript \
   -am models/v15/am.gob \
-  -dnn models/v15/dnn.gob \
+  -dnn models/v18/dnn.gob \
   -lm models/v15/lm.arpa \
   -dict models/v15/dict.txt \
-  -lm-weight 11 -word-penalty 13 \
+  -lm-weight 11 -word-penalty 10 -max-tokens 3000 \
   -wav input.wav
 
 認識コマンド (5,000語辞書):
 /tmp/transcript \
   -am models/v15/am.gob \
-  -dnn models/v15/dnn.gob \
+  -dnn models/v18/dnn.gob \
   -lm data/work/lm_5000.arpa \
   -dict data/work/dict_5000.txt \
   -lm-weight 10 -word-penalty 5 -max-tokens 3000 \
@@ -70,7 +71,7 @@ Dict: models/v16/dict.txt (2,000語 = v15 1,694語 + 外来語51 + fill 255)
 
 パラメータチューニングコマンド:
 go run ./cmd/tuner \
-  -am models/v15/am.gob -dnn models/v15/dnn.gob \
+  -am models/v15/am.gob -dnn models/v18/dnn.gob \
   -lm models/v15/lm.arpa -dict models/v15/dict.txt \
   -manifest "data/test_tts/manifest.tsv,..." \
   -lm-weights "8,10,12,15" -word-penalties "0,5,10,15"
@@ -80,8 +81,8 @@ go run ./cmd/dnntrain \
   -manifest data/manifest_all_v5.tsv \
   -dict data/work/dict_2000_filtered.txt \
   -am data/work/am_tri_8mix.gob \
-  -output models/v15/dnn.gob \
-  -hidden 512 -layers 4 -dropout 0.2 -lr-schedule cosine -epochs 50 -patience 0 -augment
+  -output models/v18/dnn.gob \
+  -hidden 512 -layers 4 -dropout 0.2 -batchnorm -lr-schedule cosine -epochs 50 -patience 0 -augment
 
 GMM学習コマンド:
 go run ./cmd/train \
@@ -98,6 +99,53 @@ go run ./cmd/lmbuild -order 3 -output models/v14/lm.arpa \
 ---
 
 ## 研究成果
+
+### Batch Normalization実験 (v18)
+
+v15アーキテクチャ (4層×512, Dropout 0.2, Cosine LR) にBatch Normalizationを追加。隠れ層のみ (出力層は除外)。
+
+#### 実装
+
+- BN配置: Linear → BN → ReLU → Dropout (隠れ層のみ)
+- BN有効時はHe初期化 (Xavier→He)、バイアスはBN betaが吸収
+- 推論: running stats (EMA, momentum=0.1) による fused scale+shift
+- 学習: バッチ統計 forward/backward、gamma/beta の Adam 更新
+- V3シリアライズ (V2/V1後方互換)
+
+#### 学習結果
+
+| | v15 (BN無し) | v18 (BN有り) | 差 |
+|---|---|---|---|
+| val_loss | 0.4353 | **0.3811** | -0.054 |
+| val_acc | 84.0% | **85.4%** | **+1.4pt** |
+| train_acc | 81.2% | 79.5% | -1.7pt |
+
+- BNによりval_accが一貫して上昇し、エポック33で85.0%到達、最終85.4%
+- train_accはBN無しより低い (正則化効果) だがval_accは高い → 汎化性能改善
+- val_lossも0.4353→0.3811と大幅改善
+
+#### 評価結果
+
+デコーダパラメータ再チューニングが必要 (BNでlog-posterior分布が変化)。
+
+| | v15 (LW=11,WP=13,MT=1000) | v18 (LW=11,WP=10,MT=3000) | 差 |
+|---|---|---|---|
+| test_external | 9/10 | **10/10** | **+1** |
+| test_emotion | 10/10 | 10/10 | ±0 |
+| test_tts | 7/10 | **10/10** | **+3** |
+| **IC合計** | **28/30 (93%)** | **30/30 (100%)** | **+2** |
+| Speaker A | 15/20 | 14/20 | -1 |
+| Speaker B | 14/20 | **16/20** | **+2** |
+| Speaker C | 15/20 | 14/20 | -1 |
+| **OOC合計** | **44/60 (73%)** | **44/60 (73%)** | ±0 |
+| **総合** | **72/90 (80.0%)** | **74/90 (82.2%)** | **+2** |
+
+#### 分析
+
+- **IC完全正解**: test_external 9→10 (「魚と野菜を買う」「朝から雨が降る」復活)、test_tts 7→10 (3発話改善)。フレーム精度+1.4ptがIC弁別力に直結
+- **OOC維持**: 44/60で同等。Speaker Bは+2 (「先輩と相談する」「赤い花が咲く」復活) だがA/Cは各-1
+- **デコーダパラメータ**: BNモデルはWP=13→10、MT=1000→3000が最適。BNによりlog-posteriorのダイナミックレンジが変化し、v15用パラメータでは73.3%に劣化する (パラメータ不適合で-7pt)
+- **共通エラーパターン**: 「忘れ物を取りに行く」(取り/撮り混同)、「夜に音楽を聴く」(夜→それ)、「お母さんに電話をかける」(かける脱落)、「お腹が空く」(短文認識困難) は全話者共通で残存
 
 ### 7,000語辞書拡張実験
 
