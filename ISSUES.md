@@ -42,7 +42,8 @@ Wikipedia日本語ダンプ → `cmd/wikitext` + `cmd/lmtext` で辞書フィル
 | ~~中~~ | ~~デコーダパラメータ最適化~~ | ~~語彙拡大耐性~~ → **実施済み: +10〜+21pt**。tunerグリッドサーチで最適WP/MT/LW探索。全語彙サイズで大幅改善 |
 | ~~中~~ | ~~Batch Normalization~~ | ~~内部共変量シフト抑制~~ → **v18で実施: IC +2, 合計 +2** (val_acc 84.0%→85.4%、IC 28/30→30/30、74/90) |
 | 中 | SpecAugment (時間/周波数マスキング) | OOC汎化改善。実装済み、評価中 |
-| 中 | tunerグリッドサーチ分散化 | シャード分割で複数マシン並列実行。90ファイル×400組=36,000デコードの高速化 |
+| ~~中~~ | ~~tunerグリッドサーチ分散化~~ | ~~シャード分割で複数マシン並列実行~~ → **実施済み**: シャード分割 + AVX2 SIMD (Dgemm 9.4x高速化) |
+| 中 | AVX2 SIMD (Go assembly) | Linux x86_64でのDgemm高速化。**実施済み**: Dgemm 9.4x、tuner全体 2.2x |
 | 中 | Residual connections (残差接続) | 6〜8層深層化の安定化。BN+ResNetで表現力向上。SpecAugment後に検討 |
 | 中 | 系列弁別学習 (sMBR/MMI) | フレームCE→系列最適化。同音異義語(取り/撮り)の文脈弁別に直結。実装コスト高 |
 | 低 | ノイズ augmentation | SNR変動への頑健性。現在の5-way speed perturbに追加 |
@@ -232,6 +233,33 @@ v18アーキテクチャ (4層×512, BN, Dropout 0.2, Cosine LR) にSpecAugment 
 - **正則化過多**: freq_mask=6, time_mask=3 は39次元×11フレームのMFCC入力に対して強すぎる。train_acc 73.7% はモデル容量に対してアンダーフィットの兆候
 - **次のアクション**: SpecAugmentの強度を下げて再実験 (freq_mask=3, time_mask=1 等)。または BN + SpecAugment 弱 の組み合わせでIC維持+OOC改善を狙う
 - **結論**: 現在の設定 (freq=6, time=3) では不採用。v18 (BNのみ) が引き続きベスト
+
+### AVX2 SIMD高速化 (Go Assembly)
+
+リモートLinux (x86_64) でのtunerグリッドサーチが純Go三重ループのDgemmで律速。Go assembly (.s) でAVX2+FMAドット積を実装し、外部依存なしでDgemmを高速化。
+
+#### 実装
+
+- `internal/blas/dot_amd64.s`: AVX2+FMA ドット積 (8要素/ループ、2アキュムレータでILP)
+- `internal/blas/blas_amd64.go`: `transA=false, transB=true` パスで `dotAVX2` 使用、他はGoフォールバック
+- ビルドタグ3段構成: `blas_darwin.go` (Apple Accelerate) / `blas_amd64.go` (AVX2) / `blas_generic.go` (純Go)
+- クロスコンパイル: `GOOS=linux GOARCH=amd64 go build` がそのまま動作 (cgo不要)
+
+#### ベンチマーク結果 (リモート Linux, Intel i7-8665U)
+
+| ベンチマーク | 純Go | AVX2 | 高速化 |
+|---|---|---|---|
+| 300×39×4 (GMM) | 79,813 ns/op | 11,950 ns/op | **6.7x** |
+| 100×429×512 (DNN forward) | 31,889,654 ns/op | 3,377,159 ns/op | **9.4x** |
+
+#### tuner実測 (1コンボ×90ファイル, リモートLinux)
+
+| | 純Go | AVX2 | 高速化 |
+|---|---|---|---|
+| 実行時間 | 32.2秒 | 14.6秒 | **2.2x** |
+
+- Dgemm以外のボトルネック (特徴抽出、ビームサーチ、LMルックアップ) がtuner全体の高速化を制限
+- Dgemm部分のみでは9.4倍だが、tuner全体では2.2倍の高速化
 
 ### 7,000語辞書拡張実験
 

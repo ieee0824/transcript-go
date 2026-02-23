@@ -1,0 +1,61 @@
+#include "textflag.h"
+
+// func dotAVX2(a, b *float64, n int) float64
+TEXT ·dotAVX2(SB), NOSPLIT, $0-32
+	MOVQ	a+0(FP), SI
+	MOVQ	b+8(FP), DI
+	MOVQ	n+16(FP), CX
+
+	VXORPD	Y0, Y0, Y0
+	VXORPD	Y1, Y1, Y1
+
+	CMPQ	CX, $8
+	JL	tail4
+
+loop8:
+	VMOVUPD	(SI), Y2
+	VMOVUPD	32(SI), Y4
+	VMOVUPD	(DI), Y3
+	VMOVUPD	32(DI), Y5
+	VFMADD231PD	Y3, Y2, Y0
+	VFMADD231PD	Y5, Y4, Y1
+	ADDQ	$64, SI
+	ADDQ	$64, DI
+	SUBQ	$8, CX
+	CMPQ	CX, $8
+	JGE	loop8
+
+	VADDPD	Y1, Y0, Y0
+
+tail4:
+	CMPQ	CX, $4
+	JL	reduce
+	VMOVUPD	(SI), Y2
+	VMOVUPD	(DI), Y3
+	VFMADD231PD	Y3, Y2, Y0
+	ADDQ	$32, SI
+	ADDQ	$32, DI
+	SUBQ	$4, CX
+
+reduce:
+	VEXTRACTF128	$1, Y0, X1
+	VADDPD	X1, X0, X0
+	VPERMILPD	$1, X0, X1
+	VADDSD	X1, X0, X0
+
+	CMPQ	CX, $0
+	JE	done
+
+scalar:
+	MOVSD	(SI), X2
+	MOVSD	(DI), X3
+	VFMADD231SD	X3, X2, X0
+	ADDQ	$8, SI
+	ADDQ	$8, DI
+	DECQ	CX
+	JNZ	scalar
+
+done:
+	VZEROUPPER
+	MOVSD	X0, ret+24(FP)
+	RET

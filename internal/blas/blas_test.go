@@ -127,3 +127,22 @@ func BenchmarkDgemm_300x39x4(b *testing.B) {
 		Dgemm(false, true, T, K, D, 1.0, a, D, bm, D, 0.0, c, K)
 	}
 }
+
+func BenchmarkDgemm_100x429x512(b *testing.B) {
+	rng := rand.New(rand.NewSource(42))
+	m, k, n := 100, 429, 512
+	a := make([]float64, m*k)
+	bm := make([]float64, n*k)
+	for i := range a {
+		a[i] = rng.Float64()
+	}
+	for i := range bm {
+		bm[i] = rng.Float64()
+	}
+	c := make([]float64, m*n)
+
+	b.ResetTimer()
+	for b.Loop() {
+		Dgemm(false, true, m, n, k, 1.0, a, k, bm, k, 0.0, c, n)
+	}
+}
