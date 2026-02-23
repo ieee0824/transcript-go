@@ -44,7 +44,7 @@ Wikipedia日本語ダンプ → `cmd/wikitext` + `cmd/lmtext` で辞書フィル
 | 中 | SpecAugment (時間/周波数マスキング) | OOC汎化改善。実装済み、評価中 |
 | ~~中~~ | ~~tunerグリッドサーチ分散化~~ | ~~シャード分割で複数マシン並列実行~~ → **実施済み**: シャード分割 + AVX2 SIMD (Dgemm 9.4x高速化) |
 | 中 | AVX2 SIMD (Go assembly) | Linux x86_64でのDgemm高速化。**実施済み**: Dgemm 9.4x、tuner全体 2.2x |
-| 中 | Residual connections (残差接続) | 6〜8層深層化の安定化。BN+ResNetで表現力向上。SpecAugment後に検討 |
+| ~~中~~ | ~~Residual connections (残差接続)~~ | ~~6〜8層深層化の安定化~~ → **実装済み**: 2層ごとskip接続 (BN後・ReLU前加算)、V4シリアライズ、`-residual` CLIフラグ。v19評価待ち |
 | 中 | 系列弁別学習 (sMBR/MMI) | フレームCE→系列最適化。同音異義語(取り/撮り)の文脈弁別に直結。実装コスト高 |
 | 低 | ノイズ augmentation | SNR変動への頑健性。現在の5-way speed perturbに追加 |
 | 低 | 非音声入力の棄却 | `<sil>`モデルのノイズ学習 + 信頼度閾値で無意味入力を棄却。現状ノイズを擬音語等に誤認識する |
