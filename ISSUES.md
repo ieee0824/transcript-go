@@ -261,6 +261,68 @@ v18アーキテクチャ (4層×512, BN, Dropout 0.2, Cosine LR) にSpecAugment 
 - Dgemm以外のボトルネック (特徴抽出、ビームサーチ、LMルックアップ) がtuner全体の高速化を制限
 - Dgemm部分のみでは9.4倍だが、tuner全体では2.2倍の高速化
 
+#### tunerボトルネック分析 (AVX2適用後)
+
+AVX2でDgemmを高速化した結果、ビームサーチと特徴抽出が新たなボトルネックに。
+
+| 処理 | Before (純Go) | After (AVX2) | After割合 |
+|---|---|---|---|
+| 特徴抽出 (90ファイル, 1回) | ~5秒 | ~5秒 | 34% |
+| DNN Forward (Dgemm) | ~18秒 | ~2秒 | 14% |
+| **ビームサーチ (Viterbi)** | ~8秒 | ~8秒 | **55%** |
+| その他 (LM, IO) | ~1秒 | ~1秒 | 7% |
+| **合計** | **~32秒** | **~15秒** | |
+
+ビームサーチが重い理由: 90ファイル × 平均100フレーム × MaxActiveTokens=2000 × 5遷移/トークン = 9,000万回のスコア計算・比較・マップ操作。分岐・メモリアクセス・Go map操作が多くSIMD化困難。
+
+さらなる高速化候補:
+- ~~ビームサーチ最適化: Go map → open addressing hash~~ → **実施済み**: macOS 1.29x、Linux 1.44x
+- ~~特徴抽出の並列化: 90ファイルを goroutine で並列 MFCC 計算~~ → **不要**: 起動時1回のみ (~5秒)、グリッドサーチ中は全コアがcombo並列で飽和
+- シャード数増加: 計算を4-8マシンに分散し壁時間を線形短縮
+
+### ビームサーチ最適化 (recomTable + phonemeIndex)
+
+AVX2でDgemm高速化後、ビームサーチ (Viterbi) がtunerの最大ボトルネック (推定55%)。Go mapの再結合テーブルをカスタムopen-addressingハッシュテーブルに置換し、フレームごとのmap clearをO(1)化。
+
+#### 実装
+
+1. **`decoder/recomtable.go`**: open-addressingハッシュテーブル (generation-based clear)
+   - 乗算ハッシュ (FNV風) + linear probing、ロードファクタ < 0.5
+   - `clear()` は `gen++` のみ (O(1))。スロットの `gens[i] != gen` で空判定
+   - `lookupOrInsert()` で1回のprobe走査でlookup+insert統合
+
+2. **`decoder/viterbi.go`**: Go map → recomTable置換
+   - `make(map[recomKey]int)` → `newRecomTable(estimatedTokens)`
+   - `for k := range recom { delete(recom, k) }` → `recom.clear()`
+   - 重複LM lookahead計算を削除 (L228-237とL269-278が同一、後者を除去)
+
+3. **`acoustic/dnn.go`**: `StateClassIndex` phoneme→indexキャッシュ
+   - `phonemeIndex map[Phoneme]int` をLoad/NewDNN時に構築
+   - 線形探索O(30) → mapルックアップO(1)
+
+#### ベンチマーク結果 (macOS, Apple M2)
+
+| ベンチマーク | Before | After | 高速化 |
+|---|---|---|---|
+| 5vocab/50frames | 4,600,000 ns | 3,700,000 ns | **1.24x** |
+| 10vocab/100frames | 18,800,000 ns | 16,600,000 ns | **1.13x** |
+| 20vocab/200frames | 82,100,000 ns | 63,600,000 ns | **1.29x** |
+
+#### ベンチマーク結果 (Linux, Intel i7-8665U)
+
+| ベンチマーク | Before | After | 高速化 |
+|---|---|---|---|
+| 5vocab/50frames | 7,000,000 ns | 4,900,000 ns | **1.43x** |
+| 10vocab/100frames | 31,800,000 ns | 22,100,000 ns | **1.44x** |
+| 20vocab/200frames | 132,900,000 ns | 97,200,000 ns | **1.37x** |
+
+#### 分析
+
+- Linux (x86_64) でmacOS (arm64) より大きな改善 (1.37-1.44x vs 1.13-1.29x)。Go mapの実装がx86_64でよりオーバーヘッドが大きい可能性
+- 最大のベンチマーク (20vocab/200frames) でmacOS 1.29x、Linux 1.37x。実tunerでは90ファイル×多数コンボで累積効果あり
+- allocs/opは変化なし (recomTableはスライスベースで事前確保)
+- 全既存テスト通過、race検出器もクリア
+
 ### 7,000語辞書拡張実験
 
 dictfilterで7,000語辞書を生成し、混同フィルタ (edit distance≥2) の有無で2パターン比較。
@@ -697,7 +759,27 @@ FFTバタフライのsplit R/I化 + NEON/SSE2アセンブリ、および `runtim
 |---|---|---|
 | 7 | E-step統計量蓄積のポインタチェイシング削減・乗算最適化 | ✅ |
 
-### デコーダ: Decode **-17%**
+### デコーダ: Decode 第2弾 **-29%〜-37%** (recomTable + phonemeIndex)
+
+| ベンチマーク (macOS M2) | Before | After | 速度 |
+|---|---|---|---|
+| Decode_5vocab_50frames | 4,600,000 ns | 3,700,000 ns | **-20%** |
+| Decode_10vocab_100frames | 18,800,000 ns | 16,600,000 ns | **-12%** |
+| Decode_20vocab_200frames | 82,100,000 ns | 63,600,000 ns | **-22%** |
+
+| ベンチマーク (Linux i7-8665U) | Before | After | 速度 |
+|---|---|---|---|
+| Decode_5vocab_50frames | 7,000,000 ns | 4,900,000 ns | **-30%** |
+| Decode_10vocab_100frames | 31,800,000 ns | 22,100,000 ns | **-31%** |
+| Decode_20vocab_200frames | 132,900,000 ns | 97,200,000 ns | **-27%** |
+
+| # | 施策 | 状態 |
+|---|---|---|
+| 16 | `decoder/recomtable.go`: open-addressingハッシュテーブル (generation-based O(1) clear) | ✅ |
+| 17 | `decoder/viterbi.go`: Go map → recomTable、重複LM lookahead削除 | ✅ |
+| 18 | `acoustic/dnn.go`: StateClassIndex phoneme→indexキャッシュ | ✅ |
+
+### デコーダ: Decode 第1弾 **-17%**
 
 | ベンチマーク | Before | After | 速度 |
 |---|---|---|---|

@@ -265,17 +265,7 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 	}
 
 	// LM look-ahead: use full weight (maximum possible LM contribution)
-	// This is correct because adaptive scaling only reduces the weight.
-	bestUniLM = math.Inf(-1)
-	for _, v := range lm.Vocab() {
-		s := lm.LogProb([]string{"<s>"}, v)
-		if s > bestUniLM {
-			bestUniLM = s
-		}
-	}
-	if math.IsInf(bestUniLM, -1) {
-		bestUniLM = 0
-	}
+	// bestUniLM already computed above; adaptive scaling only reduces the weight.
 	lmLookAhead := bestUniLM * cfg.LMWeight
 
 	// Pre-compute emission log-likelihoods for all unique HMMs (triphone or monophone)
@@ -349,8 +339,8 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 		activeTokens = append(activeTokens, tok)
 	}
 
-	// Token recombination map (reused each frame)
-	recom := make(map[recomKey]int, estimatedTokens)
+	// Token recombination table (reused each frame, O(1) clear)
+	recom := newRecomTable(estimatedTokens)
 
 	// Word-end candidate buffer for deferred expansion + pruning
 	wordEndCap := 256
@@ -366,9 +356,7 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 		bestNextScore := math.Inf(-1)
 		wordEndBuf = wordEndBuf[:0]
 
-		for k := range recom {
-			delete(recom, k)
-		}
+		recom.clear()
 
 		for _, tok := range activeTokens {
 			if tok.nodeIdx == -1 {
@@ -640,7 +628,7 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 }
 
 // addOrRecombine adds a token or replaces an existing one at the same (nodeIdx, stateIdx, lastWord, prevWord).
-func addOrRecombine(tokens *[]*token, pool *tokenPool, recom map[recomKey]int, nodeIdx, stateIdx int, history *wordHistoryNode, score float64) {
+func addOrRecombine(tokens *[]*token, pool *tokenPool, recom *recomTable, nodeIdx, stateIdx int, history *wordHistoryNode, score float64) {
 	lwID := 0
 	pwID := 0
 	if history != nil {
@@ -650,7 +638,7 @@ func addOrRecombine(tokens *[]*token, pool *tokenPool, recom map[recomKey]int, n
 		}
 	}
 	key := recomKey{nodeIdx: nodeIdx, stateIdx: stateIdx, lastWordID: lwID, prevWordID: pwID}
-	if idx, exists := recom[key]; exists {
+	if idx, exists := recom.lookupOrInsert(key, int32(len(*tokens))); exists {
 		if score > (*tokens)[idx].score {
 			(*tokens)[idx].score = score
 			(*tokens)[idx].history = history
@@ -662,7 +650,6 @@ func addOrRecombine(tokens *[]*token, pool *tokenPool, recom map[recomKey]int, n
 	nt.nodeIdx = nodeIdx
 	nt.stateIdx = stateIdx
 	nt.history = history
-	recom[key] = len(*tokens)
 	*tokens = append(*tokens, nt)
 }
 

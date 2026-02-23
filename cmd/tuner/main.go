@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/ieee0824/transcript-go/acoustic"
 	"github.com/ieee0824/transcript-go/audio"
@@ -183,6 +185,36 @@ func main() {
 	results := make([]result, len(grid))
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, *workers)
+	var done int64
+	total := int64(len(grid))
+	startTime := time.Now()
+
+	// Progress reporter
+	stopProgress := make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-stopProgress:
+				return
+			case <-ticker.C:
+				d := atomic.LoadInt64(&done)
+				if d == 0 {
+					fmt.Fprintf(os.Stderr, "  [%s] %d/%d (0%%) ...\n",
+						time.Since(startTime).Truncate(time.Second), d, total)
+					continue
+				}
+				elapsed := time.Since(startTime)
+				perCombo := elapsed / time.Duration(d)
+				remaining := perCombo * time.Duration(total-d)
+				fmt.Fprintf(os.Stderr, "  [%s] %d/%d (%.0f%%) ETA %s\n",
+					elapsed.Truncate(time.Second), d, total,
+					float64(d)/float64(total)*100,
+					remaining.Truncate(time.Second))
+			}
+		}
+	}()
 
 	for gi, ps := range grid {
 		wg.Add(1)
@@ -206,9 +238,12 @@ func main() {
 				}
 			}
 			results[gi] = result{params: ps, correct: correct, total: len(tests)}
+			atomic.AddInt64(&done, 1)
 		}(gi, ps)
 	}
 	wg.Wait()
+	close(stopProgress)
+	fmt.Fprintf(os.Stderr, "Completed %d combinations in %s\n", total, time.Since(startTime).Truncate(time.Second))
 
 	// Sort by accuracy descending, then by LMWeight ascending for ties
 	sort.Slice(results, func(i, j int) bool {

@@ -48,7 +48,8 @@ type DNN struct {
 	LogPrior []float64 // [OutputDim]
 
 	// Ordered phoneme list for class index mapping
-	PhonemeList []Phoneme // len = number of phonemes used
+	PhonemeList  []Phoneme      // len = number of phonemes used
+	phonemeIndex map[Phoneme]int // phoneme → PhonemeList index (built on load)
 }
 
 // NewDNN creates a DNN with initialized weights.
@@ -120,6 +121,7 @@ func NewDNN(featureDim, hiddenDim, contextLen, numHiddenLayers int, dropoutRate 
 		}
 	}
 
+	d.buildPhonemeIndex()
 	return d
 }
 
@@ -141,12 +143,18 @@ func heInit(w []float64, fanIn, _ int) {
 // StateClassIndex returns the DNN output class index for a phoneme and emitting state (1-based).
 // Returns -1 if the phoneme is not found.
 func (d *DNN) StateClassIndex(ph Phoneme, stateIdx int) int {
-	for i, p := range d.PhonemeList {
-		if p == ph {
-			return i*NumEmittingStates + (stateIdx - 1)
-		}
+	if i, ok := d.phonemeIndex[ph]; ok {
+		return i*NumEmittingStates + (stateIdx - 1)
 	}
 	return -1
+}
+
+// buildPhonemeIndex constructs the phoneme→index lookup map.
+func (d *DNN) buildPhonemeIndex() {
+	d.phonemeIndex = make(map[Phoneme]int, len(d.PhonemeList))
+	for i, p := range d.PhonemeList {
+		d.phonemeIndex[p] = i
+	}
 }
 
 // batchNormEps is the epsilon for numerical stability in batch normalization.
@@ -450,6 +458,7 @@ func dnnFromV3(sd *serializedDNNV3) *DNN {
 	for i, s := range sd.PhonemeList {
 		d.PhonemeList[i] = Phoneme(s)
 	}
+	d.buildPhonemeIndex()
 	return d
 }
 
@@ -471,6 +480,7 @@ func dnnFromV2(sd *serializedDNNV2) *DNN {
 	for i, s := range sd.PhonemeList {
 		d.PhonemeList[i] = Phoneme(s)
 	}
+	d.buildPhonemeIndex()
 	return d
 }
 
@@ -491,5 +501,6 @@ func dnnFromV1(sd *serializedDNN) *DNN {
 	for i, s := range sd.PhonemeList {
 		d.PhonemeList[i] = Phoneme(s)
 	}
+	d.buildPhonemeIndex()
 	return d
 }
