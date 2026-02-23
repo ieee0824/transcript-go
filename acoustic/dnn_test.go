@@ -1274,3 +1274,201 @@ func BenchmarkDNNTraining(b *testing.B) {
 		TrainDNN(d, inputs, targets, cfg)
 	}
 }
+
+// --- SpecAugment tests ---
+
+func TestApplySpecAugment_FreqMask(t *testing.T) {
+	featureDim := 39
+	contextLen := 5
+	winSize := 2*contextLen + 1
+	inputDim := winSize * featureDim
+	bs := 2
+
+	xBatch := make([]float64, bs*inputDim)
+	for i := range xBatch {
+		xBatch[i] = 1.0
+	}
+
+	rng := rand.New(rand.NewSource(42))
+	cfg := specAugmentConfig{
+		FreqMaskMaxWidth: 6,
+		TimeMaskMaxWidth: 0,
+		NumFreqMasks:     1,
+		NumTimeMasks:     0,
+		FeatureDim:       featureDim,
+		ContextLen:       contextLen,
+	}
+
+	applySpecAugment(xBatch, bs, cfg, rng)
+
+	zeros := 0
+	for _, v := range xBatch {
+		if v == 0 {
+			zeros++
+		}
+	}
+	total := bs * inputDim
+	if zeros == 0 {
+		t.Error("freq mask produced no zeros")
+	}
+	if zeros == total {
+		t.Error("freq mask zeroed everything")
+	}
+
+	// Verify same freq band is zeroed across all context positions
+	for s := 0; s < bs; s++ {
+		base := s * inputDim
+		var zeroFreqs []int
+		for f := 0; f < featureDim; f++ {
+			if xBatch[base+f] == 0 {
+				zeroFreqs = append(zeroFreqs, f)
+			}
+		}
+		for pos := 1; pos < winSize; pos++ {
+			for _, f := range zeroFreqs {
+				idx := base + pos*featureDim + f
+				if xBatch[idx] != 0 {
+					t.Errorf("sample %d pos %d freq %d: expected 0, got %f", s, pos, f, xBatch[idx])
+				}
+			}
+		}
+	}
+}
+
+func TestApplySpecAugment_TimeMask(t *testing.T) {
+	featureDim := 39
+	contextLen := 5
+	winSize := 2*contextLen + 1
+	inputDim := winSize * featureDim
+	bs := 2
+
+	xBatch := make([]float64, bs*inputDim)
+	for i := range xBatch {
+		xBatch[i] = 1.0
+	}
+
+	rng := rand.New(rand.NewSource(42))
+	cfg := specAugmentConfig{
+		FreqMaskMaxWidth: 0,
+		TimeMaskMaxWidth: 3,
+		NumFreqMasks:     0,
+		NumTimeMasks:     1,
+		FeatureDim:       featureDim,
+		ContextLen:       contextLen,
+	}
+
+	applySpecAugment(xBatch, bs, cfg, rng)
+
+	// Each context position should be either fully zeroed or fully intact
+	for s := 0; s < bs; s++ {
+		base := s * inputDim
+		for pos := 0; pos < winSize; pos++ {
+			allZero := true
+			anyZero := false
+			for f := 0; f < featureDim; f++ {
+				if xBatch[base+pos*featureDim+f] == 0 {
+					anyZero = true
+				} else {
+					allZero = false
+				}
+			}
+			if anyZero && !allZero {
+				t.Errorf("sample %d pos %d: partially zeroed (time mask should zero entire position)", s, pos)
+			}
+		}
+	}
+}
+
+func TestApplySpecAugment_Disabled(t *testing.T) {
+	featureDim := 39
+	contextLen := 5
+	inputDim := (2*contextLen + 1) * featureDim
+	bs := 2
+
+	xBatch := make([]float64, bs*inputDim)
+	for i := range xBatch {
+		xBatch[i] = 1.0
+	}
+
+	rng := rand.New(rand.NewSource(42))
+	cfg := specAugmentConfig{
+		FeatureDim: featureDim,
+		ContextLen: contextLen,
+	}
+
+	applySpecAugment(xBatch, bs, cfg, rng)
+
+	for i, v := range xBatch {
+		if v != 1.0 {
+			t.Errorf("index %d: expected 1.0, got %f", i, v)
+		}
+	}
+}
+
+func TestApplySpecAugment_BothMasks(t *testing.T) {
+	featureDim := 39
+	contextLen := 5
+	inputDim := (2*contextLen + 1) * featureDim
+	bs := 4
+
+	xBatch := make([]float64, bs*inputDim)
+	for i := range xBatch {
+		xBatch[i] = 1.0
+	}
+
+	rng := rand.New(rand.NewSource(99))
+	cfg := specAugmentConfig{
+		FreqMaskMaxWidth: 6,
+		TimeMaskMaxWidth: 3,
+		NumFreqMasks:     2,
+		NumTimeMasks:     1,
+		FeatureDim:       featureDim,
+		ContextLen:       contextLen,
+	}
+
+	applySpecAugment(xBatch, bs, cfg, rng)
+
+	zeros := 0
+	for _, v := range xBatch {
+		if v == 0 {
+			zeros++
+		}
+	}
+	if zeros == 0 {
+		t.Error("combined masking produced no zeros")
+	}
+	total := bs * inputDim
+	if float64(zeros)/float64(total) > 0.5 {
+		t.Errorf("too many zeros: %d/%d (%.1f%%)", zeros, total, float64(zeros)/float64(total)*100)
+	}
+}
+
+func TestDNNTraining_WithSpecAugment(t *testing.T) {
+	rng := rand.New(rand.NewSource(42))
+	d := NewDNN(4, 16, 1, 2, 0.0, false)
+
+	N := 500
+	inputDim := d.InputDim
+	inputs := make([]float64, N*inputDim)
+	targets := make([]int, N)
+	for i := 0; i < N; i++ {
+		c := i % d.OutputDim
+		targets[i] = c
+		for j := 0; j < inputDim; j++ {
+			inputs[i*inputDim+j] = float64(c)*0.5 + rng.NormFloat64()*0.1
+		}
+	}
+
+	cfg := DefaultDNNTrainConfig()
+	cfg.BatchSize = 64
+	cfg.MaxEpochs = 5
+	cfg.Patience = 0
+	cfg.HeldOutFrac = 0.1
+	cfg.SpecAugFreqMask = 2
+	cfg.SpecAugTimeMask = 1
+
+	err := TrainDNN(d, inputs, targets, cfg)
+	if err != nil {
+		t.Fatalf("TrainDNN with SpecAugment: %v", err)
+	}
+}

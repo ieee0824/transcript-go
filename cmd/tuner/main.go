@@ -50,6 +50,8 @@ func main() {
 	maxToksStr := flag.String("max-tokens", "1000,2000,3000", "comma-separated max active tokens")
 	maxWeStr := flag.String("max-word-ends", "0,30,50,100", "comma-separated max word ends")
 	workers := flag.Int("workers", 0, "parallel workers (default: NumCPU)")
+	shard := flag.Int("shard", 0, "shard index for distributed execution (0-based)")
+	numShards := flag.Int("num-shards", 1, "total number of shards (1 = no sharding)")
 	oovProb := flag.Float64("oov-prob", 0, "OOV log10 probability")
 	lmInterp := flag.Float64("lm-interp", 0.0, "LM interpolation weight")
 
@@ -158,6 +160,22 @@ func main() {
 				}
 			}
 		}
+	}
+
+	// Shard filtering
+	if *numShards > 1 {
+		if *shard < 0 || *shard >= *numShards {
+			fmt.Fprintf(os.Stderr, "shard must be in [0, %d)\n", *numShards)
+			os.Exit(1)
+		}
+		var sharded []paramSet
+		for i, ps := range grid {
+			if i%*numShards == *shard {
+				sharded = append(sharded, ps)
+			}
+		}
+		fmt.Fprintf(os.Stderr, "Shard %d/%d: %d combinations (of %d total)\n", *shard, *numShards, len(sharded), len(grid))
+		grid = sharded
 	}
 
 	// Run grid search in parallel

@@ -33,6 +33,8 @@ func main() {
 	lrSchedule := flag.String("lr-schedule", "none", "learning rate schedule (none/cosine)")
 	batchNorm := flag.Bool("batchnorm", false, "enable batch normalization on hidden layers")
 	augmentFlag := flag.Bool("augment", false, "enable 5-way speed perturbation")
+	specAugFreq := flag.Int("specaug-freq", 0, "SpecAugment max frequency mask width (0=disabled, recommended 6)")
+	specAugTime := flag.Int("specaug-time", 0, "SpecAugment max time mask width (0=disabled, recommended 3)")
 	manifestNoAug := flag.String("manifest-noaug", "", "additional manifest (no augmentation applied)")
 
 	flag.Usage = func() {
@@ -292,8 +294,10 @@ func main() {
 		MaxEpochs:    *maxEpochs,
 		Patience:     *patience,
 		HeldOutFrac:  0.1,
-		LabelSmooth:  *labelSmooth,
-		LRSchedule:   *lrSchedule,
+		LabelSmooth:     *labelSmooth,
+		LRSchedule:      *lrSchedule,
+		SpecAugFreqMask: *specAugFreq,
+		SpecAugTimeMask: *specAugTime,
 	}
 	totalParams := 0
 	for _, l := range dnn.Layers {
@@ -301,6 +305,10 @@ func main() {
 	}
 	fmt.Fprintf(os.Stderr, "Training DNN: input=%d hidden=%d layers=%d output=%d dropout=%.2f batchnorm=%v params=%d\n",
 		dnn.InputDim, dnn.HiddenDim, len(dnn.Layers)-1, dnn.OutputDim, dnn.DropoutRate, dnn.UseBatchNorm, totalParams)
+	if trainCfg.SpecAugFreqMask > 0 || trainCfg.SpecAugTimeMask > 0 {
+		fmt.Fprintf(os.Stderr, "  SpecAugment: freq_mask=%d time_mask=%d\n",
+			trainCfg.SpecAugFreqMask, trainCfg.SpecAugTimeMask)
+	}
 	if err := acoustic.TrainDNN(dnn, inputs, targets, trainCfg); err != nil {
 		fmt.Fprintf(os.Stderr, "training error: %v\n", err)
 		os.Exit(1)

@@ -22,7 +22,11 @@ type DNNTrainConfig struct {
 	Patience     int     // early stopping patience (0 = disabled)
 	HeldOutFrac  float64 // fraction held out for validation
 	LabelSmooth  float64 // label smoothing epsilon (0 = disabled, e.g. 0.1)
-	LRSchedule   string  // "none" or "cosine"
+	LRSchedule      string // "none" or "cosine"
+	SpecAugFreqMask int    // max frequency mask width (0 = disabled)
+	SpecAugTimeMask int    // max time mask width (0 = disabled)
+	SpecAugNumFreq  int    // number of frequency masks (default 2 if FreqMask > 0)
+	SpecAugNumTime  int    // number of time masks (default 1 if TimeMask > 0)
 }
 
 // DefaultDNNTrainConfig returns sensible defaults for DNN training.
@@ -237,6 +241,27 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 	}
 	results := make([]workerResult, workers)
 
+	// Build SpecAugment config
+	var saCfg specAugmentConfig
+	if cfg.SpecAugFreqMask > 0 || cfg.SpecAugTimeMask > 0 {
+		numFreq := cfg.SpecAugNumFreq
+		if numFreq <= 0 {
+			numFreq = 2
+		}
+		numTime := cfg.SpecAugNumTime
+		if numTime <= 0 {
+			numTime = 1
+		}
+		saCfg = specAugmentConfig{
+			FreqMaskMaxWidth: cfg.SpecAugFreqMask,
+			TimeMaskMaxWidth: cfg.SpecAugTimeMask,
+			NumFreqMasks:     numFreq,
+			NumTimeMasks:     numTime,
+			FeatureDim:       dnn.InputDim / (2*dnn.ContextLen + 1),
+			ContextLen:       dnn.ContextLen,
+		}
+	}
+
 	for epoch := 0; epoch < cfg.MaxEpochs; epoch++ {
 		// Compute effective learning rate
 		effectiveLR := cfg.LearningRate
@@ -286,6 +311,11 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 					batchTargets := make([]int, bs)
 					for i := 0; i < bs; i++ {
 						batchTargets[i] = targets[trainIdx[subStart+i]]
+					}
+
+					// SpecAugment on input
+					if saCfg.FreqMaskMaxWidth > 0 || saCfg.TimeMaskMaxWidth > 0 {
+						applySpecAugment(ws.xBatch, bs, saCfg, workerRNGs[w])
 					}
 
 					var rng *rand.Rand
@@ -399,6 +429,61 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 func fillBatch(inputs []float64, targets []int, indices []int, inputDim int, xBatch []float64) {
 	for i, idx := range indices {
 		copy(xBatch[i*inputDim:(i+1)*inputDim], inputs[idx*inputDim:(idx+1)*inputDim])
+	}
+}
+
+// specAugmentConfig holds SpecAugment masking parameters.
+type specAugmentConfig struct {
+	FreqMaskMaxWidth int // max frequency mask width (within FeatureDim)
+	TimeMaskMaxWidth int // max time mask width (within 2*ContextLen+1)
+	NumFreqMasks     int
+	NumTimeMasks     int
+	FeatureDim       int // per-frame feature dim (e.g. 39)
+	ContextLen       int // context half-size (e.g. 5 → 11 frames total)
+}
+
+// applySpecAugment applies SpecAugment masking to xBatch in place.
+// xBatch is [bs × inputDim] where inputDim = (2*contextLen+1) * featureDim.
+// The same mask is applied to all samples in the batch.
+func applySpecAugment(xBatch []float64, bs int, cfg specAugmentConfig, rng *rand.Rand) {
+	featDim := cfg.FeatureDim
+	winSize := 2*cfg.ContextLen + 1
+	inputDim := winSize * featDim
+
+	// Frequency masks: zero out band [f0, f0+w) across all context positions
+	for m := 0; m < cfg.NumFreqMasks; m++ {
+		w := rng.Intn(cfg.FreqMaskMaxWidth + 1)
+		if w == 0 {
+			continue
+		}
+		f0 := rng.Intn(featDim - w + 1)
+		for s := 0; s < bs; s++ {
+			base := s * inputDim
+			for pos := 0; pos < winSize; pos++ {
+				off := base + pos*featDim + f0
+				for f := 0; f < w; f++ {
+					xBatch[off+f] = 0
+				}
+			}
+		}
+	}
+
+	// Time masks: zero out entire context positions [t0, t0+w)
+	for m := 0; m < cfg.NumTimeMasks; m++ {
+		w := rng.Intn(cfg.TimeMaskMaxWidth + 1)
+		if w == 0 {
+			continue
+		}
+		t0 := rng.Intn(winSize - w + 1)
+		for s := 0; s < bs; s++ {
+			base := s * inputDim
+			for pos := t0; pos < t0+w; pos++ {
+				off := base + pos*featDim
+				for f := 0; f < featDim; f++ {
+					xBatch[off+f] = 0
+				}
+			}
+		}
 	}
 }
 
