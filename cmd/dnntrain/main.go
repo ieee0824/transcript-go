@@ -32,6 +32,7 @@ func main() {
 	labelSmooth := flag.Float64("label-smooth", 0.0, "label smoothing epsilon (0=disabled, recommended 0.1)")
 	lrSchedule := flag.String("lr-schedule", "none", "learning rate schedule (none/cosine)")
 	batchNorm := flag.Bool("batchnorm", false, "enable batch normalization on hidden layers")
+	residual := flag.Bool("residual", false, "enable residual connections every 2 hidden layers (requires -batchnorm)")
 	augmentFlag := flag.Bool("augment", false, "enable 5-way speed perturbation")
 	specAugFreq := flag.Int("specaug-freq", 0, "SpecAugment max frequency mask width (0=disabled, recommended 6)")
 	specAugTime := flag.Int("specaug-time", 0, "SpecAugment max time mask width (0=disabled, recommended 3)")
@@ -229,7 +230,7 @@ func main() {
 	}
 
 	// Create DNN
-	dnn := acoustic.NewDNN(featureDim, *hiddenDim, *contextLen, *numLayers, *dropout, *batchNorm)
+	dnn := acoustic.NewDNN(featureDim, *hiddenDim, *contextLen, *numLayers, *dropout, *batchNorm, *residual)
 
 	// Count total frames and compute class priors
 	totalFrames := 0

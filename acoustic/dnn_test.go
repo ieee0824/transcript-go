@@ -25,7 +25,7 @@ func testHeInit(rng *rand.Rand, w []float64, fanIn, _ int) {
 }
 
 func TestDNNForward_Dimensions(t *testing.T) {
-	d := NewDNN(39, 16, 3, 2, 0.0, false)
+	d := NewDNN(39, 16, 3, 2, 0.0, false, false)
 	T := 10
 	features := make([][]float64, T)
 	for i := range features {
@@ -47,7 +47,7 @@ func TestDNNForward_Dimensions(t *testing.T) {
 }
 
 func TestDNNLogSoftmax_SumsToOne(t *testing.T) {
-	d := NewDNN(39, 16, 3, 2, 0.0, false)
+	d := NewDNN(39, 16, 3, 2, 0.0, false, false)
 	features := make([][]float64, 5)
 	for i := range features {
 		features[i] = make([]float64, 39)
@@ -69,7 +69,7 @@ func TestDNNLogSoftmax_SumsToOne(t *testing.T) {
 }
 
 func TestDNNForward_Deterministic(t *testing.T) {
-	d := NewDNN(39, 16, 3, 2, 0.0, false)
+	d := NewDNN(39, 16, 3, 2, 0.0, false, false)
 	features := make([][]float64, 5)
 	for i := range features {
 		features[i] = make([]float64, 39)
@@ -90,7 +90,7 @@ func TestDNNForward_Deterministic(t *testing.T) {
 }
 
 func TestDNNSubtractPrior(t *testing.T) {
-	d := NewDNN(39, 16, 3, 2, 0.0, false)
+	d := NewDNN(39, 16, 3, 2, 0.0, false, false)
 	// Set known priors
 	for i := range d.LogPrior {
 		d.LogPrior[i] = -2.0
@@ -111,7 +111,7 @@ func TestDNNSubtractPrior(t *testing.T) {
 }
 
 func TestDNNStateClassIndex(t *testing.T) {
-	d := NewDNN(39, 16, 3, 2, 0.0, false)
+	d := NewDNN(39, 16, 3, 2, 0.0, false, false)
 	phonemes := AllPhonemes()
 
 	// Every phoneme × state should have a valid index
@@ -134,7 +134,7 @@ func TestDNNStateClassIndex(t *testing.T) {
 }
 
 func TestDNNSaveLoad_RoundTrip(t *testing.T) {
-	d := NewDNN(39, 16, 3, 2, 0.0, false)
+	d := NewDNN(39, 16, 3, 2, 0.0, false, false)
 	// Set some non-default priors
 	for i := range d.LogPrior {
 		d.LogPrior[i] = -float64(i) * 0.1
@@ -240,7 +240,7 @@ func TestDNNTraining_LossDecreases(t *testing.T) {
 	featureDim := 4
 	hiddenDim := 16
 	contextLen := 0 // no context for simplicity
-	d := NewDNN(featureDim, hiddenDim, contextLen, 2, 0.0, false)
+	d := NewDNN(featureDim, hiddenDim, contextLen, 2, 0.0, false, false)
 
 	numClasses := d.OutputDim
 	N := 1000
@@ -297,7 +297,7 @@ func TestBackpropBatch_GradientCheck(t *testing.T) {
 	}
 	batchTargets := []int{0, 1, 2, 1}
 
-	ws := newDNNWorkspace(bs, d.Layers, 0.0, false)
+	ws := newDNNWorkspace(bs, d.Layers, 0.0, false, false)
 	grads := newWorkerGrads(d)
 
 	// No dropout for gradient check (rng=nil)
@@ -427,7 +427,7 @@ func computeLossSmooth(d *DNN, xBatch []float64, targets []int, bs int, ws *dnnW
 // --- Variable layer tests ---
 
 func TestDNNForward_4HiddenLayers(t *testing.T) {
-	d := NewDNN(39, 32, 3, 4, 0.0, false)
+	d := NewDNN(39, 32, 3, 4, 0.0, false, false)
 	if len(d.Layers) != 5 { // 4 hidden + 1 output
 		t.Fatalf("expected 5 layers, got %d", len(d.Layers))
 	}
@@ -459,7 +459,7 @@ func TestDNNForward_4HiddenLayers(t *testing.T) {
 }
 
 func TestDNNForward_1HiddenLayer(t *testing.T) {
-	d := NewDNN(39, 32, 3, 1, 0.0, false)
+	d := NewDNN(39, 32, 3, 1, 0.0, false, false)
 	if len(d.Layers) != 2 { // 1 hidden + 1 output
 		t.Fatalf("expected 2 layers, got %d", len(d.Layers))
 	}
@@ -485,7 +485,7 @@ func TestDNNForward_1HiddenLayer(t *testing.T) {
 }
 
 func TestDNNSaveLoad_VariableLayers(t *testing.T) {
-	d := NewDNN(39, 32, 3, 4, 0.2, false)
+	d := NewDNN(39, 32, 3, 4, 0.2, false, false)
 	for i := range d.LogPrior {
 		d.LogPrior[i] = -float64(i) * 0.01
 	}
@@ -553,7 +553,7 @@ func TestBackpropBatch_GradientCheck_4Layers(t *testing.T) {
 	}
 	batchTargets := []int{0, 1, 2, 1}
 
-	ws := newDNNWorkspace(bs, d.Layers, 0.0, false)
+	ws := newDNNWorkspace(bs, d.Layers, 0.0, false, false)
 	grads := newWorkerGrads(d)
 	backpropBatch(d, xBatch, batchTargets, bs, ws, grads, nil, 0.0)
 
@@ -610,7 +610,7 @@ func TestBackpropBatch_GradientCheck_LabelSmooth(t *testing.T) {
 	batchTargets := []int{0, 1, 2, 1}
 	labelSmooth := 0.1
 
-	ws := newDNNWorkspace(bs, d.Layers, 0.0, false)
+	ws := newDNNWorkspace(bs, d.Layers, 0.0, false, false)
 	grads := newWorkerGrads(d)
 	backpropBatch(d, xBatch, batchTargets, bs, ws, grads, nil, labelSmooth)
 
@@ -706,7 +706,7 @@ func TestCosineLRSchedule(t *testing.T) {
 
 func TestDNNTraining_WithLabelSmoothing(t *testing.T) {
 	rng := rand.New(rand.NewSource(42))
-	d := NewDNN(4, 16, 0, 2, 0.0, false)
+	d := NewDNN(4, 16, 0, 2, 0.0, false, false)
 
 	N := 500
 	inputDim := d.InputDim
@@ -735,7 +735,7 @@ func TestDNNTraining_WithLabelSmoothing(t *testing.T) {
 
 func TestDNNTraining_WithCosineLR(t *testing.T) {
 	rng := rand.New(rand.NewSource(42))
-	d := NewDNN(4, 16, 0, 2, 0.0, false)
+	d := NewDNN(4, 16, 0, 2, 0.0, false, false)
 
 	N := 500
 	inputDim := d.InputDim
@@ -765,7 +765,7 @@ func TestDNNTraining_WithCosineLR(t *testing.T) {
 // --- Dropout tests ---
 
 func TestDNNDropout_InferenceDeterministic(t *testing.T) {
-	d := NewDNN(39, 32, 3, 2, 0.5, false)
+	d := NewDNN(39, 32, 3, 2, 0.5, false, false)
 	features := make([][]float64, 5)
 	for i := range features {
 		features[i] = make([]float64, 39)
@@ -788,7 +788,7 @@ func TestDNNDropout_InferenceDeterministic(t *testing.T) {
 
 func TestDNNTraining_WithDropout(t *testing.T) {
 	rng := rand.New(rand.NewSource(42))
-	d := NewDNN(4, 16, 0, 2, 0.3, false)
+	d := NewDNN(4, 16, 0, 2, 0.3, false, false)
 
 	N := 500
 	inputDim := d.InputDim
@@ -817,7 +817,7 @@ func TestDNNTraining_WithDropout(t *testing.T) {
 // --- Batch Normalization tests ---
 
 func TestDNNBatchNorm_Forward_Dimensions(t *testing.T) {
-	d := NewDNN(39, 16, 3, 2, 0.0, true)
+	d := NewDNN(39, 16, 3, 2, 0.0, true, false)
 	if !d.UseBatchNorm {
 		t.Fatal("expected UseBatchNorm=true")
 	}
@@ -852,7 +852,7 @@ func TestDNNBatchNorm_Forward_Dimensions(t *testing.T) {
 }
 
 func TestDNNBatchNorm_Deterministic(t *testing.T) {
-	d := NewDNN(39, 16, 3, 2, 0.0, true)
+	d := NewDNN(39, 16, 3, 2, 0.0, true, false)
 	features := make([][]float64, 5)
 	for i := range features {
 		features[i] = make([]float64, 39)
@@ -873,7 +873,7 @@ func TestDNNBatchNorm_Deterministic(t *testing.T) {
 }
 
 func TestDNNBatchNorm_SaveLoad_RoundTrip(t *testing.T) {
-	d := NewDNN(39, 16, 3, 2, 0.0, true)
+	d := NewDNN(39, 16, 3, 2, 0.0, true, false)
 	for i := range d.LogPrior {
 		d.LogPrior[i] = -float64(i) * 0.1
 	}
@@ -978,12 +978,12 @@ func computeLossBN(d *DNN, xBatch []float64, targets []int, bs int, ws *dnnWorks
 				mean[j] /= bsF
 			}
 
-			// Batch var + normalize + gamma/beta + ReLU
+			// Batch var + normalize + gamma/beta
 			variance := make([]float64, dim)
 			for r := 0; r < bs; r++ {
 				for j := 0; j < dim; j++ {
-					d := ws.z[i][r*dim+j] - mean[j]
-					variance[j] += d * d
+					dd := ws.z[i][r*dim+j] - mean[j]
+					variance[j] += dd * dd
 				}
 			}
 			for j := range variance {
@@ -994,12 +994,25 @@ func computeLossBN(d *DNN, xBatch []float64, targets []int, bs int, ws *dnnWorks
 				for j := 0; j < dim; j++ {
 					idx := r*dim + j
 					xh := (ws.z[i][idx] - mean[j]) / math.Sqrt(variance[j]+batchNormEps)
-					v := bn.Gamma[j]*xh + bn.Beta[j]
-					if v > 0 {
-						ws.a[i][idx] = v
-					} else {
-						ws.a[i][idx] = 0
+					ws.a[i][idx] = bn.Gamma[j]*xh + bn.Beta[j]
+				}
+			}
+
+			// Residual: add skip from layer i-2
+			if d.UseResidual {
+				n := bs * dim
+				if i >= 2 {
+					for k := 0; k < n; k++ {
+						ws.a[i][k] += ws.skipBuf[i%2][k]
 					}
+				}
+				copy(ws.skipBuf[i%2], ws.a[i][:n])
+			}
+
+			// ReLU
+			for idx := 0; idx < bs*dim; idx++ {
+				if ws.a[i][idx] < 0 {
+					ws.a[i][idx] = 0
 				}
 			}
 			prevAct = ws.a[i]
@@ -1084,7 +1097,7 @@ func TestBackpropBatch_GradientCheck_BatchNorm(t *testing.T) {
 		batchTargets[i] = i % 3
 	}
 
-	ws := newDNNWorkspace(bs, d.Layers, 0.0, true)
+	ws := newDNNWorkspace(bs, d.Layers, 0.0, true, false)
 	grads := newWorkerGrads(d)
 
 	backpropBatch(d, xBatch, batchTargets, bs, ws, grads, nil, 0.0)
@@ -1194,7 +1207,7 @@ func TestBackpropBatch_GradientCheck_BatchNorm(t *testing.T) {
 
 func TestDNNTraining_WithBatchNorm(t *testing.T) {
 	rng := rand.New(rand.NewSource(42))
-	d := NewDNN(4, 16, 0, 2, 0.0, true)
+	d := NewDNN(4, 16, 0, 2, 0.0, true, false)
 
 	N := 500
 	inputDim := d.InputDim
@@ -1237,7 +1250,7 @@ func TestDNNTraining_WithBatchNorm(t *testing.T) {
 // --- Benchmarks ---
 
 func BenchmarkDNNForward_300frames(b *testing.B) {
-	d := NewDNN(39, 256, 5, 2, 0.0, false)
+	d := NewDNN(39, 256, 5, 2, 0.0, false, false)
 	features := make([][]float64, 300)
 	for i := range features {
 		features[i] = make([]float64, 39)
@@ -1251,7 +1264,7 @@ func BenchmarkDNNForward_300frames(b *testing.B) {
 
 func BenchmarkDNNTraining(b *testing.B) {
 	rng := rand.New(rand.NewSource(42))
-	d := NewDNN(39, 256, 5, 2, 0.0, false) // production-size DNN
+	d := NewDNN(39, 256, 5, 2, 0.0, false, false) // production-size DNN
 	N := 100000
 	inputDim := d.InputDim
 	inputs := make([]float64, N*inputDim)
@@ -1445,7 +1458,7 @@ func TestApplySpecAugment_BothMasks(t *testing.T) {
 
 func TestDNNTraining_WithSpecAugment(t *testing.T) {
 	rng := rand.New(rand.NewSource(42))
-	d := NewDNN(4, 16, 1, 2, 0.0, false)
+	d := NewDNN(4, 16, 1, 2, 0.0, false, false)
 
 	N := 500
 	inputDim := d.InputDim
@@ -1470,5 +1483,344 @@ func TestDNNTraining_WithSpecAugment(t *testing.T) {
 	err := TrainDNN(d, inputs, targets, cfg)
 	if err != nil {
 		t.Fatalf("TrainDNN with SpecAugment: %v", err)
+	}
+}
+
+// --- Residual connection tests ---
+
+func TestDNNResidual_Forward_Dimensions(t *testing.T) {
+	// 4 hidden layers with residual (skip layers 0→2, 1→3)
+	d := NewDNN(39, 16, 3, 4, 0.0, true, true)
+	if !d.UseResidual {
+		t.Fatal("UseResidual should be true")
+	}
+
+	T := 10
+	features := make([][]float64, T)
+	for i := range features {
+		features[i] = make([]float64, 39)
+		for j := range features[i] {
+			features[i][j] = float64(i+j) * 0.01
+		}
+	}
+
+	result := d.ForwardFrames(features)
+	if len(result) != T {
+		t.Fatalf("expected %d frames, got %d", T, len(result))
+	}
+	if len(result[0]) != d.OutputDim {
+		t.Fatalf("expected OutputDim=%d, got %d", d.OutputDim, len(result[0]))
+	}
+
+	// Verify log-softmax: each row should sum to ~1 in probability space
+	for tt := 0; tt < T; tt++ {
+		sumProb := 0.0
+		for _, lp := range result[tt] {
+			sumProb += math.Exp(lp)
+		}
+		if math.Abs(sumProb-1.0) > 1e-5 {
+			t.Errorf("frame %d: sum(exp(logprob)) = %f, want ~1.0", tt, sumProb)
+		}
+	}
+}
+
+func TestDNNResidual_DiffersFromNonResidual(t *testing.T) {
+	// Same weights, residual vs non-residual should produce different outputs
+	rng := rand.New(rand.NewSource(42))
+	dRes := NewDNN(4, 8, 0, 4, 0.0, true, true)
+	dNoRes := NewDNN(4, 8, 0, 4, 0.0, true, false)
+
+	// Copy weights and BN params from dRes to dNoRes
+	for i := range dRes.Layers {
+		copy(dNoRes.Layers[i].W, dRes.Layers[i].W)
+		copy(dNoRes.Layers[i].B, dRes.Layers[i].B)
+	}
+	for i := range dRes.BN {
+		copy(dNoRes.BN[i].Gamma, dRes.BN[i].Gamma)
+		copy(dNoRes.BN[i].Beta, dRes.BN[i].Beta)
+		copy(dNoRes.BN[i].RunningMean, dRes.BN[i].RunningMean)
+		copy(dNoRes.BN[i].RunningVar, dRes.BN[i].RunningVar)
+	}
+
+	// Set non-trivial running stats so BN actually transforms
+	for i := range dRes.BN {
+		for j := range dRes.BN[i].RunningMean {
+			dRes.BN[i].RunningMean[j] = rng.NormFloat64() * 0.1
+			dNoRes.BN[i].RunningMean[j] = dRes.BN[i].RunningMean[j]
+		}
+	}
+
+	bs := 2
+	input := make([]float64, bs*dRes.InputDim)
+	for i := range input {
+		input[i] = rng.NormFloat64()
+	}
+
+	actRes := make([][]float64, len(dRes.Layers)-1)
+	actNoRes := make([][]float64, len(dNoRes.Layers)-1)
+	for i := range actRes {
+		actRes[i] = make([]float64, bs*dRes.Layers[i].OutDim)
+		actNoRes[i] = make([]float64, bs*dNoRes.Layers[i].OutDim)
+	}
+	outRes := make([]float64, bs*dRes.OutputDim)
+	outNoRes := make([]float64, bs*dNoRes.OutputDim)
+
+	dRes.Forward(input, bs, actRes, outRes)
+	dNoRes.Forward(input, bs, actNoRes, outNoRes)
+
+	// Outputs should differ because residual adds skip connections
+	same := true
+	for i := range outRes {
+		if math.Abs(outRes[i]-outNoRes[i]) > 1e-10 {
+			same = false
+			break
+		}
+	}
+	if same {
+		t.Error("residual and non-residual produced identical output")
+	}
+}
+
+func TestDNNResidual_SaveLoad_RoundTrip(t *testing.T) {
+	d := NewDNN(39, 16, 3, 4, 0.0, true, true)
+
+	var buf bytes.Buffer
+	if err := d.Save(&buf); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+
+	loaded, err := LoadDNN(&buf)
+	if err != nil {
+		t.Fatalf("LoadDNN: %v", err)
+	}
+
+	if !loaded.UseResidual {
+		t.Error("loaded DNN should have UseResidual=true")
+	}
+	if !loaded.UseBatchNorm {
+		t.Error("loaded DNN should have UseBatchNorm=true")
+	}
+	if len(loaded.Layers) != len(d.Layers) {
+		t.Fatalf("layer count: got %d, want %d", len(loaded.Layers), len(d.Layers))
+	}
+
+	// Verify forward produces identical output
+	bs := 3
+	input := make([]float64, bs*d.InputDim)
+	rng := rand.New(rand.NewSource(42))
+	for i := range input {
+		input[i] = rng.NormFloat64()
+	}
+
+	nHidden := len(d.Layers) - 1
+	act1 := make([][]float64, nHidden)
+	act2 := make([][]float64, nHidden)
+	for i := 0; i < nHidden; i++ {
+		act1[i] = make([]float64, bs*d.Layers[i].OutDim)
+		act2[i] = make([]float64, bs*loaded.Layers[i].OutDim)
+	}
+	out1 := make([]float64, bs*d.OutputDim)
+	out2 := make([]float64, bs*loaded.OutputDim)
+
+	d.Forward(input, bs, act1, out1)
+	loaded.Forward(input, bs, act2, out2)
+
+	for i := range out1 {
+		if math.Abs(out1[i]-out2[i]) > 1e-10 {
+			t.Fatalf("output mismatch at %d: %f vs %f", i, out1[i], out2[i])
+		}
+	}
+}
+
+func TestBackpropBatch_GradientCheck_Residual(t *testing.T) {
+	rng := rand.New(rand.NewSource(777))
+
+	// 4 hidden layers with residual: skip 0→2, 1→3
+	d := &DNN{
+		Layers: []DNNLayer{
+			{W: make([]float64, 4*6), B: make([]float64, 4), InDim: 6, OutDim: 4},
+			{W: make([]float64, 4*4), B: make([]float64, 4), InDim: 4, OutDim: 4},
+			{W: make([]float64, 4*4), B: make([]float64, 4), InDim: 4, OutDim: 4},
+			{W: make([]float64, 4*4), B: make([]float64, 4), InDim: 4, OutDim: 4},
+			{W: make([]float64, 3*4), B: make([]float64, 3), InDim: 4, OutDim: 3},
+		},
+		InputDim:     6,
+		HiddenDim:    4,
+		OutputDim:    3,
+		ContextLen:   0,
+		UseBatchNorm: true,
+		UseResidual:  true,
+	}
+
+	nHidden := len(d.Layers) - 1
+	for li := range d.Layers {
+		testHeInit(rng, d.Layers[li].W, d.Layers[li].InDim, d.Layers[li].OutDim)
+		for j := range d.Layers[li].B {
+			d.Layers[li].B[j] = rng.NormFloat64() * 0.1
+		}
+	}
+	d.BN = make([]BatchNormParams, nHidden)
+	for i := 0; i < nHidden; i++ {
+		dim := d.Layers[i].OutDim
+		gamma := make([]float64, dim)
+		for j := range gamma {
+			gamma[j] = 1.0 + rng.NormFloat64()*0.1
+		}
+		d.BN[i] = BatchNormParams{
+			Gamma:       gamma,
+			Beta:        make([]float64, dim),
+			RunningMean: make([]float64, dim),
+			RunningVar:  make([]float64, dim),
+			Dim:         dim,
+		}
+		for j := range d.BN[i].Beta {
+			d.BN[i].Beta[j] = rng.NormFloat64() * 0.1
+		}
+		for j := range d.BN[i].RunningVar {
+			d.BN[i].RunningVar[j] = 1.0
+		}
+	}
+	d.buildPhonemeIndex()
+
+	bs := 8
+	xBatch := make([]float64, bs*d.InputDim)
+	for i := range xBatch {
+		xBatch[i] = rng.NormFloat64() * 0.5
+	}
+	batchTargets := make([]int, bs)
+	for i := range batchTargets {
+		batchTargets[i] = i % 3
+	}
+
+	ws := newDNNWorkspace(bs, d.Layers, 0.0, true, true)
+	grads := newWorkerGrads(d)
+
+	backpropBatch(d, xBatch, batchTargets, bs, ws, grads, nil, 0.0)
+
+	eps := 1e-5
+
+	// Check W gradients
+	for li := range d.Layers {
+		maxRelErr := 0.0
+		for idx := range d.Layers[li].W {
+			orig := d.Layers[li].W[idx]
+			d.Layers[li].W[idx] = orig + eps
+			lossPlus := computeLossBN(d, xBatch, batchTargets, bs, ws)
+			d.Layers[li].W[idx] = orig - eps
+			lossMinus := computeLossBN(d, xBatch, batchTargets, bs, ws)
+			d.Layers[li].W[idx] = orig
+
+			numGrad := (lossPlus - lossMinus) / (2 * eps)
+			anaGrad := grads.gW[li][idx] / float64(bs)
+			diff := math.Abs(numGrad - anaGrad)
+			denom := math.Max(math.Abs(numGrad)+math.Abs(anaGrad), 1e-8)
+			relErr := diff / denom
+			if relErr > maxRelErr {
+				maxRelErr = relErr
+			}
+		}
+		if maxRelErr > 0.02 {
+			t.Errorf("Residual: Layer %d W gradient check failed: max relative error = %e", li, maxRelErr)
+		}
+	}
+
+	// Check B gradients
+	for li := range d.Layers {
+		maxRelErr := 0.0
+		for idx := range d.Layers[li].B {
+			orig := d.Layers[li].B[idx]
+			d.Layers[li].B[idx] = orig + eps
+			lossPlus := computeLossBN(d, xBatch, batchTargets, bs, ws)
+			d.Layers[li].B[idx] = orig - eps
+			lossMinus := computeLossBN(d, xBatch, batchTargets, bs, ws)
+			d.Layers[li].B[idx] = orig
+
+			numGrad := (lossPlus - lossMinus) / (2 * eps)
+			anaGrad := grads.gB[li][idx] / float64(bs)
+			diff := math.Abs(numGrad - anaGrad)
+			denom := math.Max(math.Abs(numGrad)+math.Abs(anaGrad), 1e-8)
+			relErr := diff / denom
+			if relErr > maxRelErr {
+				maxRelErr = relErr
+			}
+		}
+		if maxRelErr > 0.02 {
+			t.Errorf("Residual: Layer %d B gradient check failed: max relative error = %e", li, maxRelErr)
+		}
+	}
+
+	// Check Gamma and Beta gradients
+	for li := 0; li < nHidden; li++ {
+		maxRelErr := 0.0
+		for idx := range d.BN[li].Gamma {
+			orig := d.BN[li].Gamma[idx]
+			d.BN[li].Gamma[idx] = orig + eps
+			lossPlus := computeLossBN(d, xBatch, batchTargets, bs, ws)
+			d.BN[li].Gamma[idx] = orig - eps
+			lossMinus := computeLossBN(d, xBatch, batchTargets, bs, ws)
+			d.BN[li].Gamma[idx] = orig
+
+			numGrad := (lossPlus - lossMinus) / (2 * eps)
+			anaGrad := grads.gGamma[li][idx] / float64(bs)
+			diff := math.Abs(numGrad - anaGrad)
+			denom := math.Max(math.Abs(numGrad)+math.Abs(anaGrad), 1e-8)
+			relErr := diff / denom
+			if relErr > maxRelErr {
+				maxRelErr = relErr
+			}
+		}
+		if maxRelErr > 0.02 {
+			t.Errorf("Residual: BN[%d] Gamma gradient check failed: max relative error = %e", li, maxRelErr)
+		}
+
+		maxRelErr = 0.0
+		for idx := range d.BN[li].Beta {
+			orig := d.BN[li].Beta[idx]
+			d.BN[li].Beta[idx] = orig + eps
+			lossPlus := computeLossBN(d, xBatch, batchTargets, bs, ws)
+			d.BN[li].Beta[idx] = orig - eps
+			lossMinus := computeLossBN(d, xBatch, batchTargets, bs, ws)
+			d.BN[li].Beta[idx] = orig
+
+			numGrad := (lossPlus - lossMinus) / (2 * eps)
+			anaGrad := grads.gBeta[li][idx] / float64(bs)
+			diff := math.Abs(numGrad - anaGrad)
+			denom := math.Max(math.Abs(numGrad)+math.Abs(anaGrad), 1e-8)
+			relErr := diff / denom
+			if relErr > maxRelErr {
+				maxRelErr = relErr
+			}
+		}
+		if maxRelErr > 0.02 {
+			t.Errorf("Residual: BN[%d] Beta gradient check failed: max relative error = %e", li, maxRelErr)
+		}
+	}
+}
+
+func TestDNNTraining_WithResidual(t *testing.T) {
+	rng := rand.New(rand.NewSource(42))
+	d := NewDNN(4, 16, 0, 4, 0.0, true, true)
+
+	N := 500
+	inputDim := d.InputDim
+	inputs := make([]float64, N*inputDim)
+	targets := make([]int, N)
+	for i := 0; i < N; i++ {
+		c := i % d.OutputDim
+		targets[i] = c
+		for j := 0; j < inputDim; j++ {
+			inputs[i*inputDim+j] = float64(c)*0.5 + rng.NormFloat64()*0.1
+		}
+	}
+
+	cfg := DefaultDNNTrainConfig()
+	cfg.BatchSize = 64
+	cfg.MaxEpochs = 5
+	cfg.Patience = 0
+	cfg.HeldOutFrac = 0.1
+
+	err := TrainDNN(d, inputs, targets, cfg)
+	if err != nil {
+		t.Fatalf("TrainDNN with Residual: %v", err)
 	}
 }

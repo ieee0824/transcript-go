@@ -60,9 +60,13 @@ type dnnWorkspace struct {
 	bnXhat     [][]float64 // xhat[i] = normalized activations [batchSize × dim]
 	bnMean     [][]float64 // batch mean [dim]
 	bnInvStd   [][]float64 // 1/sqrt(var+eps) [dim]
+
+	// Residual skip buffers (nil if !UseResidual)
+	skipBuf  [2][]float64 // forward: pre-ReLU values for skip connections
+	skipGrad [2][]float64 // backward: skip gradient buffers
 }
 
-func newDNNWorkspace(batchSize int, layers []DNNLayer, dropoutRate float64, useBN bool) *dnnWorkspace {
+func newDNNWorkspace(batchSize int, layers []DNNLayer, dropoutRate float64, useBN, useResidual bool) *dnnWorkspace {
 	nLayers := len(layers)
 	nHidden := nLayers - 1
 	ws := &dnnWorkspace{
@@ -98,6 +102,13 @@ func newDNNWorkspace(batchSize int, layers []DNNLayer, dropoutRate float64, useB
 			ws.bnMean[i] = make([]float64, dim)
 			ws.bnInvStd[i] = make([]float64, dim)
 		}
+	}
+	if useResidual {
+		n := batchSize * layers[0].OutDim
+		ws.skipBuf[0] = make([]float64, n)
+		ws.skipBuf[1] = make([]float64, n)
+		ws.skipGrad[0] = make([]float64, n)
+		ws.skipGrad[1] = make([]float64, n)
 	}
 	return ws
 }
@@ -221,7 +232,7 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 	workerGradsList := make([]*workerGrads, workers)
 	workerRNGs := make([]*rand.Rand, workers)
 	for w := 0; w < workers; w++ {
-		workerWSList[w] = newDNNWorkspace(cfg.BatchSize, dnn.Layers, dnn.DropoutRate, dnn.UseBatchNorm)
+		workerWSList[w] = newDNNWorkspace(cfg.BatchSize, dnn.Layers, dnn.DropoutRate, dnn.UseBatchNorm, dnn.UseResidual)
 		workerGradsList[w] = newWorkerGrads(dnn)
 		workerRNGs[w] = rand.New(rand.NewSource(rand.Int63()))
 	}
@@ -497,6 +508,17 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 	nLayers := len(dnn.Layers)
 	O := dnn.OutputDim
 	useBN := dnn.UseBatchNorm
+	useRes := dnn.UseResidual
+
+	// Clear skip buffers for this batch
+	if useRes {
+		for k := range ws.skipBuf[0] {
+			ws.skipBuf[0][k] = 0
+		}
+		for k := range ws.skipBuf[1] {
+			ws.skipBuf[1][k] = 0
+		}
+	}
 
 	// === Forward pass ===
 	prevAct := xBatch
@@ -552,21 +574,34 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 					invStd[j] = 1.0 / math.Sqrt(invStd[j]/bsF+batchNormEps)
 				}
 
-				// Normalize, apply gamma/beta, store xhat, then ReLU
+				// Normalize, apply gamma/beta, store xhat
 				xhat := ws.bnXhat[i]
 				for r := 0; r < bs; r++ {
 					for j := 0; j < dim; j++ {
 						idx := r*dim + j
 						xh := (ws.z[i][idx] - mean[j]) * invStd[j]
 						xhat[idx] = xh
-						v := bn.Gamma[j]*xh + bn.Beta[j]
-						// Store the BN output in z[i] for ReLU derivative tracking
-						ws.z[i][idx] = v
-						if v > 0 {
-							ws.a[i][idx] = v
-						} else {
-							ws.a[i][idx] = 0
+						ws.z[i][idx] = bn.Gamma[j]*xh + bn.Beta[j]
+					}
+				}
+
+				// Residual: add skip from layer i-2, save pre-ReLU
+				if useRes {
+					n := bs * dim
+					if i >= 2 {
+						for k := 0; k < n; k++ {
+							ws.z[i][k] += ws.skipBuf[i%2][k]
 						}
+					}
+					copy(ws.skipBuf[i%2], ws.z[i][:n])
+				}
+
+				// ReLU
+				for idx := 0; idx < bs*dim; idx++ {
+					if ws.z[i][idx] > 0 {
+						ws.a[i][idx] = ws.z[i][idx]
+					} else {
+						ws.a[i][idx] = 0
 					}
 				}
 
@@ -680,6 +715,16 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 
 	// === Backward pass ===
 
+	// Clear residual skip gradient buffers
+	if useRes {
+		for k := range ws.skipGrad[0] {
+			ws.skipGrad[0][k] = 0
+		}
+		for k := range ws.skipGrad[1] {
+			ws.skipGrad[1][k] = 0
+		}
+	}
+
 	// dz[nLayers-1] = prob - y_smooth (or prob - one_hot if no smoothing)
 	outIdx := nLayers - 1
 	copy(ws.dz[outIdx], ws.prob[:bs*O])
@@ -745,7 +790,7 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 
 			if useBN {
 				// BN backward for hidden layer i-1
-				// First apply ReLU derivative: ws.z[i-1] stores BN output (gamma*xhat+beta)
+				// First apply ReLU derivative: ws.z[i-1] stores pre-ReLU value
 				n := bs * prevHiddenDim
 				for idx := 0; idx < n; idx++ {
 					if ws.z[i-1][idx] <= 0 {
@@ -753,7 +798,21 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 					}
 				}
 
-				// da[i-1] is now dBNout (gradient w.r.t. gamma*xhat+beta)
+				// Residual gradient: add skip grad from layer (i-1)+2, propagate to (i-1)-2
+				if useRes {
+					h := i - 1
+					nHidden := nLayers - 1
+					if h+2 < nHidden {
+						for k := 0; k < n; k++ {
+							ws.da[h][k] += ws.skipGrad[h%2][k]
+						}
+					}
+					if h >= 2 {
+						copy(ws.skipGrad[h%2], ws.da[h][:n])
+					}
+				}
+
+				// da[i-1] is now dPreReLU (gradient w.r.t. pre-ReLU value)
 				bn := &dnn.BN[i-1]
 				dim := prevHiddenDim
 				bsF := float64(bs)
@@ -858,7 +917,19 @@ func evaluateDNN(dnn *DNN, inputs []float64, targets []int, indices []int, batch
 			if i < nLayers-1 {
 				dim := layer.OutDim
 				if dnn.UseBatchNorm {
-					addBiasBNReLUFlat(ws.z[i], ws.a[i], layer.B, &dnn.BN[i], bs, dim)
+					if dnn.UseResidual {
+						addBiasBNFlat(ws.z[i], ws.a[i], layer.B, &dnn.BN[i], bs, dim)
+						n := bs * dim
+						if i >= 2 {
+							for k := 0; k < n; k++ {
+								ws.a[i][k] += ws.skipBuf[i%2][k]
+							}
+						}
+						copy(ws.skipBuf[i%2], ws.a[i][:n])
+						applyReLU(ws.a[i], n)
+					} else {
+						addBiasBNReLUFlat(ws.z[i], ws.a[i], layer.B, &dnn.BN[i], bs, dim)
+					}
 				} else {
 					for idx := 0; idx < bs*dim; idx++ {
 						v := ws.z[i][idx] + layer.B[idx%dim]
@@ -914,6 +985,20 @@ func evaluateDNN(dnn *DNN, inputs []float64, targets []int, indices []int, batch
 	}
 
 	return totalLoss / float64(N), float64(totalCorrect) / float64(N) * 100
+}
+
+// addBiasBNFlat adds bias and applies BN with running stats (no ReLU).
+// Reads from z, writes to out. Uses flat [rows × cols] layout.
+func addBiasBNFlat(z, out []float64, bias []float64, bn *BatchNormParams, rows, cols int) {
+	for j := 0; j < cols; j++ {
+		invStd := 1.0 / math.Sqrt(bn.RunningVar[j]+batchNormEps)
+		scale := bn.Gamma[j] * invStd
+		shift := bn.Beta[j] - bn.Gamma[j]*invStd*(bn.RunningMean[j]-bias[j])
+		for r := 0; r < rows; r++ {
+			idx := r*cols + j
+			out[idx] = z[idx]*scale + shift
+		}
+	}
 }
 
 // addBiasBNReLUFlat adds bias, applies BN with running stats, then ReLU.
