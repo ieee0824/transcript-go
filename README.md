@@ -7,41 +7,46 @@ HMM音響モデル (GMM/DNN) とN-gram言語モデルによる音声認識パイ
 
 - **純粋Go実装** — クロスプラットフォーム対応 (macOSではApple Accelerate自動活用)
 - **トライフォン対応HMM音響モデル** — 日本語29音素、5状態left-to-right HMM、対角共分散GMM、文脈依存トライフォンHMMによる高精度認識
-- **DNN-HMM ハイブリッド** — GMM音響尤度をDNNに差し替え可能。可変N層MLP + Dropout (ReLU隠れ層 → log-softmax出力) による状態事後確率推定、Apple Accelerate/AMX活用
+- **DNN-HMM ハイブリッド** — GMM音響尤度をDNNに差し替え可能。可変N層MLP + Batch Normalization + Residual Connections + Dropout (ReLU隠れ層 → log-softmax出力) による状態事後確率推定、Apple Accelerate/AMX活用
 - **N-gram言語モデル** — ARPA形式の読み込み、Witten-Bellスムージング付きbigram/trigram対応、OOV処理
 - **MFCC特徴量抽出** — 39次元 (13 MFCC + 13 Δ + 13 ΔΔ)、ケプストラム平均正規化 (CMN)、VTLN (声道長正規化)、FFT NEON/SSE2アセンブリ + マルチコア並列化
 - **レキシコンプレフィックスツリーデコーダ** — LMルックアヘッド、トライグラム再結合、発射キャッシュによる高速ビームサーチ
 - **Baum-Welch (EM) 訓練** — 強制アラインメント、モノフォン→トライフォン段階訓練、goroutine並列化
-- **DNN訓練** — GMM強制アライメントによるフレームレベルラベル生成、可変層数・Dropout対応、ミニバッチSGD + Adam、early stopping、Cosine LR Annealing、Label Smoothing、並列サブバッチ処理
+- **DNN訓練** — GMM強制アライメントによるフレームレベルラベル生成、可変層数・Dropout・BatchNorm・Residual Connections対応、ミニバッチSGD + Adam、early stopping、Cosine LR Annealing、SpecAugment、並列サブバッチ処理
 - **言語モデルビルダー** — コーパスからWitten-Bellスムージング付きARPA形式を自動生成
 - **自然言語テキストフィルタ** — MeCab + 辞書照合でWikipedia等からLM学習用コーパスを自動生成
 
 ## 学習済みモデル
 
-`models/` 以下に学習済みモデルが同梱されています。v15 (DNN-HMM 4層×512+Dropout+Cosine LR) が最新。
+`models/` 以下に学習済みモデルが同梱されています。v19 (DNN-HMM 6層×512+BN+Residual+Cosine LR) が最新。
 
 | ディレクトリ | 音響モデル | 備考 |
 |---|---|---|
-| `models/v15/` | v11 AM + DNN-HMM 4層×512+Dropout+Cosine LR, 辞書1,694語 | **最新** (IC 87%, OOC 60%) |
+| `models/v19/` | v11 AM + DNN-HMM 6層×512+BN+Residual+Cosine LR | **最新** (IC 100%, OOC 77%) |
+| `models/v18/` | v11 AM + DNN-HMM 4層×512+BN+Cosine LR, 辞書1,694語 | (IC 100%, OOC 73%) |
+| `models/v17/` | v11 AM + DNN-HMM, 辞書5,000語 | 外来語拡張版 |
+| `models/v16/` | v11 AM + DNN-HMM, 辞書2,000語 | 外来語対応版 |
+| `models/v15/` | v11 AM + DNN-HMM 4層×512+Dropout+Cosine LR, 辞書1,694語 | (IC 87%, OOC 60%) |
 | `models/v14/` | v11 AM + DNN-HMM 4層×512+Dropout, 辞書1,694語 | (IC 83%, OOC 50%) |
 | `models/v13/` | v11 AM + DNN-HMM 2層×256, 辞書1,694語 | (IC 87%, OOC 45%) |
 | `models/v11/` | 55話者TTS, 5,794発話, 5-way augment, 4-mix GMM, トライフォン304 | GMM最良 (辞書1,176語) |
 | `models/v12/` | v11 + Common Voice 4,686発話 (全augment), トライフォン808 | 実験 |
 | `models/v12b/` | v11 + Common Voice 4,686発話 (augmentなし), トライフォン684 | 実験 |
 
-各ディレクトリに `am.gob` (音響モデル)、`lm.arpa` (言語モデル)、`dict.txt` (発音辞書) を含む。v13以降は `dnn.gob` (DNNモデル) も含む。
+各ディレクトリに `am.gob` (音響モデル)、`lm.arpa` (言語モデル)、`dict.txt` (発音辞書) を含む。v13以降は `dnn.gob` (DNNモデル) も含む。v17以降はAM/LM/Dictをv15から参照。
 
 ### クイックスタート
 
 ```bash
 go build -o /tmp/transcript ./cmd/transcript/
 
-# DNN-HMM (v15, 最新)
+# DNN-HMM (v19, 最新)
 /tmp/transcript \
     -am models/v15/am.gob \
-    -dnn models/v15/dnn.gob \
+    -dnn models/v19/dnn.gob \
     -lm models/v15/lm.arpa \
     -dict models/v15/dict.txt \
+    -lm-weight 10 -word-penalty 10 -max-tokens 3000 \
     -wav input.wav
 
 # GMM (v11)
@@ -54,7 +59,19 @@ go build -o /tmp/transcript ./cmd/transcript/
 
 ## 認識精度
 
-### v11 (最新)
+### DNN-HMM ハイブリッド (最新)
+
+GMM音響尤度をDNNに差し替え。55話者TTS 5,794発話で訓練。
+
+| テスト条件 | v13 (2層×256) | v14 (4層+DO) | v15 (+Cosine LR) | v18 (+BN) | v19 (+Residual 6層) |
+|---|---|---|---|---|---|
+| コーパス内文 (IC, 30文) | 87% | 83% | 87% | **100%** | **100%** |
+| コーパス外文 × 3未知話者 (OOC, 60文) | 45% | 50% | 60% | 73% | **77%** |
+| **総合 (90文)** | 63% | 63% | 71% | 82% | **84%** |
+
+v19は6層×512+BN+Residual Connections+Cosine LRにより、val_acc 86.0%+、OOC 77% を達成。
+
+### GMM (v11)
 
 | テスト条件 | 精度 |
 |---|---|
@@ -63,43 +80,13 @@ go build -o /tmp/transcript ./cmd/transcript/
 | 特定TTS話者 | 50% |
 | コーパス外文 × 未知TTS話者 (3話者平均) | 57% |
 
-### DNN-HMM ハイブリッド
-
-GMM音響尤度をDNNに差し替えた結果。同一コード・デコーダパラメータでの統一比較。
-
-| テスト条件 | v11 GMM | v13 DNN (2層×256) | v14 DNN (4層×512+DO) | v15 DNN (+Cosine LR) |
-|---|---|---|---|---|
-| コーパス内文 (IC) | 85% | 87% | 83% | **87%** |
-| コーパス外文 × 未知TTS話者 (OOC) | 42% | 45% | 50% | **60%** |
-
-v15はCosine LR Annealingによりval_acc 80.0%→84.0% (+4pt)、OOC 50%→60% (+10pt)。
-
-### v12実験 (Common Voice実音声混合)
-
-TTS 55話者 + Common Voice実音声4,686発話の混合訓練実験。4-mix GMMではTTS・実音声の異なる音響分布を同時にモデル化できず、コーパス外精度が低下。v11が現行アーキテクチャの最良モデル。
-
-| テスト条件 | v11 | v12b (CV noaug) |
-|---|---|---|
-| コーパス内文 × 外部話者 | 90% | **100%** |
-| 感情音声 × 外部話者 | 90% | 90% |
-| 特定TTS話者 | 50% | **80%** |
-| コーパス外文 × 未知TTS話者 (3話者平均) | **57%** | 35% |
-
-### v10
-
-| テスト条件 | 精度 |
-|---|---|
-| 学習データ (2,469発話 × 5-way augment, TTS 30話者) | 98.4% |
-| コーパス内文 × 外部話者 | 90% |
-| 感情音声 × 外部話者 | 90% |
-| コーパス外文 × 未知TTS話者 (3話者平均) | 47% |
-
 ## プロジェクト構成
 
 ```
 transcript/
 ├── transcript.go          トップレベルAPI (Recognizer)
-├── models/v15/            学習済みモデル (AM + DNN + LM + 辞書)
+├── models/v19/            学習済みモデル (最新DNN)
+├── models/v15/            学習済みモデル (AM + LM + 辞書)
 ├── cmd/
 │   ├── transcript/        音声認識CLI
 │   ├── train/             音響モデル訓練CLI
@@ -108,6 +95,7 @@ transcript/
 │   ├── wikitext/          MediaWiki XMLダンプからテキスト抽出
 │   ├── cvimport/          Common Voice日本語コーパスインポート
 │   ├── dnntrain/          DNN音響モデル訓練CLI
+│   ├── tuner/             デコーダパラメータチューニングCLI
 │   ├── jsutimport/        JSUTコーパスインポート
 │   ├── corpusgen/         テンプレートベースコーパス生成
 │   ├── dictconv/          辞書変換 (MeCab辞書 → 発音辞書)
@@ -118,7 +106,7 @@ transcript/
 ├── language/              言語モデル (N-gram, ARPA形式パーサ, ビルダー)
 ├── lexicon/               発音辞書 (単語 → 音素列)
 ├── decoder/               レキシコンプレフィックスツリーデコーダ
-├── internal/blas/         Apple Accelerate cblas_dgemm wrapper + 純Goフォールバック
+├── internal/blas/         BLAS (Apple Accelerate / AVX2 Go Assembly / 純Goフォールバック)
 ├── internal/simd/         NEON (arm64) / SSE2 (amd64) SIMDアセンブリ
 ├── internal/mathutil/     ログ域算術、ベクトル/行列演算
 └── training/              訓練用コーパス
@@ -145,7 +133,7 @@ go test ./... -timeout 60s
 ### 音声認識
 
 ```bash
-transcript -am models/v15/am.gob -dnn models/v15/dnn.gob -lm models/v15/lm.arpa -dict models/v15/dict.txt -wav input.wav
+transcript -am models/v15/am.gob -dnn models/v19/dnn.gob -lm models/v15/lm.arpa -dict models/v15/dict.txt -lm-weight 10 -word-penalty 10 -max-tokens 3000 -wav input.wav
 ```
 
 | フラグ | デフォルト | 説明 |
@@ -195,7 +183,8 @@ go run ./cmd/dnntrain \
     -dict data/dict.txt \
     -am data/am.gob \
     -output data/dnn.gob \
-    -hidden 512 -layers 4 -dropout 0.2 -epochs 50 -augment
+    -hidden 512 -layers 6 -dropout 0.2 -batchnorm -residual \
+    -lr-schedule cosine -epochs 50 -patience 0 -augment
 ```
 
 | フラグ | デフォルト | 説明 |
@@ -207,13 +196,17 @@ go run ./cmd/dnntrain \
 | `-hidden` | 256 | 隠れ層のユニット数 |
 | `-layers` | 2 | 隠れ層の数 |
 | `-dropout` | 0.0 | Dropout率 (0=無効) |
+| `-batchnorm` | false | Batch Normalizationを有効化 |
+| `-residual` | false | Residual connectionsを有効化 (2層ごとskip、BN必須) |
 | `-context` | 5 | コンテキスト窓の片側フレーム数 |
 | `-lr` | 0.001 | 学習率 |
 | `-batch` | 256 | ミニバッチサイズ |
 | `-epochs` | 20 | 最大エポック数 |
 | `-patience` | 3 | early stoppingの忍耐回数 (0=無効) |
-| `-label-smooth` | 0.0 | Label Smoothing ε (0=無効、推奨0.05-0.1) |
+| `-label-smooth` | 0.0 | Label Smoothing ε (0=無効) |
 | `-lr-schedule` | none | 学習率スケジュール (none/cosine) |
+| `-specaug-freq` | 0 | SpecAugment周波数マスク幅 (0=無効) |
+| `-specaug-time` | 0 | SpecAugment時間マスク幅 (0=無効) |
 | `-augment` | false | 5-way速度変換データ拡張 |
 
 DNN-HMM認識時は `-dnn` フラグでDNNモデルを指定:
@@ -282,10 +275,10 @@ rec, err := transcript.NewRecognizer("models/v15/am.gob", "models/v15/lm.arpa", 
     transcript.WithDecoderConfig(decoder.Config{
         BeamWidth:       200.0,
         LMWeight:        10.0,
-        MaxActiveTokens: 5000,
+        WordPenalty:      10.0,
+        MaxActiveTokens: 3000,
     }),
-    transcript.WithOOVLogProb(-5.0),
-    transcript.WithDNN("models/v15/dnn.gob"), // DNN-HMMハイブリッド (省略時はGMM)
+    transcript.WithDNN("models/v19/dnn.gob"), // DNN-HMMハイブリッド (省略時はGMM)
 )
 if err != nil {
     log.Fatal(err)
@@ -352,7 +345,7 @@ ngram 2=2
 - **トライフォンHMM**: `left-center+right` 形式の文脈依存モデル。単語境界は `#` で表現 (例: `#-i+k`, `i-k+u`, `k-u+#`)
 - **GMM**: 対角共分散ガウス混合モデル。各発射状態にMコンポーネント。バッチ行列積 (macOS: Accelerate/AMX) による高速尤度計算
 - **DNN-HMM ハイブリッド**: GMM音響尤度をDNNの擬似尤度 (log P(state|obs) - log P(state)) に差し替え。HMMトポロジ・遷移確率・デコーダ・LMはそのまま維持
-- **DNN**: 可変N層MLP (入力429 → 隠れ層N×M ReLU + Dropout → 出力87 log-softmax)。±5フレームのコンテキスト窓。行列積はApple Accelerate/AMX活用。v15: 4層×512+Dropout 0.2+Cosine LR (~1.05Mパラメータ、val_acc 84.0%)
+- **DNN**: 可変N層MLP (入力429 → 隠れ層N×M Linear→BN→ReLU→Dropout → 出力87 log-softmax)。±5フレームのコンテキスト窓。Batch Normalization、Residual Connections (2層ごとskip)、Cosine LR Annealing対応。行列積はApple Accelerate/AMX活用。v19: 6層×512+BN+Residual+Dropout 0.2+Cosine LR (~1.58Mパラメータ、val_acc 86.0%+)
 - **ResolveHMM**: トライフォンHMM → モノフォンHMMへのフォールバック解決
 - **訓練**: Baum-Welch → 強制アラインメント → トライフォン分割の段階的訓練。DNN訓練はGMM強制アライメント → Adam最適化
 
@@ -429,5 +422,6 @@ go run ./cmd/lmbuild -order 3 -output data/lm.arpa training/corpus.txt
 # 6. DNN音響モデル訓練 (オプション: GMM→DNN差し替え)
 go run ./cmd/dnntrain -manifest data/manifest.tsv -dict data/dict.txt \
     -am data/am.gob -output data/dnn.gob \
-    -hidden 512 -layers 4 -dropout 0.2 -epochs 50 -augment
+    -hidden 512 -layers 6 -dropout 0.2 -batchnorm -residual \
+    -lr-schedule cosine -epochs 50 -patience 0 -augment
 ```
