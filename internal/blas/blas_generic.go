@@ -31,5 +31,33 @@ func Dgemm(transA, transB bool, m, n, k int,
 	}
 }
 
+// Sgemm performs C = alpha*op(A)*op(B) + beta*C in pure Go (float32).
+func Sgemm(transA, transB bool, m, n, k int,
+	alpha float32, a []float32, lda int,
+	b []float32, ldb int,
+	beta float32, c []float32, ldc int) {
+
+	for i := 0; i < m; i++ {
+		for j := 0; j < n; j++ {
+			var sum float32
+			for p := 0; p < k; p++ {
+				var aVal, bVal float32
+				if transA {
+					aVal = a[p*lda+i]
+				} else {
+					aVal = a[i*lda+p]
+				}
+				if transB {
+					bVal = b[j*ldb+p]
+				} else {
+					bVal = b[p*ldb+j]
+				}
+				sum += aVal * bVal
+			}
+			c[i*ldc+j] = alpha*sum + beta*c[i*ldc+j]
+		}
+	}
+}
+
 // HasAccelerate returns false on non-darwin platforms.
 func HasAccelerate() bool { return false }

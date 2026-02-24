@@ -128,6 +128,117 @@ func BenchmarkDgemm_300x39x4(b *testing.B) {
 	}
 }
 
+func TestSgemm_Identity(t *testing.T) {
+	a := []float32{1, 2, 3, 4, 5, 6}
+	b := []float32{1, 0, 0, 0, 1, 0, 0, 0, 1}
+	c := make([]float32, 6)
+
+	Sgemm(false, false, 2, 3, 3, 1.0, a, 3, b, 3, 0.0, c, 3)
+
+	for i, want := range a {
+		if diff := c[i] - want; diff > 1e-5 || diff < -1e-5 {
+			t.Errorf("c[%d] = %f, want %f", i, c[i], want)
+		}
+	}
+}
+
+func TestSgemm_TransB(t *testing.T) {
+	a := []float32{1, 2, 3, 4, 5, 6}
+	b := []float32{7, 9, 11, 8, 10, 12}
+	c := make([]float32, 4)
+
+	Sgemm(false, true, 2, 2, 3, 1.0, a, 3, b, 3, 0.0, c, 2)
+
+	want := []float32{58, 64, 139, 154}
+	for i := range want {
+		if diff := c[i] - want[i]; diff > 1e-4 || diff < -1e-4 {
+			t.Errorf("c[%d] = %f, want %f", i, c[i], want[i])
+		}
+	}
+}
+
+func TestSgemm_AlphaBeta(t *testing.T) {
+	a := []float32{1, 2, 3, 4}
+	b := []float32{5, 6, 7, 8}
+	c := []float32{1, 1, 1, 1}
+
+	Sgemm(false, false, 2, 2, 2, 2.0, a, 2, b, 2, 3.0, c, 2)
+
+	want := []float32{41, 47, 89, 103}
+	for i := range want {
+		if diff := c[i] - want[i]; diff > 1e-4 || diff < -1e-4 {
+			t.Errorf("c[%d] = %f, want %f", i, c[i], want[i])
+		}
+	}
+}
+
+func TestSgemm_DNNSized(t *testing.T) {
+	rng := rand.New(rand.NewSource(42))
+	m, k, n := 100, 429, 512
+	a := make([]float32, m*k)
+	bm := make([]float32, n*k)
+	for i := range a {
+		a[i] = float32(rng.Float64())
+	}
+	for i := range bm {
+		bm[i] = float32(rng.Float64())
+	}
+
+	c := make([]float32, m*n)
+	Sgemm(false, true, m, n, k, 1.0, a, k, bm, k, 0.0, c, n)
+
+	for i := 0; i < m; i++ {
+		for j := 0; j < n; j++ {
+			var sum float64
+			for p := 0; p < k; p++ {
+				sum += float64(a[i*k+p]) * float64(bm[j*k+p])
+			}
+			diff := float64(c[i*n+j]) - sum
+			if diff > 0.05 || diff < -0.05 {
+				t.Errorf("c[%d,%d] = %f, want %f (diff=%e)", i, j, c[i*n+j], sum, diff)
+			}
+		}
+	}
+}
+
+func BenchmarkSgemm_300x39x4(b *testing.B) {
+	rng := rand.New(rand.NewSource(42))
+	T, D, K := 300, 39, 4
+	a := make([]float32, T*D)
+	bm := make([]float32, K*D)
+	for i := range a {
+		a[i] = float32(rng.Float64())
+	}
+	for i := range bm {
+		bm[i] = float32(rng.Float64())
+	}
+	c := make([]float32, T*K)
+
+	b.ResetTimer()
+	for b.Loop() {
+		Sgemm(false, true, T, K, D, 1.0, a, D, bm, D, 0.0, c, K)
+	}
+}
+
+func BenchmarkSgemm_100x429x512(b *testing.B) {
+	rng := rand.New(rand.NewSource(42))
+	m, k, n := 100, 429, 512
+	a := make([]float32, m*k)
+	bm := make([]float32, n*k)
+	for i := range a {
+		a[i] = float32(rng.Float64())
+	}
+	for i := range bm {
+		bm[i] = float32(rng.Float64())
+	}
+	c := make([]float32, m*n)
+
+	b.ResetTimer()
+	for b.Loop() {
+		Sgemm(false, true, m, n, k, 1.0, a, k, bm, k, 0.0, c, n)
+	}
+}
+
 func BenchmarkDgemm_100x429x512(b *testing.B) {
 	rng := rand.New(rand.NewSource(42))
 	m, k, n := 100, 429, 512

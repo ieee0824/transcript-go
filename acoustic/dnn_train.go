@@ -46,24 +46,24 @@ func DefaultDNNTrainConfig() DNNTrainConfig {
 // dnnWorkspace holds pre-allocated buffers for one mini-batch forward/backward pass.
 type dnnWorkspace struct {
 	batchSize int
-	xBatch    []float64   // [batchSize × InputDim]
-	z         [][]float64 // z[i] = pre-activation for layer i [batchSize × layer.OutDim]
-	a         [][]float64 // a[i] = post-activation for hidden layer i [batchSize × layer.OutDim]
-	prob      []float64   // [batchSize × OutputDim] softmax output
-	masks     [][]float64 // dropout masks for hidden layers (nil if no dropout)
+	xBatch    []float32   // [batchSize × InputDim]
+	z         [][]float32 // z[i] = pre-activation for layer i [batchSize × layer.OutDim]
+	a         [][]float32 // a[i] = post-activation for hidden layer i [batchSize × layer.OutDim]
+	prob      []float64   // [batchSize × OutputDim] softmax output (float64 for loss stability)
+	masks     [][]float32 // dropout masks for hidden layers (nil if no dropout)
 
 	// Backward intermediates
-	dz [][]float64 // dz[i] for each layer
-	da [][]float64 // da[i] for each hidden layer
+	dz [][]float32 // dz[i] for each layer
+	da [][]float32 // da[i] for each hidden layer
 
 	// Batch normalization intermediates (nil if !UseBatchNorm)
-	bnXhat     [][]float64 // xhat[i] = normalized activations [batchSize × dim]
-	bnMean     [][]float64 // batch mean [dim]
-	bnInvStd   [][]float64 // 1/sqrt(var+eps) [dim]
+	bnXhat   [][]float32 // xhat[i] = normalized activations [batchSize × dim]
+	bnMean   [][]float32 // batch mean [dim]
+	bnInvStd [][]float32 // 1/sqrt(var+eps) [dim]
 
 	// Residual skip buffers (nil if !UseResidual)
-	skipBuf  [2][]float64 // forward: pre-ReLU values for skip connections
-	skipGrad [2][]float64 // backward: skip gradient buffers
+	skipBuf  [2][]float32 // forward: pre-ReLU values for skip connections
+	skipGrad [2][]float32 // backward: skip gradient buffers
 }
 
 func newDNNWorkspace(batchSize int, layers []DNNLayer, dropoutRate float64, useBN, useResidual bool) *dnnWorkspace {
@@ -71,84 +71,84 @@ func newDNNWorkspace(batchSize int, layers []DNNLayer, dropoutRate float64, useB
 	nHidden := nLayers - 1
 	ws := &dnnWorkspace{
 		batchSize: batchSize,
-		xBatch:    make([]float64, batchSize*layers[0].InDim),
-		z:         make([][]float64, nLayers),
-		a:         make([][]float64, nHidden),
+		xBatch:    make([]float32, batchSize*layers[0].InDim),
+		z:         make([][]float32, nLayers),
+		a:         make([][]float32, nHidden),
 		prob:      make([]float64, batchSize*layers[nLayers-1].OutDim),
-		dz:        make([][]float64, nLayers),
-		da:        make([][]float64, nHidden),
+		dz:        make([][]float32, nLayers),
+		da:        make([][]float32, nHidden),
 	}
 	for i := 0; i < nLayers; i++ {
-		ws.z[i] = make([]float64, batchSize*layers[i].OutDim)
-		ws.dz[i] = make([]float64, batchSize*layers[i].OutDim)
+		ws.z[i] = make([]float32, batchSize*layers[i].OutDim)
+		ws.dz[i] = make([]float32, batchSize*layers[i].OutDim)
 		if i < nHidden {
-			ws.a[i] = make([]float64, batchSize*layers[i].OutDim)
-			ws.da[i] = make([]float64, batchSize*layers[i].OutDim)
+			ws.a[i] = make([]float32, batchSize*layers[i].OutDim)
+			ws.da[i] = make([]float32, batchSize*layers[i].OutDim)
 		}
 	}
 	if dropoutRate > 0 {
-		ws.masks = make([][]float64, nHidden)
+		ws.masks = make([][]float32, nHidden)
 		for i := 0; i < nHidden; i++ {
-			ws.masks[i] = make([]float64, batchSize*layers[i].OutDim)
+			ws.masks[i] = make([]float32, batchSize*layers[i].OutDim)
 		}
 	}
 	if useBN {
-		ws.bnXhat = make([][]float64, nHidden)
-		ws.bnMean = make([][]float64, nHidden)
-		ws.bnInvStd = make([][]float64, nHidden)
+		ws.bnXhat = make([][]float32, nHidden)
+		ws.bnMean = make([][]float32, nHidden)
+		ws.bnInvStd = make([][]float32, nHidden)
 		for i := 0; i < nHidden; i++ {
 			dim := layers[i].OutDim
-			ws.bnXhat[i] = make([]float64, batchSize*dim)
-			ws.bnMean[i] = make([]float64, dim)
-			ws.bnInvStd[i] = make([]float64, dim)
+			ws.bnXhat[i] = make([]float32, batchSize*dim)
+			ws.bnMean[i] = make([]float32, dim)
+			ws.bnInvStd[i] = make([]float32, dim)
 		}
 	}
 	if useResidual {
 		n := batchSize * layers[0].OutDim
-		ws.skipBuf[0] = make([]float64, n)
-		ws.skipBuf[1] = make([]float64, n)
-		ws.skipGrad[0] = make([]float64, n)
-		ws.skipGrad[1] = make([]float64, n)
+		ws.skipBuf[0] = make([]float32, n)
+		ws.skipBuf[1] = make([]float32, n)
+		ws.skipGrad[0] = make([]float32, n)
+		ws.skipGrad[1] = make([]float32, n)
 	}
 	return ws
 }
 
 // workerGrads holds per-worker gradient buffers.
 type workerGrads struct {
-	gW [][]float64 // gW[i] for each layer
-	gB [][]float64 // gB[i] for each layer
+	gW [][]float32 // gW[i] for each layer
+	gB [][]float32 // gB[i] for each layer
 
 	// BN gradients (nil if !UseBatchNorm)
-	gGamma [][]float64 // gGamma[i] for each hidden layer
-	gBeta  [][]float64 // gBeta[i] for each hidden layer
+	gGamma [][]float32 // gGamma[i] for each hidden layer
+	gBeta  [][]float32 // gBeta[i] for each hidden layer
 
 	// BN batch statistics for running stats update
-	bnMean [][]float64 // per-hidden-layer batch mean
-	bnVar  [][]float64 // per-hidden-layer batch variance
+	bnMean [][]float32 // per-hidden-layer batch mean
+	bnVar  [][]float32 // per-hidden-layer batch variance
 	bnN    int         // batch size used for these stats
 }
 
 func newWorkerGrads(d *DNN) *workerGrads {
 	wg := &workerGrads{
-		gW: make([][]float64, len(d.Layers)),
-		gB: make([][]float64, len(d.Layers)),
+		gW: make([][]float32, len(d.Layers)),
+		gB: make([][]float32, len(d.Layers)),
 	}
 	for i, layer := range d.Layers {
-		wg.gW[i] = make([]float64, len(layer.W))
-		wg.gB[i] = make([]float64, len(layer.B))
+		wg.gW[i] = make([]float32, len(layer.W))
+		wg.gB[i] = make([]float32, len(layer.B))
 	}
 	if d.UseBatchNorm {
 		nHidden := len(d.Layers) - 1
-		wg.gGamma = make([][]float64, nHidden)
-		wg.gBeta = make([][]float64, nHidden)
-		wg.bnMean = make([][]float64, nHidden)
-		wg.bnVar = make([][]float64, nHidden)
+		wg.gGamma = make([][]float32, nHidden)
+		wg.gBeta = make([][]float32, nHidden)
+		wg.bnMean = make([][]float32, nHidden)
+		wg.bnVar = make([][]float32, nHidden)
 		for i := 0; i < nHidden; i++ {
 			dim := d.BN[i].Dim
-			wg.gGamma[i] = make([]float64, dim)
-			wg.gBeta[i] = make([]float64, dim)
-			wg.bnMean[i] = make([]float64, dim)
-			wg.bnVar[i] = make([]float64, dim)
+			wg.gGamma[i] = make([]float32, dim)
+			wg.gBeta[i] = make([]float32, dim)
+			wg.bnMean[i] = make([]float32, dim)
+			wg.bnVar[i] = make([]float32, dim)
 		}
 	}
 	return wg
@@ -156,49 +156,48 @@ func newWorkerGrads(d *DNN) *workerGrads {
 
 // adamState holds per-parameter momentum and variance for Adam optimizer.
 type adamState struct {
-	mW, vW [][]float64 // per-layer weight momentum/variance
-	mB, vB [][]float64 // per-layer bias momentum/variance
+	mW, vW [][]float32 // per-layer weight momentum/variance
+	mB, vB [][]float32 // per-layer bias momentum/variance
 	t      int         // step counter
 
 	// BN Adam state (nil if !UseBatchNorm)
-	mGamma, vGamma [][]float64
-	mBeta, vBeta   [][]float64
+	mGamma, vGamma [][]float32
+	mBeta, vBeta   [][]float32
 }
 
 func newAdamState(d *DNN) *adamState {
 	s := &adamState{
-		mW: make([][]float64, len(d.Layers)),
-		vW: make([][]float64, len(d.Layers)),
-		mB: make([][]float64, len(d.Layers)),
-		vB: make([][]float64, len(d.Layers)),
+		mW: make([][]float32, len(d.Layers)),
+		vW: make([][]float32, len(d.Layers)),
+		mB: make([][]float32, len(d.Layers)),
+		vB: make([][]float32, len(d.Layers)),
 	}
 	for i, layer := range d.Layers {
-		s.mW[i] = make([]float64, len(layer.W))
-		s.vW[i] = make([]float64, len(layer.W))
-		s.mB[i] = make([]float64, len(layer.B))
-		s.vB[i] = make([]float64, len(layer.B))
+		s.mW[i] = make([]float32, len(layer.W))
+		s.vW[i] = make([]float32, len(layer.W))
+		s.mB[i] = make([]float32, len(layer.B))
+		s.vB[i] = make([]float32, len(layer.B))
 	}
 	if d.UseBatchNorm {
 		nHidden := len(d.Layers) - 1
-		s.mGamma = make([][]float64, nHidden)
-		s.vGamma = make([][]float64, nHidden)
-		s.mBeta = make([][]float64, nHidden)
-		s.vBeta = make([][]float64, nHidden)
+		s.mGamma = make([][]float32, nHidden)
+		s.vGamma = make([][]float32, nHidden)
+		s.mBeta = make([][]float32, nHidden)
+		s.vBeta = make([][]float32, nHidden)
 		for i := 0; i < nHidden; i++ {
 			dim := d.BN[i].Dim
-			s.mGamma[i] = make([]float64, dim)
-			s.vGamma[i] = make([]float64, dim)
-			s.mBeta[i] = make([]float64, dim)
-			s.vBeta[i] = make([]float64, dim)
+			s.mGamma[i] = make([]float32, dim)
+			s.vGamma[i] = make([]float32, dim)
+			s.mBeta[i] = make([]float32, dim)
+			s.vBeta[i] = make([]float32, dim)
 		}
 	}
 	return s
 }
 
 // TrainDNN trains the DNN on (input, target) sample pairs with mini-batch Adam.
-// inputs: flat [N × InputDim], targets: [N] class indices.
-// Uses parallel sub-batch processing with gradient accumulation for multi-core utilization.
-// Reports progress to stderr.
+// inputs: flat [N × InputDim] float64 (from MFCC features), targets: [N] class indices.
+// Internally converts to float32 for computation.
 func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) error {
 	N := len(targets)
 	if N == 0 {
@@ -317,7 +316,7 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 					ws := workerWSList[w]
 					wGrads := workerGradsList[w]
 
-					// Fill batch
+					// Fill batch (convert float64 inputs → float32)
 					fillBatch(inputs, targets, trainIdx[subStart:subStart+bs], dnn.InputDim, ws.xBatch)
 					batchTargets := make([]int, bs)
 					for i := 0; i < bs; i++ {
@@ -341,26 +340,26 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 
 			// Accumulate gradients from all workers
 			for i := range dnn.Layers {
-				clearSlice(totalGrads.gW[i])
-				clearSlice(totalGrads.gB[i])
+				clearSlice32(totalGrads.gW[i])
+				clearSlice32(totalGrads.gB[i])
 			}
 			if dnn.UseBatchNorm {
 				nHidden := len(dnn.Layers) - 1
 				for i := 0; i < nHidden; i++ {
-					clearSlice(totalGrads.gGamma[i])
-					clearSlice(totalGrads.gBeta[i])
+					clearSlice32(totalGrads.gGamma[i])
+					clearSlice32(totalGrads.gBeta[i])
 				}
 			}
 			for w := 0; w < activeWorkers; w++ {
 				for i := range dnn.Layers {
-					addSlice(totalGrads.gW[i], workerGradsList[w].gW[i])
-					addSlice(totalGrads.gB[i], workerGradsList[w].gB[i])
+					addSlice32(totalGrads.gW[i], workerGradsList[w].gW[i])
+					addSlice32(totalGrads.gB[i], workerGradsList[w].gB[i])
 				}
 				if dnn.UseBatchNorm {
 					nHidden := len(dnn.Layers) - 1
 					for i := 0; i < nHidden; i++ {
-						addSlice(totalGrads.gGamma[i], workerGradsList[w].gGamma[i])
-						addSlice(totalGrads.gBeta[i], workerGradsList[w].gBeta[i])
+						addSlice32(totalGrads.gGamma[i], workerGradsList[w].gGamma[i])
+						addSlice32(totalGrads.gBeta[i], workerGradsList[w].gBeta[i])
 					}
 				}
 				totalLoss += results[w].loss * float64(results[w].samples)
@@ -386,20 +385,19 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 				const bnMomentum = 0.1
 				for i := 0; i < nHidden; i++ {
 					dim := dnn.BN[i].Dim
-					// Weighted mean of batch means and vars across workers
 					for j := 0; j < dim; j++ {
 						batchMean := 0.0
 						batchVar := 0.0
 						for w := 0; w < activeWorkers; w++ {
 							wN := float64(results[w].samples)
-							batchMean += wN * workerGradsList[w].bnMean[i][j]
-							batchVar += wN * workerGradsList[w].bnVar[i][j]
+							batchMean += wN * float64(workerGradsList[w].bnMean[i][j])
+							batchVar += wN * float64(workerGradsList[w].bnVar[i][j])
 						}
 						batchMean /= float64(totalBS)
 						batchVar /= float64(totalBS)
 						// EMA update
-						dnn.BN[i].RunningMean[j] = (1-bnMomentum)*dnn.BN[i].RunningMean[j] + bnMomentum*batchMean
-						dnn.BN[i].RunningVar[j] = (1-bnMomentum)*dnn.BN[i].RunningVar[j] + bnMomentum*batchVar
+						dnn.BN[i].RunningMean[j] = float32((1-bnMomentum)*float64(dnn.BN[i].RunningMean[j]) + bnMomentum*batchMean)
+						dnn.BN[i].RunningVar[j] = float32((1-bnMomentum)*float64(dnn.BN[i].RunningVar[j]) + bnMomentum*batchVar)
 					}
 				}
 			}
@@ -437,9 +435,14 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 	return nil
 }
 
-func fillBatch(inputs []float64, targets []int, indices []int, inputDim int, xBatch []float64) {
+// fillBatch copies float64 input features to float32 batch buffer.
+func fillBatch(inputs []float64, targets []int, indices []int, inputDim int, xBatch []float32) {
 	for i, idx := range indices {
-		copy(xBatch[i*inputDim:(i+1)*inputDim], inputs[idx*inputDim:(idx+1)*inputDim])
+		src := inputs[idx*inputDim : (idx+1)*inputDim]
+		dst := xBatch[i*inputDim : (i+1)*inputDim]
+		for j, v := range src {
+			dst[j] = float32(v)
+		}
 	}
 }
 
@@ -454,9 +457,7 @@ type specAugmentConfig struct {
 }
 
 // applySpecAugment applies SpecAugment masking to xBatch in place.
-// xBatch is [bs × inputDim] where inputDim = (2*contextLen+1) * featureDim.
-// The same mask is applied to all samples in the batch.
-func applySpecAugment(xBatch []float64, bs int, cfg specAugmentConfig, rng *rand.Rand) {
+func applySpecAugment(xBatch []float32, bs int, cfg specAugmentConfig, rng *rand.Rand) {
 	featDim := cfg.FeatureDim
 	winSize := 2*cfg.ContextLen + 1
 	inputDim := winSize * featDim
@@ -499,10 +500,7 @@ func applySpecAugment(xBatch []float64, bs int, cfg specAugmentConfig, rng *rand
 }
 
 // backpropBatch computes forward pass, loss, and gradients for one mini-batch.
-// If rng is non-nil and dnn.DropoutRate > 0, dropout is applied to hidden layers.
-// labelSmooth is label smoothing epsilon (0 = disabled).
-// Returns average cross-entropy loss and number of correct predictions.
-func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
+func backpropBatch(dnn *DNN, xBatch []float32, batchTargets []int, bs int,
 	ws *dnnWorkspace, grads *workerGrads, rng *rand.Rand, labelSmooth float64) (float64, int) {
 
 	nLayers := len(dnn.Layers)
@@ -527,16 +525,15 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 	for i := 0; i < nLayers; i++ {
 		layer := &dnn.Layers[i]
 
-		blas.Dgemm(false, true, bs, layer.OutDim, prevDim,
+		blas.Sgemm(false, true, bs, layer.OutDim, prevDim,
 			1.0, prevAct, prevDim, layer.W, prevDim, 0.0, ws.z[i], layer.OutDim)
 
 		if i < nLayers-1 {
 			dim := layer.OutDim
 
 			if useBN {
-				// BN forward: add bias → batch normalize → gamma*xhat+beta → ReLU → dropout
 				bn := &dnn.BN[i]
-				bsF := float64(bs)
+				bsF := float32(bs)
 
 				// Add bias to z
 				for r := 0; r < bs; r++ {
@@ -571,7 +568,7 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 					}
 				}
 				for j := 0; j < dim; j++ {
-					invStd[j] = 1.0 / math.Sqrt(invStd[j]/bsF+batchNormEps)
+					invStd[j] = float32(1.0 / math.Sqrt(float64(invStd[j]/bsF+batchNormEps)))
 				}
 
 				// Normalize, apply gamma/beta, store xhat
@@ -607,9 +604,7 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 
 				// Save batch stats for running stats update
 				copy(grads.bnMean[i], mean)
-				// Compute unbiased variance for running stats
 				for j := 0; j < dim; j++ {
-					// variance = 1/(invStd^2) - eps, but use the biased batch variance directly
 					v := 1.0/(invStd[j]*invStd[j]) - batchNormEps
 					grads.bnVar[i][j] = v
 				}
@@ -632,7 +627,7 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 
 			// Inverted dropout
 			if dnn.DropoutRate > 0 && rng != nil {
-				scale := 1.0 / (1.0 - dnn.DropoutRate)
+				scale := float32(1.0 / (1.0 - dnn.DropoutRate))
 				n := bs * dim
 				for idx := 0; idx < n; idx++ {
 					if rng.Float64() < dnn.DropoutRate {
@@ -647,19 +642,23 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 			prevAct = ws.a[i]
 			prevDim = dim
 		} else {
-			// Output layer: bias + softmax + loss
+			// Output layer: bias + softmax (in float64 for loss stability)
 			for r := 0; r < bs; r++ {
 				off := r * O
-				maxVal := math.Inf(-1)
+				// Add bias
 				for j := 0; j < O; j++ {
 					ws.z[i][off+j] += layer.B[j]
-					if ws.z[i][off+j] > maxVal {
-						maxVal = ws.z[i][off+j]
+				}
+				// Softmax in float64
+				maxVal := float64(ws.z[i][off])
+				for j := 1; j < O; j++ {
+					if v := float64(ws.z[i][off+j]); v > maxVal {
+						maxVal = v
 					}
 				}
 				sumExp := 0.0
 				for j := 0; j < O; j++ {
-					ws.prob[off+j] = math.Exp(ws.z[i][off+j] - maxVal)
+					ws.prob[off+j] = math.Exp(float64(ws.z[i][off+j]) - maxVal)
 					sumExp += ws.prob[off+j]
 				}
 				for j := 0; j < O; j++ {
@@ -669,18 +668,17 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 		}
 	}
 
-	// Loss and accuracy
+	// Loss and accuracy (float64)
 	totalLoss := 0.0
 	correct := 0
 	K := float64(O)
-	smooth := labelSmooth / K // per-class uniform component
+	smooth := labelSmooth / K
 	for r := 0; r < bs; r++ {
 		off := r * O
 		t := batchTargets[r]
 
 		if labelSmooth > 0 {
-			// Smoothed cross-entropy: -Σ y_smooth[j] * log(p[j])
-			targetWeight := 1.0 - labelSmooth + smooth // weight for correct class
+			targetWeight := 1.0 - labelSmooth + smooth
 			for j := 0; j < O; j++ {
 				p := ws.prob[off+j]
 				if p < 1e-30 {
@@ -725,21 +723,24 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 		}
 	}
 
-	// dz[nLayers-1] = prob - y_smooth (or prob - one_hot if no smoothing)
+	// dz[nLayers-1] = prob - y_smooth (convert float64 prob → float32 dz)
 	outIdx := nLayers - 1
-	copy(ws.dz[outIdx], ws.prob[:bs*O])
 	if labelSmooth > 0 {
 		targetWeight := 1.0 - labelSmooth + smooth
 		for r := 0; r < bs; r++ {
 			off := r * O
 			for j := 0; j < O; j++ {
-				ws.dz[outIdx][off+j] -= smooth
+				ws.dz[outIdx][off+j] = float32(ws.prob[off+j] - smooth)
 			}
-			ws.dz[outIdx][off+batchTargets[r]] -= (targetWeight - smooth)
+			ws.dz[outIdx][off+batchTargets[r]] = float32(ws.prob[off+batchTargets[r]] - targetWeight)
 		}
 	} else {
 		for r := 0; r < bs; r++ {
-			ws.dz[outIdx][r*O+batchTargets[r]] -= 1.0
+			off := r * O
+			for j := 0; j < O; j++ {
+				ws.dz[outIdx][off+j] = float32(ws.prob[off+j])
+			}
+			ws.dz[outIdx][off+batchTargets[r]] -= 1.0
 		}
 	}
 
@@ -747,7 +748,7 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 		layer := &dnn.Layers[i]
 
 		// Input to this layer
-		var inputToLayer []float64
+		var inputToLayer []float32
 		var inputDim int
 		if i == 0 {
 			inputToLayer = xBatch
@@ -758,13 +759,13 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 		}
 
 		// gW[i] = dz[i]^T @ inputToLayer
-		clearSlice(grads.gW[i])
-		blas.Dgemm(true, false, layer.OutDim, inputDim, bs,
+		clearSlice32(grads.gW[i])
+		blas.Sgemm(true, false, layer.OutDim, inputDim, bs,
 			1.0, ws.dz[i], layer.OutDim, inputToLayer, inputDim,
 			0.0, grads.gW[i], inputDim)
 
 		// gB[i] = sum(dz[i], axis=0)
-		clearSlice(grads.gB[i])
+		clearSlice32(grads.gB[i])
 		for r := 0; r < bs; r++ {
 			for j := 0; j < layer.OutDim; j++ {
 				grads.gB[i][j] += ws.dz[i][r*layer.OutDim+j]
@@ -776,7 +777,7 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 			prevHiddenDim := dnn.Layers[i-1].OutDim
 
 			// da[i-1] = dz[i] @ W[i]
-			blas.Dgemm(false, false, bs, prevHiddenDim, layer.OutDim,
+			blas.Sgemm(false, false, bs, prevHiddenDim, layer.OutDim,
 				1.0, ws.dz[i], layer.OutDim, layer.W, prevHiddenDim,
 				0.0, ws.da[i-1], prevHiddenDim)
 
@@ -790,7 +791,6 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 
 			if useBN {
 				// BN backward for hidden layer i-1
-				// First apply ReLU derivative: ws.z[i-1] stores pre-ReLU value
 				n := bs * prevHiddenDim
 				for idx := 0; idx < n; idx++ {
 					if ws.z[i-1][idx] <= 0 {
@@ -798,7 +798,7 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 					}
 				}
 
-				// Residual gradient: add skip grad from layer (i-1)+2, propagate to (i-1)-2
+				// Residual gradient
 				if useRes {
 					h := i - 1
 					nHidden := nLayers - 1
@@ -812,16 +812,15 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 					}
 				}
 
-				// da[i-1] is now dPreReLU (gradient w.r.t. pre-ReLU value)
 				bn := &dnn.BN[i-1]
 				dim := prevHiddenDim
-				bsF := float64(bs)
+				bsF := float32(bs)
 				xhat := ws.bnXhat[i-1]
 				invStd := ws.bnInvStd[i-1]
 
 				// dGamma and dBeta
-				clearSlice(grads.gGamma[i-1])
-				clearSlice(grads.gBeta[i-1])
+				clearSlice32(grads.gGamma[i-1])
+				clearSlice32(grads.gBeta[i-1])
 				for r := 0; r < bs; r++ {
 					for j := 0; j < dim; j++ {
 						idx := r*dim + j
@@ -832,8 +831,8 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 
 				// dxhat = da * gamma
 				// dz = invStd/N * (N*dxhat - sum(dxhat) - xhat*sum(dxhat*xhat))
-				sumDxhat := make([]float64, dim)
-				sumDxhatXhat := make([]float64, dim)
+				sumDxhat := make([]float32, dim)
+				sumDxhatXhat := make([]float32, dim)
 				for r := 0; r < bs; r++ {
 					for j := 0; j < dim; j++ {
 						idx := r*dim + j
@@ -867,18 +866,20 @@ func backpropBatch(dnn *DNN, xBatch []float64, batchTargets []int, bs int,
 	return totalLoss / float64(bs), correct
 }
 
-// adamUpdate applies one Adam step: params -= lr * m_hat / (sqrt(v_hat) + eps)
-// gradScale is applied to gradients (typically 1/batchSize).
-func adamUpdate(params, grad, m, v []float64, lr, beta1, beta2, eps float64, t int, gradScale float64) {
+// adamUpdate applies one Adam step on float32 parameters.
+// Hyperparameters (lr, beta, eps) are float64; computation uses float64 internally.
+func adamUpdate(params, grad, m, v []float32, lr, beta1, beta2, eps float64, t int, gradScale float64) {
 	bc1 := 1.0 - math.Pow(beta1, float64(t))
 	bc2 := 1.0 - math.Pow(beta2, float64(t))
 	for i := range params {
-		g := grad[i] * gradScale
-		m[i] = beta1*m[i] + (1-beta1)*g
-		v[i] = beta2*v[i] + (1-beta2)*g*g
-		mHat := m[i] / bc1
-		vHat := v[i] / bc2
-		params[i] -= lr * mHat / (math.Sqrt(vHat) + eps)
+		g := float64(grad[i]) * gradScale
+		mi := beta1*float64(m[i]) + (1-beta1)*g
+		vi := beta2*float64(v[i]) + (1-beta2)*g*g
+		m[i] = float32(mi)
+		v[i] = float32(vi)
+		mHat := mi / bc1
+		vHat := vi / bc2
+		params[i] -= float32(lr * mHat / (math.Sqrt(vHat) + eps))
 	}
 }
 
@@ -911,24 +912,26 @@ func evaluateDNN(dnn *DNN, inputs []float64, targets []int, indices []int, batch
 		for i := 0; i < nLayers; i++ {
 			layer := &dnn.Layers[i]
 
-			blas.Dgemm(false, true, bs, layer.OutDim, prevDim,
+			blas.Sgemm(false, true, bs, layer.OutDim, prevDim,
 				1.0, prevAct, prevDim, layer.W, prevDim, 0.0, ws.z[i], layer.OutDim)
 
 			if i < nLayers-1 {
 				dim := layer.OutDim
 				if dnn.UseBatchNorm {
 					if dnn.UseResidual {
-						addBiasBNFlat(ws.z[i], ws.a[i], layer.B, &dnn.BN[i], bs, dim)
+						addBiasBN(ws.z[i], layer.B, &dnn.BN[i], bs, dim)
 						n := bs * dim
 						if i >= 2 {
 							for k := 0; k < n; k++ {
-								ws.a[i][k] += ws.skipBuf[i%2][k]
+								ws.z[i][k] += ws.skipBuf[i%2][k]
 							}
 						}
-						copy(ws.skipBuf[i%2], ws.a[i][:n])
-						applyReLU(ws.a[i], n)
+						copy(ws.skipBuf[i%2], ws.z[i][:n])
+						applyReLU(ws.z[i], n)
+						copy(ws.a[i][:n], ws.z[i][:n])
 					} else {
-						addBiasBNReLUFlat(ws.z[i], ws.a[i], layer.B, &dnn.BN[i], bs, dim)
+						addBiasBNReLU(ws.z[i], layer.B, &dnn.BN[i], bs, dim)
+						copy(ws.a[i][:bs*dim], ws.z[i][:bs*dim])
 					}
 				} else {
 					for idx := 0; idx < bs*dim; idx++ {
@@ -945,36 +948,42 @@ func evaluateDNN(dnn *DNN, inputs []float64, targets []int, indices []int, batch
 			}
 		}
 
-		// Output layer: softmax + loss + accuracy
+		// Output layer: softmax + loss + accuracy (float64 for stability)
 		outLayer := &dnn.Layers[nLayers-1]
 		for r := 0; r < bs; r++ {
 			off := r * O
-			maxVal := math.Inf(-1)
-			for j := 0; j < O; j++ {
+			maxVal := float64(ws.z[nLayers-1][off])
+			for j := 1; j < O; j++ {
 				ws.z[nLayers-1][off+j] += outLayer.B[j]
-				if ws.z[nLayers-1][off+j] > maxVal {
-					maxVal = ws.z[nLayers-1][off+j]
+				if v := float64(ws.z[nLayers-1][off+j]); v > maxVal {
+					maxVal = v
 				}
 			}
+			// Add bias to first element (loop above starts at j=1)
+			ws.z[nLayers-1][off] += outLayer.B[0]
+			if v := float64(ws.z[nLayers-1][off]); v > maxVal {
+				maxVal = v
+			}
+
 			sumExp := 0.0
+			probs := make([]float64, O)
 			for j := 0; j < O; j++ {
-				e := math.Exp(ws.z[nLayers-1][off+j] - maxVal)
-				ws.prob[off+j] = e
-				sumExp += e
+				probs[j] = math.Exp(float64(ws.z[nLayers-1][off+j]) - maxVal)
+				sumExp += probs[j]
 			}
 
 			t := targets[indices[start+r]]
-			p := ws.prob[off+t] / sumExp
+			p := probs[t] / sumExp
 			if p < 1e-30 {
 				p = 1e-30
 			}
 			totalLoss -= math.Log(p)
 
 			bestJ := 0
-			bestP := ws.prob[off]
+			bestP := probs[0]
 			for j := 1; j < O; j++ {
-				if ws.prob[off+j] > bestP {
-					bestP = ws.prob[off+j]
+				if probs[j] > bestP {
+					bestP = probs[j]
 					bestJ = j
 				}
 			}
@@ -987,46 +996,13 @@ func evaluateDNN(dnn *DNN, inputs []float64, targets []int, indices []int, batch
 	return totalLoss / float64(N), float64(totalCorrect) / float64(N) * 100
 }
 
-// addBiasBNFlat adds bias and applies BN with running stats (no ReLU).
-// Reads from z, writes to out. Uses flat [rows × cols] layout.
-func addBiasBNFlat(z, out []float64, bias []float64, bn *BatchNormParams, rows, cols int) {
-	for j := 0; j < cols; j++ {
-		invStd := 1.0 / math.Sqrt(bn.RunningVar[j]+batchNormEps)
-		scale := bn.Gamma[j] * invStd
-		shift := bn.Beta[j] - bn.Gamma[j]*invStd*(bn.RunningMean[j]-bias[j])
-		for r := 0; r < rows; r++ {
-			idx := r*cols + j
-			out[idx] = z[idx]*scale + shift
-		}
-	}
-}
-
-// addBiasBNReLUFlat adds bias, applies BN with running stats, then ReLU.
-// Reads from z, writes to a. Uses flat [rows × cols] layout.
-func addBiasBNReLUFlat(z, a []float64, bias []float64, bn *BatchNormParams, rows, cols int) {
-	for j := 0; j < cols; j++ {
-		invStd := 1.0 / math.Sqrt(bn.RunningVar[j]+batchNormEps)
-		scale := bn.Gamma[j] * invStd
-		shift := bn.Beta[j] - bn.Gamma[j]*invStd*(bn.RunningMean[j]-bias[j])
-		for r := 0; r < rows; r++ {
-			idx := r*cols + j
-			v := z[idx]*scale + shift
-			if v > 0 {
-				a[idx] = v
-			} else {
-				a[idx] = 0
-			}
-		}
-	}
-}
-
-func clearSlice(s []float64) {
+func clearSlice32(s []float32) {
 	for i := range s {
 		s[i] = 0
 	}
 }
 
-func addSlice(dst, src []float64) {
+func addSlice32(dst, src []float32) {
 	for i := range dst {
 		dst[i] += src[i]
 	}
