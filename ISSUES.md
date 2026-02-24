@@ -49,7 +49,7 @@ Wikipedia日本語ダンプ → `cmd/wikitext` + `cmd/lmtext` で辞書フィル
 | 中 | 系列弁別学習 (sMBR/MMI) | フレームCE→系列最適化。同音異義語(取り/撮り)の文脈弁別に直結。実装コスト高 |
 | 低 | ノイズ augmentation | SNR変動への頑健性。現在の5-way speed perturbに追加 |
 | 低 | 非音声入力の棄却 | `<sil>`モデルのノイズ学習 + 信頼度閾値で無意味入力を棄却。現状ノイズを擬音語等に誤認識する |
-| 低 | ひらがなフォールバック認識 | **実装済み**: `-hiragana -hiragana-penalty -15`。kanaPhonemsテーブルからひらがなエントリ自動生成、辞書既存語と重複回避。デコーダでHiraganaPenaltyを適用し辞書語を優先。評価未実施 |
+| ~~低~~ | ~~ひらがなフォールバック認識~~ | ~~辞書外未知語のひらがな認識~~ → **実施済み: +1** (77/90, 85.6%)。penalty=-10, LW=10, WP=13, MT=5000。penalty=-15では76/90(変化なし)、-10/-5で77/90。WP増加は短いひらがな語の過剰挿入抑制に寄与 |
 | 低 | コーパスのドメイン拡張（医療・IT等） | 未知文カバレッジ向上 |
 
 ### tunerグリッドサーチ分散化案
@@ -101,6 +101,16 @@ Dict: models/v16/dict.txt (2,000語 = v15 1,694語 + 外来語51 + fill 255)
   -lm models/v15/lm.arpa \
   -dict models/v15/dict.txt \
   -lm-weight 10 -word-penalty 10 -max-tokens 3000 \
+  -wav input.wav
+
+認識コマンド (v19, 1,694語, ひらがなフォールバック有り):
+/tmp/transcript \
+  -am models/v15/am.gob \
+  -dnn models/v19/dnn.gob \
+  -lm models/v15/lm.arpa \
+  -dict models/v15/dict.txt \
+  -lm-weight 10 -word-penalty 13 -max-tokens 5000 \
+  -hiragana -hiragana-penalty -10 \
   -wav input.wav
 
 認識コマンド (5,000語辞書, チューニング済):
