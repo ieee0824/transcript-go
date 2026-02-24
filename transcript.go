@@ -21,7 +21,8 @@ type Recognizer struct {
 	DecCfg     decoder.Config
 	OOVLogProb float64 // OOV unigram log10 probability (e.g. -5.0). 0 = disable.
 	UseVTLN    bool    // enable VTLN speaker normalization
-	dnnPending *acoustic.DNN // set by WithDNN, applied after AM load
+	dnnPending  *acoustic.DNN // set by WithDNN, applied after AM load
+	useHiragana bool         // enable hiragana fallback
 }
 
 // Option configures a Recognizer.
@@ -52,6 +53,13 @@ func WithOOVLogProb(log10prob float64) Option {
 func WithVTLN(enabled bool) Option {
 	return func(r *Recognizer) {
 		r.UseVTLN = enabled
+	}
+}
+
+// WithHiragana enables hiragana fallback recognition for unknown words.
+func WithHiragana(enabled bool) Option {
+	return func(r *Recognizer) {
+		r.useHiragana = enabled
 	}
 }
 
@@ -112,6 +120,11 @@ func NewRecognizer(amPath, lmPath, dictPath string, opts ...Option) (*Recognizer
 	r.Dict, err = lexicon.LoadFile(dictPath)
 	if err != nil {
 		return nil, fmt.Errorf("load dictionary: %w", err)
+	}
+
+	// Add hiragana fallback entries to dictionary
+	if r.useHiragana {
+		r.DecCfg.HiraganaSet = r.Dict.AddHiraganaFallback()
 	}
 
 	// Apply OOV log probability to LM

@@ -22,6 +22,8 @@ func main() {
 	lmInterp := flag.Float64("lm-interp", 0.0, "LM interpolation weight with uniform prior (0=pure LM, 0.5=half uniform)")
 	vtln := flag.Bool("vtln", false, "enable VTLN speaker normalization")
 	dnnPath := flag.String("dnn", "", "path to DNN model file (enables DNN-HMM hybrid)")
+	hiragana := flag.Bool("hiragana", false, "enable hiragana fallback for unknown words")
+	hiraganaPenalty := flag.Float64("hiragana-penalty", -15.0, "penalty for hiragana fallback words")
 	verbose := flag.Bool("v", false, "verbose output")
 
 	flag.Parse()
@@ -40,10 +42,12 @@ func main() {
 			MaxActiveTokens:      *maxTokens,
 			MaxWordEnds:          *maxWordEnds,
 			LMInterpolation:     *lmInterp,
+			HiraganaPenalty:      *hiraganaPenalty,
 		}),
 		transcript.WithOOVLogProb(*oovProb),
 		transcript.WithVTLN(*vtln),
 		transcript.WithDNN(*dnnPath),
+		transcript.WithHiragana(*hiragana),
 	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)

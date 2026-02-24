@@ -18,6 +18,8 @@ type Config struct {
 	WordInsertionPenalty float64 // penalty to control insertion rate
 	LMInterpolation      float64 // uniform interpolation weight (0=pure LM, 0.5=half LM half uniform)
 	MaxWordEnds          int     // max word completions expanded per frame (0 = unlimited)
+	HiraganaSet          map[string]bool // set of hiragana fallback words (nil = disabled)
+	HiraganaPenalty      float64         // additional penalty for hiragana word completions
 }
 
 // DefaultConfig returns reasonable default parameters.
@@ -501,6 +503,9 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 							lmScore = scoreLM(lmHistBuf, word)
 						}
 						wordBaseScore := baseScore - lmLookAhead + lmScore + cfg.WordInsertionPenalty
+						if cfg.HiraganaSet != nil && cfg.HiraganaSet[word] {
+							wordBaseScore += cfg.HiraganaPenalty
+						}
 
 						wordEndBuf = append(wordEndBuf, wordEndCandidate{
 							history:   newNode,
@@ -577,6 +582,9 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 					lmScore = scoreLM(lmHistBuf, w)
 				}
 				s := best.score - lmLookAhead + lmScore + cfg.WordInsertionPenalty
+				if cfg.HiraganaSet != nil && cfg.HiraganaSet[w] {
+					s += cfg.HiraganaPenalty
+				}
 				if s > bestWordScore {
 					bestWordScore = s
 					bestWord = w

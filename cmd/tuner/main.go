@@ -56,6 +56,8 @@ func main() {
 	numShards := flag.Int("num-shards", 1, "total number of shards (1 = no sharding)")
 	oovProb := flag.Float64("oov-prob", 0, "OOV log10 probability")
 	lmInterp := flag.Float64("lm-interp", 0.0, "LM interpolation weight")
+	hiragana := flag.Bool("hiragana", false, "enable hiragana fallback")
+	hiraganaPenalty := flag.Float64("hiragana-penalty", -15.0, "penalty for hiragana fallback words")
 
 	flag.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage: tuner -am AM -lm LM -dict DICT -manifest M1,M2,...")
@@ -132,6 +134,11 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "load dict: %v\n", err)
 		os.Exit(1)
+	}
+
+	var hiraganaSet map[string]bool
+	if *hiragana {
+		hiraganaSet = dict.AddHiraganaFallback()
 	}
 
 	// Load and pre-extract features from all manifests
@@ -230,6 +237,8 @@ func main() {
 				WordInsertionPenalty: ps.WordInsertionPenalty,
 				LMInterpolation:     *lmInterp,
 				MaxWordEnds:          ps.MaxWordEnds,
+				HiraganaSet:          hiraganaSet,
+				HiraganaPenalty:      *hiraganaPenalty,
 			}
 			for _, tc := range tests {
 				r := decoder.Decode(tc.features, am, lm, dict, cfg)

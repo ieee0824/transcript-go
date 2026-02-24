@@ -99,6 +99,22 @@ func (d *Dictionary) PhonemeSequence(word string) ([]acoustic.Phoneme, bool) {
 	return entries[0].Phonemes, true
 }
 
+// AddHiraganaFallback adds hiragana character entries to the dictionary
+// for fallback recognition of unknown words. Entries already present in
+// the dictionary are skipped. Returns the set of added hiragana words
+// (for penalty application in the decoder).
+func (d *Dictionary) AddHiraganaFallback() map[string]bool {
+	added := make(map[string]bool)
+	for _, e := range HiraganaEntries() {
+		if _, exists := d.Entries[e.Word]; exists {
+			continue
+		}
+		d.Add(e.Word, e.Reading, e.Phonemes)
+		added[e.Word] = true
+	}
+	return added
+}
+
 // Words returns all words in the dictionary.
 func (d *Dictionary) Words() []string {
 	words := make([]string, 0, len(d.Entries))
