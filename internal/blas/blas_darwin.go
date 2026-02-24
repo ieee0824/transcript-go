@@ -39,5 +39,32 @@ func Dgemm(transA, transB bool, m, n, k int,
 		(*C.double)(unsafe.Pointer(&c[0])), C.int(ldc))
 }
 
+// Sgemm performs C = alpha*op(A)*op(B) + beta*C using Apple Accelerate (AMX) in float32.
+func Sgemm(transA, transB bool, m, n, k int,
+	alpha float32, a []float32, lda int,
+	b []float32, ldb int,
+	beta float32, c []float32, ldc int) {
+
+	var ta, tb C.enum_CBLAS_TRANSPOSE
+	if transA {
+		ta = C.CblasTrans
+	} else {
+		ta = C.CblasNoTrans
+	}
+	if transB {
+		tb = C.CblasTrans
+	} else {
+		tb = C.CblasNoTrans
+	}
+
+	C.cblas_sgemm(C.CblasRowMajor, ta, tb,
+		C.int(m), C.int(n), C.int(k),
+		C.float(alpha),
+		(*C.float)(unsafe.Pointer(&a[0])), C.int(lda),
+		(*C.float)(unsafe.Pointer(&b[0])), C.int(ldb),
+		C.float(beta),
+		(*C.float)(unsafe.Pointer(&c[0])), C.int(ldc))
+}
+
 // HasAccelerate returns true when Apple Accelerate framework is available.
 func HasAccelerate() bool { return true }

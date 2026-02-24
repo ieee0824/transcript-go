@@ -13,18 +13,18 @@ import (
 // DNNLayer holds weights and biases for a single fully-connected layer.
 // W is [OutDim × InDim] row-major, B is [OutDim].
 type DNNLayer struct {
-	W      []float64
-	B      []float64
+	W      []float32
+	B      []float32
 	InDim  int
 	OutDim int
 }
 
 // BatchNormParams holds parameters for one batch normalization layer.
 type BatchNormParams struct {
-	Gamma       []float64 // learnable scale [Dim]
-	Beta        []float64 // learnable shift [Dim]
-	RunningMean []float64 // EMA mean for inference [Dim]
-	RunningVar  []float64 // EMA variance for inference [Dim]
+	Gamma       []float32 // learnable scale [Dim]
+	Beta        []float32 // learnable shift [Dim]
+	RunningMean []float32 // EMA mean for inference [Dim]
+	RunningVar  []float32 // EMA variance for inference [Dim]
 	Dim         int
 }
 
@@ -48,6 +48,7 @@ type DNN struct {
 	UseResidual bool
 
 	// Log prior P(state) from training label histogram, for Bayes conversion
+	// Kept as float64 for decoder interface compatibility.
 	LogPrior []float64 // [OutputDim]
 
 	// Ordered phoneme list for class index mapping
@@ -74,8 +75,8 @@ func NewDNN(featureDim, hiddenDim, contextLen, numHiddenLayers int, dropoutRate 
 	prevDim := inputDim
 	for i := 0; i < numHiddenLayers; i++ {
 		layers[i] = DNNLayer{
-			W:      make([]float64, hiddenDim*prevDim),
-			B:      make([]float64, hiddenDim),
+			W:      make([]float32, hiddenDim*prevDim),
+			B:      make([]float32, hiddenDim),
 			InDim:  prevDim,
 			OutDim: hiddenDim,
 		}
@@ -84,8 +85,8 @@ func NewDNN(featureDim, hiddenDim, contextLen, numHiddenLayers int, dropoutRate 
 	}
 	// Output layer
 	layers[numHiddenLayers] = DNNLayer{
-		W:      make([]float64, outputDim*prevDim),
-		B:      make([]float64, outputDim),
+		W:      make([]float32, outputDim*prevDim),
+		B:      make([]float32, outputDim),
 		InDim:  prevDim,
 		OutDim: outputDim,
 	}
@@ -108,15 +109,15 @@ func NewDNN(featureDim, hiddenDim, contextLen, numHiddenLayers int, dropoutRate 
 		d.BN = make([]BatchNormParams, numHiddenLayers)
 		for i := 0; i < numHiddenLayers; i++ {
 			dim := layers[i].OutDim
-			gamma := make([]float64, dim)
+			gamma := make([]float32, dim)
 			for j := range gamma {
 				gamma[j] = 1.0
 			}
 			d.BN[i] = BatchNormParams{
 				Gamma:       gamma,
-				Beta:        make([]float64, dim),
-				RunningMean: make([]float64, dim),
-				RunningVar:  make([]float64, dim),
+				Beta:        make([]float32, dim),
+				RunningMean: make([]float32, dim),
+				RunningVar:  make([]float32, dim),
 				Dim:         dim,
 			}
 			// RunningVar initialized to 1.0
@@ -130,18 +131,18 @@ func NewDNN(featureDim, hiddenDim, contextLen, numHiddenLayers int, dropoutRate 
 	return d
 }
 
-func xavierInit(w []float64, fanIn, fanOut int) {
+func xavierInit(w []float32, fanIn, fanOut int) {
 	scale := math.Sqrt(2.0 / float64(fanIn+fanOut))
 	for i := range w {
-		w[i] = rand.NormFloat64() * scale
+		w[i] = float32(rand.NormFloat64() * scale)
 	}
 }
 
 // heInit initializes weights with He normal initialization (for ReLU networks with BN).
-func heInit(w []float64, fanIn, _ int) {
+func heInit(w []float32, fanIn, _ int) {
 	scale := math.Sqrt(2.0 / float64(fanIn))
 	for i := range w {
-		w[i] = rand.NormFloat64() * scale
+		w[i] = float32(rand.NormFloat64() * scale)
 	}
 }
 
@@ -163,37 +164,37 @@ func (d *DNN) buildPhonemeIndex() {
 }
 
 // batchNormEps is the epsilon for numerical stability in batch normalization.
-const batchNormEps = 1e-5
+const batchNormEps float32 = 1e-5
 
 // Forward computes log-softmax outputs for a batch of input vectors using BLAS.
-// input: flat [batchSize × InputDim] row-major
+// input: flat [batchSize × InputDim] row-major (float32)
 // activations: per-hidden-layer buffers, each [batchSize × layer.OutDim]
 // output: flat [batchSize × OutputDim] log-softmax values
 // Dropout is NOT applied (inference path).
 // When UseBatchNorm is true, hidden layers use running stats for BN inference.
-func (d *DNN) Forward(input []float64, batchSize int, activations [][]float64, output []float64) {
+func (d *DNN) Forward(input []float32, batchSize int, activations [][]float32, output []float32) {
 	nLayers := len(d.Layers)
 	prevAct := input
 	prevDim := d.InputDim
 
 	// Residual: alternating skip buffers for pre-ReLU values
-	var skipBuf [2][]float64
+	var skipBuf [2][]float32
 	if d.UseResidual {
 		n := batchSize * d.HiddenDim
-		skipBuf[0] = make([]float64, n)
-		skipBuf[1] = make([]float64, n)
+		skipBuf[0] = make([]float32, n)
+		skipBuf[1] = make([]float32, n)
 	}
 
 	for i := range d.Layers {
 		layer := &d.Layers[i]
-		var dst []float64
+		var dst []float32
 		if i < nLayers-1 {
 			dst = activations[i]
 		} else {
 			dst = output
 		}
 
-		blas.Dgemm(false, true, batchSize, layer.OutDim, prevDim,
+		blas.Sgemm(false, true, batchSize, layer.OutDim, prevDim,
 			1.0, prevAct, prevDim, layer.W, prevDim, 0.0, dst, layer.OutDim)
 
 		if i < nLayers-1 {
@@ -224,7 +225,7 @@ func (d *DNN) Forward(input []float64, batchSize int, activations [][]float64, o
 }
 
 // addBiasReLU adds bias and applies ReLU in place.
-func addBiasReLU(z []float64, bias []float64, rows, cols int) {
+func addBiasReLU(z []float32, bias []float32, rows, cols int) {
 	for i := 0; i < rows; i++ {
 		off := i * cols
 		for j := 0; j < cols; j++ {
@@ -239,12 +240,12 @@ func addBiasReLU(z []float64, bias []float64, rows, cols int) {
 
 // addBiasBNReLU adds bias, applies batch normalization using running stats, then ReLU.
 // Fused: z = gamma * (z + bias - runningMean) / sqrt(runningVar + eps) + beta → ReLU
-func addBiasBNReLU(z []float64, bias []float64, bn *BatchNormParams, rows, cols int) {
+func addBiasBNReLU(z []float32, bias []float32, bn *BatchNormParams, rows, cols int) {
 	// Precompute per-feature scale and shift for fused operation
-	scale := make([]float64, cols)
-	shift := make([]float64, cols)
+	scale := make([]float32, cols)
+	shift := make([]float32, cols)
 	for j := 0; j < cols; j++ {
-		invStd := 1.0 / math.Sqrt(bn.RunningVar[j]+batchNormEps)
+		invStd := float32(1.0 / math.Sqrt(float64(bn.RunningVar[j]+batchNormEps)))
 		scale[j] = bn.Gamma[j] * invStd
 		shift[j] = bn.Beta[j] - bn.Gamma[j]*invStd*(bn.RunningMean[j]-bias[j])
 	}
@@ -261,11 +262,11 @@ func addBiasBNReLU(z []float64, bias []float64, bn *BatchNormParams, rows, cols 
 }
 
 // addBiasBN adds bias and applies batch normalization using running stats (no ReLU).
-func addBiasBN(z []float64, bias []float64, bn *BatchNormParams, rows, cols int) {
-	scale := make([]float64, cols)
-	shift := make([]float64, cols)
+func addBiasBN(z []float32, bias []float32, bn *BatchNormParams, rows, cols int) {
+	scale := make([]float32, cols)
+	shift := make([]float32, cols)
 	for j := 0; j < cols; j++ {
-		invStd := 1.0 / math.Sqrt(bn.RunningVar[j]+batchNormEps)
+		invStd := float32(1.0 / math.Sqrt(float64(bn.RunningVar[j]+batchNormEps)))
 		scale[j] = bn.Gamma[j] * invStd
 		shift[j] = bn.Beta[j] - bn.Gamma[j]*invStd*(bn.RunningMean[j]-bias[j])
 	}
@@ -278,7 +279,7 @@ func addBiasBN(z []float64, bias []float64, bn *BatchNormParams, rows, cols int)
 }
 
 // applyReLU applies ReLU activation in place.
-func applyReLU(z []float64, n int) {
+func applyReLU(z []float32, n int) {
 	for i := 0; i < n; i++ {
 		if z[i] < 0 {
 			z[i] = 0
@@ -287,11 +288,12 @@ func applyReLU(z []float64, n int) {
 }
 
 // addBiasLogSoftmax adds bias and applies log-softmax per row.
-func addBiasLogSoftmax(z []float64, bias []float64, rows, cols int) {
+// Uses float64 internally for numerical stability.
+func addBiasLogSoftmax(z []float32, bias []float32, rows, cols int) {
 	for i := 0; i < rows; i++ {
 		off := i * cols
 		// Add bias and find max for numerical stability
-		maxVal := math.Inf(-1)
+		maxVal := float32(-math.MaxFloat32)
 		for j := 0; j < cols; j++ {
 			z[off+j] += bias[j]
 			if z[off+j] > maxVal {
@@ -301,9 +303,9 @@ func addBiasLogSoftmax(z []float64, bias []float64, rows, cols int) {
 		// log-softmax: log(exp(z_j - max) / sum(exp(z_k - max)))
 		sumExp := 0.0
 		for j := 0; j < cols; j++ {
-			sumExp += math.Exp(z[off+j] - maxVal)
+			sumExp += math.Exp(float64(z[off+j] - maxVal))
 		}
-		logSumExp := maxVal + math.Log(sumExp)
+		logSumExp := float32(float64(maxVal) + math.Log(sumExp))
 		for j := 0; j < cols; j++ {
 			z[off+j] -= logSumExp
 		}
@@ -312,15 +314,15 @@ func addBiasLogSoftmax(z []float64, bias []float64, rows, cols int) {
 
 // ForwardFrames computes DNN log-posteriors for all T frames.
 // Handles context window construction with edge replication padding.
-// Returns [T][OutputDim] log-posteriors.
+// Returns [T][OutputDim] log-posteriors (float64 for decoder compatibility).
 func (d *DNN) ForwardFrames(features [][]float64) [][]float64 {
 	T := len(features)
 	if T == 0 {
 		return nil
 	}
 
-	// Build context-windowed input matrix: [T × InputDim] flat
-	input := make([]float64, T*d.InputDim)
+	// Build context-windowed input matrix: [T × InputDim] flat (float32)
+	input := make([]float32, T*d.InputDim)
 	featDim := len(features[0])
 	winSize := 2*d.ContextLen + 1
 
@@ -333,30 +335,39 @@ func (d *DNN) ForwardFrames(features [][]float64) [][]float64 {
 			} else if srcT >= T {
 				srcT = T - 1
 			}
-			copy(input[off+w*featDim:off+(w+1)*featDim], features[srcT])
+			// Convert float64 features to float32
+			for f := 0; f < featDim; f++ {
+				input[off+w*featDim+f] = float32(features[srcT][f])
+			}
 		}
 	}
 
 	// Allocate per-hidden-layer buffers
 	nHidden := len(d.Layers) - 1
-	activations := make([][]float64, nHidden)
+	activations := make([][]float32, nHidden)
 	for i := 0; i < nHidden; i++ {
-		activations[i] = make([]float64, T*d.Layers[i].OutDim)
+		activations[i] = make([]float32, T*d.Layers[i].OutDim)
 	}
-	outFlat := make([]float64, T*d.OutputDim)
+	outFlat := make([]float32, T*d.OutputDim)
 
 	d.Forward(input, T, activations, outFlat)
 
-	// Reshape to [][]float64
+	// Convert float32 output to [][]float64 for decoder
 	result := make([][]float64, T)
 	for t := 0; t < T; t++ {
-		result[t] = outFlat[t*d.OutputDim : (t+1)*d.OutputDim]
+		row := make([]float64, d.OutputDim)
+		base := t * d.OutputDim
+		for j := 0; j < d.OutputDim; j++ {
+			row[j] = float64(outFlat[base+j])
+		}
+		result[t] = row
 	}
 	return result
 }
 
 // SubtractPrior converts log-posteriors to pseudo-log-likelihoods in place.
 // logLike[c] = logPost[c] - logPrior[c]
+// Works with float64 for decoder compatibility.
 func (d *DNN) SubtractPrior(logPost []float64) {
 	for i, lp := range d.LogPrior {
 		logPost[i] -= lp
@@ -365,7 +376,34 @@ func (d *DNN) SubtractPrior(logPost []float64) {
 
 // --- Serialization ---
 
-// V3 serialized format (variable layers + batch normalization)
+// V5 serialized format (float32 weights)
+type serializedDNNLayerV5 struct {
+	W      []float32
+	B      []float32
+	InDim  int
+	OutDim int
+}
+
+type serializedBNParamsV5 struct {
+	Gamma       []float32
+	Beta        []float32
+	RunningMean []float32
+	RunningVar  []float32
+	Dim         int
+}
+
+type serializedDNNV5 struct {
+	Version     int // = 5
+	ContextLen  int
+	DropoutRate float64
+	Layers      []serializedDNNLayerV5
+	BN          []serializedBNParamsV5 // len = nHidden
+	UseResidual bool
+	LogPrior    []float64 // kept as float64
+	PhonemeList []string
+}
+
+// V1-V4 serialized formats (float64 weights, for backward compatibility loading)
 type serializedDNNLayer struct {
 	W      []float64
 	B      []float64
@@ -425,91 +463,74 @@ type serializedDNN struct {
 	PhonemeList []string
 }
 
-// Save serializes the DNN to a writer using gob encoding.
-// Uses V4 format when Residual is enabled, V3 when BatchNorm only, V2 otherwise.
+// Save serializes the DNN to a writer using gob encoding (V5 float32 format).
 func (d *DNN) Save(w io.Writer) error {
 	phonemes := make([]string, len(d.PhonemeList))
 	for i, p := range d.PhonemeList {
 		phonemes[i] = string(p)
 	}
-	layers := make([]serializedDNNLayer, len(d.Layers))
+	layers := make([]serializedDNNLayerV5, len(d.Layers))
 	for i, l := range d.Layers {
-		layers[i] = serializedDNNLayer{W: l.W, B: l.B, InDim: l.InDim, OutDim: l.OutDim}
+		layers[i] = serializedDNNLayerV5{W: l.W, B: l.B, InDim: l.InDim, OutDim: l.OutDim}
 	}
 
-	serializeBN := func() []serializedBNParams {
-		sbn := make([]serializedBNParams, len(d.BN))
+	var bnList []serializedBNParamsV5
+	if d.UseBatchNorm {
+		bnList = make([]serializedBNParamsV5, len(d.BN))
 		for i, bn := range d.BN {
-			sbn[i] = serializedBNParams{
+			bnList[i] = serializedBNParamsV5{
 				Gamma: bn.Gamma, Beta: bn.Beta,
 				RunningMean: bn.RunningMean, RunningVar: bn.RunningVar,
 				Dim: bn.Dim,
 			}
 		}
-		return sbn
 	}
 
-	if d.UseResidual {
-		sd := serializedDNNV4{
-			Version:     4,
-			ContextLen:  d.ContextLen,
-			Layers:      layers,
-			BN:          serializeBN(),
-			UseResidual: true,
-			LogPrior:    d.LogPrior,
-			PhonemeList: phonemes,
-		}
-		return gob.NewEncoder(w).Encode(sd)
-	}
-
-	if d.UseBatchNorm {
-		sd := serializedDNNV3{
-			Version:     3,
-			ContextLen:  d.ContextLen,
-			Layers:      layers,
-			BN:          serializeBN(),
-			LogPrior:    d.LogPrior,
-			PhonemeList: phonemes,
-		}
-		return gob.NewEncoder(w).Encode(sd)
-	}
-
-	sd := serializedDNNV2{
-		Version:     2,
+	sd := serializedDNNV5{
+		Version:     5,
 		ContextLen:  d.ContextLen,
+		DropoutRate: d.DropoutRate,
 		Layers:      layers,
+		BN:          bnList,
+		UseResidual: d.UseResidual,
 		LogPrior:    d.LogPrior,
 		PhonemeList: phonemes,
 	}
 	return gob.NewEncoder(w).Encode(sd)
 }
 
-// LoadDNN deserializes a DNN from a reader. Supports V4, V3, V2 and legacy V1 formats.
+// LoadDNN deserializes a DNN from a reader. Supports V5 (float32), V4, V3, V2 and legacy V1 formats.
 func LoadDNN(r io.Reader) (*DNN, error) {
 	data, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
 
-	// Try V4 format (BN + Residual)
+	// Try V5 format (float32)
+	var v5 serializedDNNV5
+	if err := gob.NewDecoder(bytes.NewReader(data)).Decode(&v5); err == nil && v5.Version == 5 && len(v5.Layers) > 0 {
+		return dnnFromV5(&v5), nil
+	}
+
+	// Try V4 format (BN + Residual, float64)
 	var v4 serializedDNNV4
 	if err := gob.NewDecoder(bytes.NewReader(data)).Decode(&v4); err == nil && v4.Version == 4 && len(v4.Layers) > 0 {
 		return dnnFromV4(&v4), nil
 	}
 
-	// Try V3 format (with BN)
+	// Try V3 format (with BN, float64)
 	var v3 serializedDNNV3
 	if err := gob.NewDecoder(bytes.NewReader(data)).Decode(&v3); err == nil && v3.Version == 3 && len(v3.Layers) > 0 {
 		return dnnFromV3(&v3), nil
 	}
 
-	// Try V2 format
+	// Try V2 format (float64)
 	var v2 serializedDNNV2
 	if err := gob.NewDecoder(bytes.NewReader(data)).Decode(&v2); err == nil && v2.Version == 2 && len(v2.Layers) > 0 {
 		return dnnFromV2(&v2), nil
 	}
 
-	// Fall back to V1 (legacy 3-layer format)
+	// Fall back to V1 (legacy 3-layer format, float64)
 	var v1 serializedDNN
 	if err := gob.NewDecoder(bytes.NewReader(data)).Decode(&v1); err != nil {
 		return nil, err
@@ -517,10 +538,54 @@ func LoadDNN(r io.Reader) (*DNN, error) {
 	return dnnFromV1(&v1), nil
 }
 
-func dnnFromV4(sd *serializedDNNV4) *DNN {
+func dnnFromV5(sd *serializedDNNV5) *DNN {
 	layers := make([]DNNLayer, len(sd.Layers))
 	for i, sl := range sd.Layers {
 		layers[i] = DNNLayer{W: sl.W, B: sl.B, InDim: sl.InDim, OutDim: sl.OutDim}
+	}
+	nLayers := len(layers)
+	d := &DNN{
+		Layers:       layers,
+		InputDim:     layers[0].InDim,
+		HiddenDim:    layers[0].OutDim,
+		OutputDim:    layers[nLayers-1].OutDim,
+		ContextLen:   sd.ContextLen,
+		DropoutRate:  sd.DropoutRate,
+		UseBatchNorm: len(sd.BN) > 0,
+		UseResidual:  sd.UseResidual,
+		LogPrior:     sd.LogPrior,
+	}
+	if len(sd.BN) > 0 {
+		d.BN = make([]BatchNormParams, len(sd.BN))
+		for i, sbn := range sd.BN {
+			d.BN[i] = BatchNormParams{
+				Gamma: sbn.Gamma, Beta: sbn.Beta,
+				RunningMean: sbn.RunningMean, RunningVar: sbn.RunningVar,
+				Dim: sbn.Dim,
+			}
+		}
+	}
+	d.PhonemeList = make([]Phoneme, len(sd.PhonemeList))
+	for i, s := range sd.PhonemeList {
+		d.PhonemeList[i] = Phoneme(s)
+	}
+	d.buildPhonemeIndex()
+	return d
+}
+
+// float64to32 converts a float64 slice to float32.
+func float64to32(src []float64) []float32 {
+	dst := make([]float32, len(src))
+	for i, v := range src {
+		dst[i] = float32(v)
+	}
+	return dst
+}
+
+func dnnFromV4(sd *serializedDNNV4) *DNN {
+	layers := make([]DNNLayer, len(sd.Layers))
+	for i, sl := range sd.Layers {
+		layers[i] = DNNLayer{W: float64to32(sl.W), B: float64to32(sl.B), InDim: sl.InDim, OutDim: sl.OutDim}
 	}
 	nLayers := len(layers)
 	d := &DNN{
@@ -536,8 +601,8 @@ func dnnFromV4(sd *serializedDNNV4) *DNN {
 	d.BN = make([]BatchNormParams, len(sd.BN))
 	for i, sbn := range sd.BN {
 		d.BN[i] = BatchNormParams{
-			Gamma: sbn.Gamma, Beta: sbn.Beta,
-			RunningMean: sbn.RunningMean, RunningVar: sbn.RunningVar,
+			Gamma: float64to32(sbn.Gamma), Beta: float64to32(sbn.Beta),
+			RunningMean: float64to32(sbn.RunningMean), RunningVar: float64to32(sbn.RunningVar),
 			Dim: sbn.Dim,
 		}
 	}
@@ -552,7 +617,7 @@ func dnnFromV4(sd *serializedDNNV4) *DNN {
 func dnnFromV3(sd *serializedDNNV3) *DNN {
 	layers := make([]DNNLayer, len(sd.Layers))
 	for i, sl := range sd.Layers {
-		layers[i] = DNNLayer{W: sl.W, B: sl.B, InDim: sl.InDim, OutDim: sl.OutDim}
+		layers[i] = DNNLayer{W: float64to32(sl.W), B: float64to32(sl.B), InDim: sl.InDim, OutDim: sl.OutDim}
 	}
 	nLayers := len(layers)
 	d := &DNN{
@@ -567,8 +632,8 @@ func dnnFromV3(sd *serializedDNNV3) *DNN {
 	d.BN = make([]BatchNormParams, len(sd.BN))
 	for i, sbn := range sd.BN {
 		d.BN[i] = BatchNormParams{
-			Gamma: sbn.Gamma, Beta: sbn.Beta,
-			RunningMean: sbn.RunningMean, RunningVar: sbn.RunningVar,
+			Gamma: float64to32(sbn.Gamma), Beta: float64to32(sbn.Beta),
+			RunningMean: float64to32(sbn.RunningMean), RunningVar: float64to32(sbn.RunningVar),
 			Dim: sbn.Dim,
 		}
 	}
@@ -583,7 +648,7 @@ func dnnFromV3(sd *serializedDNNV3) *DNN {
 func dnnFromV2(sd *serializedDNNV2) *DNN {
 	layers := make([]DNNLayer, len(sd.Layers))
 	for i, sl := range sd.Layers {
-		layers[i] = DNNLayer{W: sl.W, B: sl.B, InDim: sl.InDim, OutDim: sl.OutDim}
+		layers[i] = DNNLayer{W: float64to32(sl.W), B: float64to32(sl.B), InDim: sl.InDim, OutDim: sl.OutDim}
 	}
 	nLayers := len(layers)
 	d := &DNN{
@@ -605,9 +670,9 @@ func dnnFromV2(sd *serializedDNNV2) *DNN {
 func dnnFromV1(sd *serializedDNN) *DNN {
 	d := &DNN{
 		Layers: []DNNLayer{
-			{W: sd.W1, B: sd.B1, InDim: sd.InputDim, OutDim: sd.HiddenDim},
-			{W: sd.W2, B: sd.B2, InDim: sd.HiddenDim, OutDim: sd.HiddenDim},
-			{W: sd.W3, B: sd.B3, InDim: sd.HiddenDim, OutDim: sd.OutputDim},
+			{W: float64to32(sd.W1), B: float64to32(sd.B1), InDim: sd.InputDim, OutDim: sd.HiddenDim},
+			{W: float64to32(sd.W2), B: float64to32(sd.B2), InDim: sd.HiddenDim, OutDim: sd.HiddenDim},
+			{W: float64to32(sd.W3), B: float64to32(sd.B3), InDim: sd.HiddenDim, OutDim: sd.OutputDim},
 		},
 		InputDim:   sd.InputDim,
 		HiddenDim:  sd.HiddenDim,
