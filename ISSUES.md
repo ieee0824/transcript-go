@@ -2,9 +2,9 @@
 
 ## 残存課題
 
-### 1. コーパス外文の認識精度 (73%)
+### 1. コーパス外文の認識精度 (77%)
 
-20文 × 3未知話者で44/60 (v18)。v10の47%からデコーダチューニング+DNN改善で+26pt。残り16エラーのうち全3話者共通が5パターン:
+20文 × 3未知話者で46/60 (v19)。v10の47%からデコーダチューニング+DNN改善で+30pt。残り14エラーのうち全3話者共通が5パターン:
 - 同音異義語: 取り→撮り (フレームCEでは音素列が同一で区別不能)
 - 音響混同: 夜→それ、お腹が空く→認識不能
 - 末尾脱落: 「かける」が消える
@@ -44,7 +44,7 @@ Wikipedia日本語ダンプ → `cmd/wikitext` + `cmd/lmtext` で辞書フィル
 | 中 | SpecAugment (時間/周波数マスキング) | OOC汎化改善。実装済み、評価中 |
 | ~~中~~ | ~~tunerグリッドサーチ分散化~~ | ~~シャード分割で複数マシン並列実行~~ → **実施済み**: シャード分割 + AVX2 SIMD (Dgemm 9.4x高速化) |
 | 中 | AVX2 SIMD (Go assembly) | Linux x86_64でのDgemm高速化。**実施済み**: Dgemm 9.4x、tuner全体 2.2x |
-| ~~中~~ | ~~Residual connections (残差接続)~~ | ~~6〜8層深層化の安定化~~ → **実装済み**: 2層ごとskip接続 (BN後・ReLU前加算)、V4シリアライズ、`-residual` CLIフラグ。v19評価待ち |
+| ~~中~~ | ~~Residual connections (残差接続)~~ | ~~6〜8層深層化の安定化~~ → **v19で実施: OOC +2, 合計 +2** (6層×512, val_acc 86.0%+, 76/90) |
 | 中 | 系列弁別学習 (sMBR/MMI) | フレームCE→系列最適化。同音異義語(取り/撮り)の文脈弁別に直結。実装コスト高 |
 | 低 | ノイズ augmentation | SNR変動への頑健性。現在の5-way speed perturbに追加 |
 | 低 | 非音声入力の棄却 | `<sil>`モデルのノイズ学習 + 信頼度閾値で無意味入力を棄却。現状ノイズを擬音語等に誤認識する |
@@ -85,7 +85,7 @@ cat results_*.tsv | sort -t$'\t' -k7 -rn | head -20
 
 ```
 AM:   models/v15/am.gob (55話者 5,794発話, 5-way augment, 4-mix GMM, トライフォン)
-DNN:  models/v18/dnn.gob (4層×512, Dropout 0.2, BatchNorm, Cosine LR, 50エポック, val_acc 85.4%)
+DNN:  models/v19/dnn.gob (6層×512, Dropout 0.2, BatchNorm, Residual, Cosine LR, 50エポック, val_acc 86.0%+)
 LM:   models/v15/lm.arpa (トライグラム、14,643文: テンプレート14,250 + Wikipedia393)
 Dict: models/v15/dict.txt (1,694語、混同フィルタ済)
 
@@ -93,19 +93,19 @@ Dict: models/v15/dict.txt (1,694語、混同フィルタ済)
 LM:   models/v16/lm.arpa (トライグラム、29,774文: テンプレート18,367 + Wikipedia11,407)
 Dict: models/v16/dict.txt (2,000語 = v15 1,694語 + 外来語51 + fill 255)
 
-認識コマンド (v18, 1,694語, チューニング済):
+認識コマンド (v19, 1,694語, チューニング済):
 /tmp/transcript \
   -am models/v15/am.gob \
-  -dnn models/v18/dnn.gob \
+  -dnn models/v19/dnn.gob \
   -lm models/v15/lm.arpa \
   -dict models/v15/dict.txt \
-  -lm-weight 11 -word-penalty 10 -max-tokens 3000 \
+  -lm-weight 10 -word-penalty 10 -max-tokens 3000 \
   -wav input.wav
 
 認識コマンド (5,000語辞書, チューニング済):
 /tmp/transcript \
   -am models/v17/am.gob \
-  -dnn models/v18/dnn.gob \
+  -dnn models/v19/dnn.gob \
   -lm models/v17/lm.arpa \
   -dict models/v17/dict.txt \
   -lm-weight 10 -word-penalty 5 -max-tokens 5000 \
@@ -113,7 +113,7 @@ Dict: models/v16/dict.txt (2,000語 = v15 1,694語 + 外来語51 + fill 255)
 
 パラメータチューニングコマンド:
 go run ./cmd/tuner \
-  -am models/v15/am.gob -dnn models/v18/dnn.gob \
+  -am models/v15/am.gob -dnn models/v19/dnn.gob \
   -lm models/v15/lm.arpa -dict models/v15/dict.txt \
   -manifest "data/test_tts/manifest.tsv,..." \
   -lm-weights "8,10,12,15" -word-penalties "0,5,10,15"
@@ -123,8 +123,8 @@ go run ./cmd/dnntrain \
   -manifest data/manifest_all_v5.tsv \
   -dict data/work/dict_2000_filtered.txt \
   -am data/work/am_tri_8mix.gob \
-  -output models/v18/dnn.gob \
-  -hidden 512 -layers 4 -dropout 0.2 -batchnorm -lr-schedule cosine -epochs 50 -patience 0 -augment
+  -output models/v19/dnn.gob \
+  -hidden 512 -layers 6 -dropout 0.2 -batchnorm -residual -lr-schedule cosine -epochs 50 -patience 0 -augment
 
 GMM学習コマンド:
 go run ./cmd/train \
@@ -188,6 +188,51 @@ v15アーキテクチャ (4層×512, Dropout 0.2, Cosine LR) にBatch Normalizat
 - **OOC維持**: 44/60で同等。Speaker Bは+2 (「先輩と相談する」「赤い花が咲く」復活) だがA/Cは各-1
 - **デコーダパラメータ**: BNモデルはWP=13→10、MT=1000→3000が最適。BNによりlog-posteriorのダイナミックレンジが変化し、v15用パラメータでは73.3%に劣化する (パラメータ不適合で-7pt)
 - **共通エラーパターン**: 「忘れ物を取りに行く」(取り/撮り混同)、「夜に音楽を聴く」(夜→それ)、「お母さんに電話をかける」(かける脱落)、「お腹が空く」(短文認識困難) は全話者共通で残存
+
+### Residual Connections + 深層化実験 (v19)
+
+v18アーキテクチャ (4層×512, BN, Dropout 0.2, Cosine LR) を6層に深層化し、Residual connectionsで勾配安定化。
+
+#### 実装
+
+- Residual配置: 2層ごとのskip接続 (layer i にlayer i-2 のBN後出力を加算)
+- 加算位置: Linear → BN → (+skip) → ReLU → Dropout
+- V4シリアライズ (V3/V2/V1後方互換)
+- CLIフラグ: `-residual` (BN有効時のみ動作)
+
+#### 学習結果
+
+| | v18 (4層, BNのみ) | v19 (6層, BN+Residual) | 差 |
+|---|---|---|---|
+| val_acc | 85.4% | **86.0%+** | **+0.6pt以上** |
+| params | 1,052,247 | 1,578,071 | +50% |
+
+- エポック13で85.6% (v18超え)、エポック16で86.0%到達
+- 50エポック完走 (Cosine LR, patience無効)
+
+#### 評価結果
+
+デコーダパラメータ再チューニング: LW=11→10に変化。
+
+| | v18 (LW=11,WP=10,MT=3000) | v19 (LW=10,WP=10,MT=3000) | 差 |
+|---|---|---|---|
+| test_tts (IC) | 10/10 | 10/10 | ±0 |
+| test_external (IC) | 10/10 | 10/10 | ±0 |
+| test_emotion (IC) | 10/10 | 10/10 | ±0 |
+| **IC合計** | **30/30 (100%)** | **30/30 (100%)** | **±0** |
+| Speaker A | 14/20 | **16/20** | **+2** |
+| Speaker B | 16/20 | 14/20 | -2 |
+| Speaker C | 14/20 | **16/20** | **+2** |
+| **OOC合計** | **44/60 (73%)** | **46/60 (77%)** | **+2** |
+| **総合** | **74/90 (82.2%)** | **76/90 (84.4%)** | **+2** |
+
+#### 分析
+
+- **IC維持**: 30/30 (100%) を維持。6層化によるフレーム精度向上がIC弁別力を損なわない
+- **OOC改善**: 44→46 (+2)。Speaker A/Cで各+2、Speaker Bは-2のトレードオフ。深層化による特徴抽出力向上が未知話者への汎化に寄与
+- **Residual効果**: BNのみの4層→6層化はResidual無しでは勾配消失リスクがあるが、skip接続により安定学習を実現
+- **デコーダパラメータ**: LW=11→10に微調整。Residualによるlog-posterior分布変化は軽微
+- **v10→v19の累積改善**: OOC 47%→77% (+30pt)、総合 54%→84% (+30pt)
 
 ### SpecAugment実験
 
