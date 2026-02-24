@@ -1,6 +1,9 @@
 package feature
 
-import "math"
+import (
+	"math"
+	"sync"
+)
 
 // PreEmphasize applies a first-order high-pass filter: y[n] = x[n] - alpha*x[n-1].
 func PreEmphasize(samples []float64, alpha float64) []float64 {
@@ -31,19 +34,19 @@ func Frame(samples []float64, frameLen, frameShift int) [][]float64 {
 }
 
 // hammingTable caches pre-computed Hamming window coefficients by frame length.
-var hammingTable = make(map[int][]float64)
+var hammingTable sync.Map
 
 // getHammingWindow returns pre-computed Hamming window coefficients for the given length.
 func getHammingWindow(n int) []float64 {
-	if w, ok := hammingTable[n]; ok {
-		return w
+	if v, ok := hammingTable.Load(n); ok {
+		return v.([]float64)
 	}
 	w := make([]float64, n)
 	invN := 1.0 / float64(n-1)
 	for i := range w {
 		w[i] = 0.54 - 0.46*math.Cos(2*math.Pi*float64(i)*invN)
 	}
-	hammingTable[n] = w
+	hammingTable.Store(n, w)
 	return w
 }
 

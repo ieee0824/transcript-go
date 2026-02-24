@@ -7,6 +7,7 @@ import (
 	"os"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/ieee0824/transcript-go/internal/blas"
 )
@@ -273,6 +274,7 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 	}
 
 	for epoch := 0; epoch < cfg.MaxEpochs; epoch++ {
+		epochStart := time.Now()
 		// Compute effective learning rate
 		effectiveLR := cfg.LearningRate
 		if cfg.LRSchedule == "cosine" {
@@ -408,14 +410,15 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 		trainAcc := float64(totalCorrect) / float64(totalSamples) * 100
 
 		// Validation
-		valLoss, valAcc := evaluateDNN(dnn, inputs, targets, valIdx, cfg.BatchSize, workerWSList[0])
+		valLoss, valAcc := evaluateDNNParallel(dnn, inputs, targets, valIdx, cfg.BatchSize, workerWSList)
 
+		elapsed := time.Since(epochStart)
 		if cfg.LRSchedule == "cosine" {
-			fmt.Fprintf(os.Stderr, "  Epoch %2d: train_loss=%.4f train_acc=%.1f%% val_loss=%.4f val_acc=%.1f%% lr=%.6f\n",
-				epoch+1, trainLoss, trainAcc, valLoss, valAcc, effectiveLR)
+			fmt.Fprintf(os.Stderr, "  Epoch %2d: train_loss=%.4f train_acc=%.1f%% val_loss=%.4f val_acc=%.1f%% lr=%.6f [%s]\n",
+				epoch+1, trainLoss, trainAcc, valLoss, valAcc, effectiveLR, elapsed.Round(time.Millisecond))
 		} else {
-			fmt.Fprintf(os.Stderr, "  Epoch %2d: train_loss=%.4f train_acc=%.1f%% val_loss=%.4f val_acc=%.1f%%\n",
-				epoch+1, trainLoss, trainAcc, valLoss, valAcc)
+			fmt.Fprintf(os.Stderr, "  Epoch %2d: train_loss=%.4f train_acc=%.1f%% val_loss=%.4f val_acc=%.1f%% [%s]\n",
+				epoch+1, trainLoss, trainAcc, valLoss, valAcc, elapsed.Round(time.Millisecond))
 		}
 
 		// Early stopping
@@ -883,8 +886,62 @@ func adamUpdate(params, grad, m, v []float32, lr, beta1, beta2, eps float64, t i
 	}
 }
 
-// evaluateDNN computes average loss and accuracy on a subset of data.
-func evaluateDNN(dnn *DNN, inputs []float64, targets []int, indices []int, batchSize int, ws *dnnWorkspace) (float64, float64) {
+// evaluateDNNParallel computes average loss and accuracy using multiple workers.
+func evaluateDNNParallel(dnn *DNN, inputs []float64, targets []int, indices []int, batchSize int, wsList []*dnnWorkspace) (float64, float64) {
+	N := len(indices)
+	if N == 0 {
+		return 0, 0
+	}
+	workers := len(wsList)
+	if workers < 1 {
+		workers = 1
+	}
+
+	// Split indices evenly across workers
+	chunkSize := (N + workers - 1) / workers
+
+	type evalResult struct {
+		loss    float64
+		correct int
+		count   int
+	}
+	results := make([]evalResult, workers)
+
+	var wg sync.WaitGroup
+	for w := 0; w < workers; w++ {
+		s := w * chunkSize
+		if s >= N {
+			break
+		}
+		e := s + chunkSize
+		if e > N {
+			e = N
+		}
+		wg.Add(1)
+		go func(w, s, e int) {
+			defer wg.Done()
+			loss, correct := evaluateDNNChunk(dnn, inputs, targets, indices[s:e], batchSize, wsList[w])
+			results[w] = evalResult{loss: loss, correct: correct, count: e - s}
+		}(w, s, e)
+	}
+	wg.Wait()
+
+	totalLoss := 0.0
+	totalCorrect := 0
+	totalN := 0
+	for _, r := range results {
+		totalLoss += r.loss
+		totalCorrect += r.correct
+		totalN += r.count
+	}
+	if totalN == 0 {
+		return 0, 0
+	}
+	return totalLoss / float64(totalN), float64(totalCorrect) / float64(totalN) * 100
+}
+
+// evaluateDNNChunk computes raw loss sum and correct count on a chunk of data.
+func evaluateDNNChunk(dnn *DNN, inputs []float64, targets []int, indices []int, batchSize int, ws *dnnWorkspace) (float64, int) {
 	N := len(indices)
 	if N == 0 {
 		return 0, 0
@@ -993,7 +1050,7 @@ func evaluateDNN(dnn *DNN, inputs []float64, targets []int, indices []int, batch
 		}
 	}
 
-	return totalLoss / float64(N), float64(totalCorrect) / float64(N) * 100
+	return totalLoss, totalCorrect
 }
 
 func clearSlice32(s []float32) {
