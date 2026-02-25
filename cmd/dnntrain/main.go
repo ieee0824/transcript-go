@@ -33,7 +33,8 @@ func main() {
 	lrSchedule := flag.String("lr-schedule", "none", "learning rate schedule (none/cosine)")
 	batchNorm := flag.Bool("batchnorm", false, "enable batch normalization on hidden layers")
 	residual := flag.Bool("residual", false, "enable residual connections every 2 hidden layers (requires -batchnorm)")
-	augmentFlag := flag.Bool("augment", false, "enable 5-way speed perturbation")
+	augmentFlag := flag.Bool("augment", false, "enable speed perturbation (default 5-way, use -augment9 for 9-way)")
+	augment9 := flag.Bool("augment9", false, "enable 9-way speed perturbation (0.85-1.15)")
 	specAugFreq := flag.Int("specaug-freq", 0, "SpecAugment max frequency mask width (0=disabled, recommended 6)")
 	specAugTime := flag.Int("specaug-time", 0, "SpecAugment max time mask width (0=disabled, recommended 3)")
 	manifestNoAug := flag.String("manifest-noaug", "", "additional manifest (no augmentation applied)")
@@ -133,7 +134,9 @@ func main() {
 	cfg := feature.DefaultConfig()
 	featureDim := cfg.FeatureDim()
 	factors := []float64{1.0}
-	if *augmentFlag {
+	if *augment9 {
+		factors = []float64{1.0, 0.85, 0.875, 0.9, 0.95, 1.05, 1.1, 1.125, 1.15}
+	} else if *augmentFlag {
 		factors = []float64{1.0, 0.9, 0.95, 1.05, 1.1}
 	}
 

@@ -1,0 +1,2 @@
+models/**/*.gob filter=lfs diff=lfs merge=lfs -text
+models/**/*.arpa filter=lfs diff=lfs merge=lfs -text
