@@ -25,6 +25,7 @@ func main() {
 	hiragana := flag.Bool("hiragana", false, "enable hiragana fallback for unknown words")
 	hiraganaPenalty := flag.Float64("hiragana-penalty", -15.0, "penalty for hiragana fallback words")
 	wpPerFrame := flag.Float64("wp-per-frame", 0.0, "per-frame WP adjustment (effectiveWP = WP + wpPerFrame*T)")
+	shortBeamThreshold := flag.Int("short-beam-threshold", 0, "frames below which beam is widened (0=default 80)")
 	verbose := flag.Bool("v", false, "verbose output")
 
 	flag.Parse()
@@ -45,6 +46,7 @@ func main() {
 			LMInterpolation:     *lmInterp,
 			HiraganaPenalty:      *hiraganaPenalty,
 			WPPerFrame:           *wpPerFrame,
+			ShortBeamThreshold:   *shortBeamThreshold,
 		}),
 		transcript.WithOOVLogProb(*oovProb),
 		transcript.WithVTLN(*vtln),

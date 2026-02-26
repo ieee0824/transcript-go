@@ -23,6 +23,7 @@ type Config struct {
 	HiraganaPenalty      float64         // additional penalty for hiragana word completions
 	NBestCount           int             // number of N-best hypotheses to return (0 = 1-best only)
 	WPPerFrame           float64         // per-frame WP adjustment: effectiveWP = WordInsertionPenalty + WPPerFrame*T
+	ShortBeamThreshold   int             // frames below which beam is widened (0 = use default 80)
 }
 
 // DefaultConfig returns reasonable default parameters.
@@ -133,8 +134,12 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 	// Adaptive beam widening for short utterances:
 	// Short utterances have fewer frames, making beam pruning more aggressive.
 	// Widen beam to preserve hypothesis diversity.
-	if T < 80 {
-		scale := 1.0 + (80.0-float64(T))/80.0 // T=40: 1.5x, T=20: 1.75x
+	shortThresh := cfg.ShortBeamThreshold
+	if shortThresh == 0 {
+		shortThresh = 80 // default
+	}
+	if shortThresh > 0 && T < shortThresh {
+		scale := 1.0 + float64(shortThresh-T)/float64(shortThresh) // e.g. T=half: 1.5x
 		cfg.BeamWidth *= scale
 		cfg.MaxActiveTokens = int(float64(cfg.MaxActiveTokens) * scale)
 	}

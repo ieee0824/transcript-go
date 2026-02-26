@@ -36,6 +36,7 @@ type paramSet struct {
 	MaxWordEnds          int
 	RescoreWeight        float64
 	WPPerFrame           float64
+	ShortBeamThreshold   int
 }
 
 type result struct {
@@ -67,6 +68,7 @@ func main() {
 	rescoreLMPath := flag.String("rescore-lm", "", "path to rescoring LM (ARPA)")
 	rescoreWeightsStr := flag.String("rescore-weights", "1,2,3,5", "comma-separated rescore LM weights")
 	wpPerFrameStr := flag.String("wp-per-frame", "0", "comma-separated WP per-frame adjustments (effectiveWP = WP + wpPerFrame*T)")
+	shortBeamStr := flag.String("short-beam-thresholds", "0", "comma-separated short beam thresholds in frames (0=default 80)")
 	correctDictPath := flag.String("correct-dict", "", "large dictionary for post-correction")
 	correctLMPath := flag.String("correct-lm", "", "large LM for post-correction")
 	correctMaxDist := flag.Int("correct-max-dist", 2, "max phoneme edit distance for correction candidates")
@@ -208,15 +210,16 @@ func main() {
 	maxWordEnds := parseInts(*maxWeStr)
 	rescoreWeights := parseFloats(*rescoreWeightsStr)
 	wpPerFrames := parseFloats(*wpPerFrameStr)
+	shortBeamThresholds := parseInts(*shortBeamStr)
 
 	// If rescoring is not enabled, use a single dummy weight so grid loop works
 	if rescoreLM == nil {
 		rescoreWeights = []float64{0}
 	}
 
-	combos := len(lmWeights) * len(wordPenalties) * len(maxTokens) * len(maxWordEnds) * len(rescoreWeights) * len(wpPerFrames)
-	fmt.Fprintf(os.Stderr, "Grid: %d LMWeight × %d WordPenalty × %d MaxTokens × %d MaxWordEnds × %d WPPerFrame",
-		len(lmWeights), len(wordPenalties), len(maxTokens), len(maxWordEnds), len(wpPerFrames))
+	combos := len(lmWeights) * len(wordPenalties) * len(maxTokens) * len(maxWordEnds) * len(rescoreWeights) * len(wpPerFrames) * len(shortBeamThresholds)
+	fmt.Fprintf(os.Stderr, "Grid: %d LMWeight × %d WordPenalty × %d MaxTokens × %d MaxWordEnds × %d WPPerFrame × %d ShortBeam",
+		len(lmWeights), len(wordPenalties), len(maxTokens), len(maxWordEnds), len(wpPerFrames), len(shortBeamThresholds))
 	if rescoreLM != nil {
 		fmt.Fprintf(os.Stderr, " × %d RescoreWeight", len(rescoreWeights))
 	}
@@ -260,6 +263,16 @@ func main() {
 		for _, ps := range base {
 			for _, wppf := range wpPerFrames {
 				ps.WPPerFrame = wppf
+				grid = append(grid, ps)
+			}
+		}
+	}
+	if len(shortBeamThresholds) > 1 || (len(shortBeamThresholds) == 1 && shortBeamThresholds[0] != 0) {
+		base := grid
+		grid = make([]paramSet, 0, len(base)*len(shortBeamThresholds))
+		for _, ps := range base {
+			for _, sbt := range shortBeamThresholds {
+				ps.ShortBeamThreshold = sbt
 				grid = append(grid, ps)
 			}
 		}
@@ -335,6 +348,7 @@ func main() {
 				HiraganaPenalty:      *hiraganaPenalty,
 				NBestCount:           *nbest,
 				WPPerFrame:           ps.WPPerFrame,
+				ShortBeamThreshold:   ps.ShortBeamThreshold,
 			}
 			for _, tc := range tests {
 				r := decoder.Decode(tc.features, am, lm, dict, cfg)
@@ -368,6 +382,7 @@ func main() {
 
 	// Print results
 	showWPPF := len(wpPerFrames) > 1 || (len(wpPerFrames) == 1 && wpPerFrames[0] != 0)
+	showSBT := len(shortBeamThresholds) > 1 || (len(shortBeamThresholds) == 1 && shortBeamThresholds[0] != 0)
 	if rescoreLM != nil {
 		fmt.Printf("%-10s %-12s %-12s %-12s %-12s", "LMWeight", "WordPenalty", "MaxTokens", "MaxWordEnds", "RescoreWt")
 	} else {
@@ -376,8 +391,11 @@ func main() {
 	if showWPPF {
 		fmt.Printf(" %-10s", "WPPerFrm")
 	}
+	if showSBT {
+		fmt.Printf(" %-8s", "SBThresh")
+	}
 	fmt.Printf(" %8s %6s %8s\n", "Correct", "Total", "Accuracy")
-	fmt.Println(strings.Repeat("-", 90))
+	fmt.Println(strings.Repeat("-", 100))
 	for _, r := range results {
 		acc := float64(r.correct) / float64(r.total) * 100
 		if rescoreLM != nil {
@@ -393,6 +411,9 @@ func main() {
 		if showWPPF {
 			fmt.Printf(" %-10.4f", r.params.WPPerFrame)
 		}
+		if showSBT {
+			fmt.Printf(" %-8d", r.params.ShortBeamThreshold)
+		}
 		fmt.Printf(" %8d %6d %7.1f%%\n", r.correct, r.total, acc)
 	}
 
@@ -403,6 +424,9 @@ func main() {
 			best.LMWeight, best.WordInsertionPenalty, best.MaxActiveTokens, best.MaxWordEnds)
 		if best.WPPerFrame != 0 {
 			hdr += fmt.Sprintf(" WPPF=%.4f", best.WPPerFrame)
+		}
+		if best.ShortBeamThreshold != 0 {
+			hdr += fmt.Sprintf(" SBT=%d", best.ShortBeamThreshold)
 		}
 		if rescoreLM != nil {
 			hdr += fmt.Sprintf(" RW=%.1f", best.RescoreWeight)
@@ -419,6 +443,7 @@ func main() {
 			HiraganaPenalty:      *hiraganaPenalty,
 			NBestCount:           *nbest,
 			WPPerFrame:           best.WPPerFrame,
+			ShortBeamThreshold:   best.ShortBeamThreshold,
 		}
 		errCount := 0
 		for _, tc := range tests {
