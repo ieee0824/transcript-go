@@ -10,6 +10,8 @@
 
 # Go build output
 /transcript
+/lmbuild
+/lmtext
 
 # Coverage
 *.out
