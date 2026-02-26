@@ -2,6 +2,7 @@ package decoder
 
 import (
 	"math"
+	"sort"
 	"strings"
 
 	"github.com/ieee0824/transcript-go/acoustic"
@@ -20,6 +21,7 @@ type Config struct {
 	MaxWordEnds          int     // max word completions expanded per frame (0 = unlimited)
 	HiraganaSet          map[string]bool // set of hiragana fallback words (nil = disabled)
 	HiraganaPenalty      float64         // additional penalty for hiragana word completions
+	NBestCount           int             // number of N-best hypotheses to return (0 = 1-best only)
 }
 
 // DefaultConfig returns reasonable default parameters.
@@ -566,22 +568,14 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 		return &Result{}
 	}
 
-	best := activeTokens[0]
-	for _, tok := range activeTokens[1:] {
-		if tok.score > best.score {
-			best = tok
+	// finalize resolves a token into a wordHistoryNode for backtrace.
+	finalize := func(tok *token) *wordHistoryNode {
+		if tok.nodeIdx == -1 {
+			return tok.history
 		}
-	}
-
-	// Build result: for trie tokens at word-end nodes, apply actual LM scoring
-	var finalNode *wordHistoryNode
-	if best.nodeIdx == -1 {
-		finalNode = best.history
-	} else {
-		nd := &nodes[best.nodeIdx]
+		nd := &nodes[tok.nodeIdx]
 		if len(nd.wordEnds) > 0 {
-			// Try each word-end with LM scoring
-			lmHistBuf = buildLMHist(best.history, lmHistBuf[:0])
+			lmHistBuf = buildLMHist(tok.history, lmHistBuf[:0])
 			bestWordScore := math.Inf(-1)
 			bestWord := ""
 			for _, w := range nd.wordEnds {
@@ -591,7 +585,7 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 				} else {
 					lmScore = scoreLM(lmHistBuf, w)
 				}
-				s := best.score - lmLookAhead + lmScore + cfg.WordInsertionPenalty
+				s := tok.score - lmLookAhead + lmScore + cfg.WordInsertionPenalty
 				if cfg.HiraganaSet != nil && cfg.HiraganaSet[w] {
 					s += cfg.HiraganaPenalty
 				}
@@ -600,49 +594,77 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 					bestWord = w
 				}
 			}
-			if bestWord != "" && bestWordScore > best.score-cfg.BeamWidth {
-				finalNode = &wordHistoryNode{
+			if bestWord != "" && bestWordScore > tok.score-cfg.BeamWidth {
+				fn := &wordHistoryNode{
 					word:   bestWord,
 					wordID: wordIDs[bestWord],
-					prev:   best.history,
+					prev:   tok.history,
 				}
-				if best.history != nil {
-					finalNode.length = best.history.length + 1
+				if tok.history != nil {
+					fn.length = tok.history.length + 1
 				} else {
-					finalNode.length = 1
+					fn.length = 1
 				}
-			} else {
-				finalNode = best.history
+				return fn
 			}
-		} else {
-			finalNode = best.history
+		}
+		return tok.history
+	}
+
+	// buildResult constructs a Result from a wordHistoryNode and score.
+	buildResult := func(node *wordHistoryNode, score float64) Result {
+		if node == nil {
+			return Result{LogScore: score}
+		}
+		words, starts := node.toSlice()
+		r := Result{
+			Text:     strings.Join(words, " "),
+			LogScore: score,
+		}
+		for i, w := range words {
+			word := Word{Text: w}
+			if i < len(starts) {
+				word.StartFrame = starts[i]
+			}
+			if i+1 < len(starts) {
+				word.EndFrame = starts[i+1] - 1
+			} else {
+				word.EndFrame = T - 1
+			}
+			r.Words = append(r.Words, word)
+		}
+		return r
+	}
+
+	// Sort tokens by score descending
+	sort.Slice(activeTokens, func(i, j int) bool {
+		return activeTokens[i].score > activeTokens[j].score
+	})
+
+	// Build 1-best result
+	bestNode := finalize(activeTokens[0])
+	result := buildResult(bestNode, activeTokens[0].score)
+
+	// Build N-best if requested
+	if cfg.NBestCount > 1 {
+		seen := make(map[string]bool)
+		seen[result.Text] = true
+		result.NBest = append(result.NBest, result)
+
+		for _, tok := range activeTokens[1:] {
+			if len(result.NBest) >= cfg.NBestCount {
+				break
+			}
+			node := finalize(tok)
+			r := buildResult(node, tok.score)
+			if !seen[r.Text] {
+				seen[r.Text] = true
+				result.NBest = append(result.NBest, r)
+			}
 		}
 	}
 
-	if finalNode == nil {
-		return &Result{LogScore: best.score}
-	}
-
-	words, starts := finalNode.toSlice()
-	result := &Result{
-		Text:     strings.Join(words, " "),
-		LogScore: best.score,
-	}
-
-	for i, w := range words {
-		word := Word{Text: w}
-		if i < len(starts) {
-			word.StartFrame = starts[i]
-		}
-		if i+1 < len(starts) {
-			word.EndFrame = starts[i+1] - 1
-		} else {
-			word.EndFrame = T - 1
-		}
-		result.Words = append(result.Words, word)
-	}
-
-	return result
+	return &result
 }
 
 // addOrRecombine adds a token or replaces an existing one at the same (nodeIdx, stateIdx, lastWord, prevWord, prevPrevWord).

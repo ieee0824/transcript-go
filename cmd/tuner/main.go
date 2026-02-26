@@ -16,6 +16,7 @@ import (
 
 	"github.com/ieee0824/transcript-go/acoustic"
 	"github.com/ieee0824/transcript-go/audio"
+	"github.com/ieee0824/transcript-go/correct"
 	"github.com/ieee0824/transcript-go/decoder"
 	"github.com/ieee0824/transcript-go/feature"
 	"github.com/ieee0824/transcript-go/language"
@@ -33,6 +34,7 @@ type paramSet struct {
 	WordInsertionPenalty float64
 	MaxActiveTokens      int
 	MaxWordEnds          int
+	RescoreWeight        float64
 }
 
 type result struct {
@@ -60,6 +62,13 @@ func main() {
 	hiragana := flag.Bool("hiragana", false, "enable hiragana fallback")
 	hiraganaPenalty := flag.Float64("hiragana-penalty", -15.0, "penalty for hiragana fallback words")
 	verbose := flag.Bool("verbose", false, "show per-utterance errors for best params")
+	nbest := flag.Int("nbest", 0, "N-best count for rescoring (0=disabled)")
+	rescoreLMPath := flag.String("rescore-lm", "", "path to rescoring LM (ARPA)")
+	rescoreWeightsStr := flag.String("rescore-weights", "1,2,3,5", "comma-separated rescore LM weights")
+	correctDictPath := flag.String("correct-dict", "", "large dictionary for post-correction")
+	correctLMPath := flag.String("correct-lm", "", "large LM for post-correction")
+	correctMaxDist := flag.Int("correct-max-dist", 2, "max phoneme edit distance for correction candidates")
+	correctKeepBonus := flag.Float64("correct-keep-bonus", 0, "bonus for keeping original word (higher = more conservative)")
 
 	flag.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage: tuner -am AM -lm LM -dict DICT -manifest M1,M2,...")
@@ -77,16 +86,6 @@ func main() {
 	if *workers <= 0 {
 		*workers = runtime.NumCPU()
 	}
-
-	// Parse grid parameters
-	lmWeights := parseFloats(*lmWeightsStr)
-	wordPenalties := parseFloats(*wordPenStr)
-	maxTokens := parseInts(*maxToksStr)
-	maxWordEnds := parseInts(*maxWeStr)
-
-	fmt.Fprintf(os.Stderr, "Grid: %d LMWeight × %d WordPenalty × %d MaxTokens × %d MaxWordEnds = %d combos\n",
-		len(lmWeights), len(wordPenalties), len(maxTokens), len(maxWordEnds),
-		len(lmWeights)*len(wordPenalties)*len(maxTokens)*len(maxWordEnds))
 
 	// Load models
 	fmt.Fprintln(os.Stderr, "Loading models...")
@@ -138,9 +137,87 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Load rescoring LM if specified
+	var rescoreLM *language.NGramModel
+	if *rescoreLMPath != "" && *nbest > 1 {
+		rlmFile, err := os.Open(*rescoreLMPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "open rescore LM: %v\n", err)
+			os.Exit(1)
+		}
+		rescoreLM, err = language.LoadARPA(rlmFile)
+		rlmFile.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "load rescore LM: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Fprintln(os.Stderr, "Loaded rescoring LM")
+	}
+
 	var hiraganaSet map[string]bool
 	if *hiragana {
 		hiraganaSet = dict.AddHiraganaFallback()
+	}
+
+	// Load post-correction model if specified
+	var corrector *correct.Corrector
+	if *correctDictPath != "" && *correctLMPath != "" {
+		fmt.Fprintln(os.Stderr, "Loading correction models...")
+		cDictFile, err := os.Open(*correctDictPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "open correct dict: %v\n", err)
+			os.Exit(1)
+		}
+		cDict, err := lexicon.Load(cDictFile)
+		cDictFile.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "load correct dict: %v\n", err)
+			os.Exit(1)
+		}
+		cLMFile, err := os.Open(*correctLMPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "open correct LM: %v\n", err)
+			os.Exit(1)
+		}
+		cLM, err := language.LoadARPA(cLMFile)
+		cLMFile.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "load correct LM: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Fprintf(os.Stderr, "Building confusion model (large dict: %d words)...\n", len(cDict.Entries))
+		confusion := correct.BuildConfusionModel(cDict, dict)
+		corrector = &correct.Corrector{
+			LM:              cLM,
+			Confusion:       confusion,
+			LMWeight:        1.0,
+			ConfusionWeight: 1.0,
+			BeamWidth:       50,
+			MaxDist:         *correctMaxDist,
+			KeepBonus:       *correctKeepBonus,
+		}
+		fmt.Fprintln(os.Stderr, "Correction model ready")
+	}
+
+	// Parse grid parameters
+	lmWeights := parseFloats(*lmWeightsStr)
+	wordPenalties := parseFloats(*wordPenStr)
+	maxTokens := parseInts(*maxToksStr)
+	maxWordEnds := parseInts(*maxWeStr)
+	rescoreWeights := parseFloats(*rescoreWeightsStr)
+
+	// If rescoring is not enabled, use a single dummy weight so grid loop works
+	if rescoreLM == nil {
+		rescoreWeights = []float64{0}
+	}
+
+	combos := len(lmWeights) * len(wordPenalties) * len(maxTokens) * len(maxWordEnds) * len(rescoreWeights)
+	if rescoreLM != nil {
+		fmt.Fprintf(os.Stderr, "Grid: %d LMWeight × %d WordPenalty × %d MaxTokens × %d MaxWordEnds × %d RescoreWeight = %d combos\n",
+			len(lmWeights), len(wordPenalties), len(maxTokens), len(maxWordEnds), len(rescoreWeights), combos)
+	} else {
+		fmt.Fprintf(os.Stderr, "Grid: %d LMWeight × %d WordPenalty × %d MaxTokens × %d MaxWordEnds = %d combos\n",
+			len(lmWeights), len(wordPenalties), len(maxTokens), len(maxWordEnds), combos)
 	}
 
 	// Load and pre-extract features from all manifests
@@ -162,12 +239,15 @@ func main() {
 		for _, wp := range wordPenalties {
 			for _, mt := range maxTokens {
 				for _, mwe := range maxWordEnds {
-					grid = append(grid, paramSet{
-						LMWeight:            lw,
-						WordInsertionPenalty: wp,
-						MaxActiveTokens:      mt,
-						MaxWordEnds:          mwe,
-					})
+					for _, rw := range rescoreWeights {
+						grid = append(grid, paramSet{
+							LMWeight:            lw,
+							WordInsertionPenalty: wp,
+							MaxActiveTokens:      mt,
+							MaxWordEnds:          mwe,
+							RescoreWeight:        rw,
+						})
+					}
 				}
 			}
 		}
@@ -241,10 +321,19 @@ func main() {
 				MaxWordEnds:          ps.MaxWordEnds,
 				HiraganaSet:          hiraganaSet,
 				HiraganaPenalty:      *hiraganaPenalty,
+				NBestCount:           *nbest,
 			}
 			for _, tc := range tests {
 				r := decoder.Decode(tc.features, am, lm, dict, cfg)
-				if r.Text == tc.expected {
+				hyp := r.Text
+				if rescoreLM != nil && len(r.NBest) > 0 {
+					rescored := decoder.RescoreNBest(r.NBest, rescoreLM, ps.RescoreWeight)
+					hyp = rescored.Text
+				}
+				if corrector != nil {
+					hyp = corrector.CorrectText(hyp)
+				}
+				if hyp == tc.expected {
 					correct++
 				}
 			}
@@ -265,22 +354,41 @@ func main() {
 	})
 
 	// Print results
-	fmt.Printf("%-10s %-12s %-12s %-12s %8s %6s %8s\n",
-		"LMWeight", "WordPenalty", "MaxTokens", "MaxWordEnds", "Correct", "Total", "Accuracy")
-	fmt.Println(strings.Repeat("-", 78))
+	if rescoreLM != nil {
+		fmt.Printf("%-10s %-12s %-12s %-12s %-12s %8s %6s %8s\n",
+			"LMWeight", "WordPenalty", "MaxTokens", "MaxWordEnds", "RescoreWt", "Correct", "Total", "Accuracy")
+		fmt.Println(strings.Repeat("-", 90))
+	} else {
+		fmt.Printf("%-10s %-12s %-12s %-12s %8s %6s %8s\n",
+			"LMWeight", "WordPenalty", "MaxTokens", "MaxWordEnds", "Correct", "Total", "Accuracy")
+		fmt.Println(strings.Repeat("-", 78))
+	}
 	for _, r := range results {
 		acc := float64(r.correct) / float64(r.total) * 100
-		fmt.Printf("%-10.1f %-12.1f %-12d %-12d %8d %6d %7.1f%%\n",
-			r.params.LMWeight, r.params.WordInsertionPenalty,
-			r.params.MaxActiveTokens, r.params.MaxWordEnds,
-			r.correct, r.total, acc)
+		if rescoreLM != nil {
+			fmt.Printf("%-10.1f %-12.1f %-12d %-12d %-12.1f %8d %6d %7.1f%%\n",
+				r.params.LMWeight, r.params.WordInsertionPenalty,
+				r.params.MaxActiveTokens, r.params.MaxWordEnds,
+				r.params.RescoreWeight,
+				r.correct, r.total, acc)
+		} else {
+			fmt.Printf("%-10.1f %-12.1f %-12d %-12d %8d %6d %7.1f%%\n",
+				r.params.LMWeight, r.params.WordInsertionPenalty,
+				r.params.MaxActiveTokens, r.params.MaxWordEnds,
+				r.correct, r.total, acc)
+		}
 	}
 
 	// Verbose: re-run best params and show per-utterance errors
 	if *verbose && len(results) > 0 {
 		best := results[0].params
-		fmt.Fprintf(os.Stderr, "\n=== Verbose: errors with best params (LW=%.1f WP=%.1f MT=%d MWE=%d) ===\n",
-			best.LMWeight, best.WordInsertionPenalty, best.MaxActiveTokens, best.MaxWordEnds)
+		if rescoreLM != nil {
+			fmt.Fprintf(os.Stderr, "\n=== Verbose: errors with best params (LW=%.1f WP=%.1f MT=%d MWE=%d RW=%.1f) ===\n",
+				best.LMWeight, best.WordInsertionPenalty, best.MaxActiveTokens, best.MaxWordEnds, best.RescoreWeight)
+		} else {
+			fmt.Fprintf(os.Stderr, "\n=== Verbose: errors with best params (LW=%.1f WP=%.1f MT=%d MWE=%d) ===\n",
+				best.LMWeight, best.WordInsertionPenalty, best.MaxActiveTokens, best.MaxWordEnds)
+		}
 		cfg := decoder.Config{
 			BeamWidth:            *beam,
 			MaxActiveTokens:      best.MaxActiveTokens,
@@ -290,13 +398,41 @@ func main() {
 			MaxWordEnds:          best.MaxWordEnds,
 			HiraganaSet:          hiraganaSet,
 			HiraganaPenalty:      *hiraganaPenalty,
+			NBestCount:           *nbest,
 		}
 		errCount := 0
 		for _, tc := range tests {
 			r := decoder.Decode(tc.features, am, lm, dict, cfg)
-			if r.Text != tc.expected {
+			hyp := r.Text
+			raw := r.Text
+			if rescoreLM != nil && len(r.NBest) > 0 {
+				rescored := decoder.RescoreNBest(r.NBest, rescoreLM, best.RescoreWeight)
+				hyp = rescored.Text
+			}
+			if corrector != nil {
+				hyp = corrector.CorrectText(hyp)
+			}
+			if hyp != tc.expected {
 				errCount++
-				fmt.Fprintf(os.Stderr, "  [MISS] expected: %-30s got: %-30s file: %s\n", tc.expected, r.Text, tc.path)
+				if corrector != nil && hyp != raw {
+					fmt.Fprintf(os.Stderr, "  [MISS] expected: %-30s got: %-30s (raw: %-30s) file: %s\n",
+						tc.expected, hyp, raw, tc.path)
+				} else if rescoreLM != nil && len(r.NBest) > 0 {
+					fmt.Fprintf(os.Stderr, "  [MISS] expected: %-30s got: %-30s (1best: %-30s) file: %s\n",
+						tc.expected, hyp, r.Text, tc.path)
+					for ni, nb := range r.NBest {
+						tag := "  "
+						if nb.Text == tc.expected {
+							tag = ">>"
+						}
+						fmt.Fprintf(os.Stderr, "    %s [%2d] score=%.2f text: %s\n", tag, ni+1, nb.LogScore, nb.Text)
+					}
+				} else {
+					fmt.Fprintf(os.Stderr, "  [MISS] expected: %-30s got: %-30s file: %s\n", tc.expected, hyp, tc.path)
+				}
+			} else if corrector != nil && hyp != raw {
+				fmt.Fprintf(os.Stderr, "  [FIX!] expected: %-30s raw: %-30s corrected: %s\n",
+					tc.expected, raw, hyp)
 			}
 		}
 		fmt.Fprintf(os.Stderr, "Total errors: %d/%d\n", errCount, len(tests))
