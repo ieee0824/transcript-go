@@ -722,6 +722,7 @@
 多	オオ	o long
 多い	オオイ	o long i
 夜	ヤ	y a
+夜	ヨル	y o r u
 夢	ユメ	y u m e
 大	オオ	o long
 大きい	オオキイ	o long k i i
@@ -1271,6 +1272,7 @@
 空	クウ	k u long
 空	ソラ	s o r a
 空く	アク	a k u
+空く	スク	s u k u
 空気	クウキ	k u u k i
 空港	クウコウ	k u long k o long
 窓	マド	m a d o
