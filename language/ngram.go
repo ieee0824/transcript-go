@@ -4,10 +4,11 @@ import "github.com/ieee0824/transcript-go/internal/mathutil"
 
 // NGramModel represents an n-gram language model.
 type NGramModel struct {
-	Order      int                    // 2 for bigram, 3 for trigram
+	Order      int                    // 2 for bigram, 3 for trigram, 4 for fourgram
 	Unigrams   map[string]ngramEntry  // word -> entry
 	Bigrams    map[[2]string]ngramEntry
 	Trigrams   map[[3]string]ngramEntry
+	Fourgrams  map[[4]string]ngramEntry
 	OOVLogProb float64 // log probability for OOV words (natural log). 0 = use LogZero.
 }
 
@@ -19,26 +20,32 @@ type ngramEntry struct {
 // NewNGramModel creates an empty n-gram model.
 func NewNGramModel(order int) *NGramModel {
 	return &NGramModel{
-		Order:    order,
-		Unigrams: make(map[string]ngramEntry),
-		Bigrams:  make(map[[2]string]ngramEntry),
-		Trigrams: make(map[[3]string]ngramEntry),
+		Order:     order,
+		Unigrams:  make(map[string]ngramEntry),
+		Bigrams:   make(map[[2]string]ngramEntry),
+		Trigrams:  make(map[[3]string]ngramEntry),
+		Fourgrams: make(map[[4]string]ngramEntry),
 	}
 }
 
 // LogProb returns the log probability of a word given its history.
 // Uses backoff when the exact n-gram is not found.
 func (m *NGramModel) LogProb(history []string, word string) float64 {
-	if m.Order >= 3 && len(history) >= 2 {
-		key := [3]string{history[len(history)-2], history[len(history)-1], word}
-		if e, ok := m.Trigrams[key]; ok {
+	if m.Order >= 4 && len(history) >= 3 {
+		key := [4]string{history[len(history)-3], history[len(history)-2], history[len(history)-1], word}
+		if e, ok := m.Fourgrams[key]; ok {
 			return e.LogProb
 		}
-		// Backoff to bigram
-		biKey := [2]string{history[len(history)-2], history[len(history)-1]}
-		if e, ok := m.Bigrams[biKey]; ok {
-			return e.LogBackoff + m.logProbBigram(history[len(history)-1], word)
+		// Backoff to trigram
+		triKey := [3]string{history[len(history)-3], history[len(history)-2], history[len(history)-1]}
+		if e, ok := m.Trigrams[triKey]; ok {
+			return e.LogBackoff + m.logProbTrigram(history[len(history)-2], history[len(history)-1], word)
 		}
+		// Fall through to trigram lookup with shorter history
+	}
+
+	if m.Order >= 3 && len(history) >= 2 {
+		return m.logProbTrigram(history[len(history)-2], history[len(history)-1], word)
 	}
 
 	if m.Order >= 2 && len(history) >= 1 {
@@ -46,6 +53,19 @@ func (m *NGramModel) LogProb(history []string, word string) float64 {
 	}
 
 	return m.logProbUnigram(word)
+}
+
+func (m *NGramModel) logProbTrigram(prevPrev, prev, word string) float64 {
+	key := [3]string{prevPrev, prev, word}
+	if e, ok := m.Trigrams[key]; ok {
+		return e.LogProb
+	}
+	// Backoff to bigram
+	biKey := [2]string{prevPrev, prev}
+	if e, ok := m.Bigrams[biKey]; ok {
+		return e.LogBackoff + m.logProbBigram(prev, word)
+	}
+	return m.logProbBigram(prev, word)
 }
 
 func (m *NGramModel) logProbBigram(prev, word string) float64 {

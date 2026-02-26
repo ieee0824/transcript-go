@@ -111,12 +111,13 @@ const silWord = "<sil>"
 
 // recomKey is used for token recombination within the trie.
 // Uses numeric wordID instead of string for fast map hashing.
-// prevWordID enables trigram-level recombination (two-word history).
+// Three-word history enables fourgram-level recombination.
 type recomKey struct {
-	nodeIdx    int
-	stateIdx   int
-	lastWordID int
-	prevWordID int
+	nodeIdx        int
+	stateIdx       int
+	lastWordID     int
+	prevWordID     int
+	prevPrevWordID int
 }
 
 // Decode performs Viterbi beam search decoding using a lexicon prefix trie.
@@ -124,6 +125,15 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 	T := len(features)
 	if T == 0 {
 		return &Result{}
+	}
+
+	// Adaptive beam widening for short utterances:
+	// Short utterances have fewer frames, making beam pruning more aggressive.
+	// Widen beam to preserve hypothesis diversity.
+	if T < 80 {
+		scale := 1.0 + (80.0-float64(T))/80.0 // T=40: 1.5x, T=20: 1.75x
+		cfg.BeamWidth *= scale
+		cfg.MaxActiveTokens = int(float64(cfg.MaxActiveTokens) * scale)
 	}
 
 	vocab := dict.Words()
@@ -635,17 +645,21 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 	return result
 }
 
-// addOrRecombine adds a token or replaces an existing one at the same (nodeIdx, stateIdx, lastWord, prevWord).
+// addOrRecombine adds a token or replaces an existing one at the same (nodeIdx, stateIdx, lastWord, prevWord, prevPrevWord).
 func addOrRecombine(tokens *[]*token, pool *tokenPool, recom *recomTable, nodeIdx, stateIdx int, history *wordHistoryNode, score float64) {
 	lwID := 0
 	pwID := 0
+	ppwID := 0
 	if history != nil {
 		lwID = history.wordID
 		if history.prev != nil {
 			pwID = history.prev.wordID
+			if history.prev.prev != nil {
+				ppwID = history.prev.prev.wordID
+			}
 		}
 	}
-	key := recomKey{nodeIdx: nodeIdx, stateIdx: stateIdx, lastWordID: lwID, prevWordID: pwID}
+	key := recomKey{nodeIdx: nodeIdx, stateIdx: stateIdx, lastWordID: lwID, prevWordID: pwID, prevPrevWordID: ppwID}
 	if idx, exists := recom.lookupOrInsert(key, int32(len(*tokens))); exists {
 		if score > (*tokens)[idx].score {
 			(*tokens)[idx].score = score

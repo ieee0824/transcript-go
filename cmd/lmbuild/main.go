@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	order := flag.Int("order", 2, "N-gram order (2=bigram, 3=trigram)")
+	order := flag.Int("order", 2, "N-gram order (2=bigram, 3=trigram, 4=fourgram)")
 	output := flag.String("output", "", "output file (default: stdout)")
 	flag.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage: lmbuild [options] [input-files...]")

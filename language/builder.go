@@ -13,22 +13,24 @@ type Builder struct {
 	unigrams map[string]int
 	bigrams  map[[2]string]int
 	trigrams map[[3]string]int
+	fourgrams map[[4]string]int
 }
 
 // NewBuilder creates a new N-gram builder.
-// order must be 2 (bigram) or 3 (trigram).
+// order must be 2 (bigram), 3 (trigram), or 4 (fourgram).
 func NewBuilder(order int) *Builder {
 	if order < 2 {
 		order = 2
 	}
-	if order > 3 {
-		order = 3
+	if order > 4 {
+		order = 4
 	}
 	return &Builder{
-		order:    order,
-		unigrams: make(map[string]int),
-		bigrams:  make(map[[2]string]int),
-		trigrams: make(map[[3]string]int),
+		order:     order,
+		unigrams:  make(map[string]int),
+		bigrams:   make(map[[2]string]int),
+		trigrams:  make(map[[3]string]int),
+		fourgrams: make(map[[4]string]int),
 	}
 }
 
@@ -51,6 +53,9 @@ func (b *Builder) AddSentence(words []string) {
 		}
 		if b.order >= 3 && i >= 2 {
 			b.trigrams[[3]string{seq[i-2], seq[i-1], seq[i]}]++
+		}
+		if b.order >= 4 && i >= 3 {
+			b.fourgrams[[4]string{seq[i-3], seq[i-2], seq[i-1], seq[i]}]++
 		}
 	}
 }
@@ -82,6 +87,16 @@ func (b *Builder) WriteARPA(w io.Writer) error {
 		triContextTotal[ctx] += c
 		_ = c
 		triContextTypes[ctx]++
+	}
+
+	// fourgram contexts
+	fourContextTotal := make(map[[3]string]int) // (h1,h2,h3) -> N(h1,h2,h3)
+	fourContextTypes := make(map[[3]string]int) // (h1,h2,h3) -> T(h1,h2,h3)
+	for key, c := range b.fourgrams {
+		ctx := [3]string{key[0], key[1], key[2]}
+		fourContextTotal[ctx] += c
+		_ = c
+		fourContextTypes[ctx]++
 	}
 
 	// --- Compute unigram probabilities ---
@@ -181,8 +196,9 @@ func (b *Builder) WriteARPA(w io.Writer) error {
 
 	// --- Compute trigram probabilities (Witten-Bell) ---
 	type triProb struct {
-		key     [3]string
-		logProb float64
+		key        [3]string
+		logProb    float64
+		logBackoff float64
 	}
 	tris := make([]triProb, 0, len(b.trigrams))
 	if b.order >= 3 {
@@ -191,7 +207,47 @@ func (b *Builder) WriteARPA(w io.Writer) error {
 			n := triContextTotal[ctx]
 			t := triContextTypes[ctx]
 			lp := math.Log10(float64(count) / float64(n+t))
-			tris = append(tris, triProb{key, lp})
+
+			// Backoff weight for trigram -> fourgram backoff
+			var bo float64
+			if b.order >= 4 {
+				fctx := [3]string{key[0], key[1], key[2]}
+				if fn, ok := fourContextTotal[fctx]; ok {
+					ft := fourContextTypes[fctx]
+					sumFourProb := 0.0
+					for fkey, fc := range b.fourgrams {
+						if fkey[0] == fctx[0] && fkey[1] == fctx[1] && fkey[2] == fctx[2] {
+							sumFourProb += float64(fc) / float64(fn+ft)
+						}
+					}
+					sumTriProb := 0.0
+					for fkey := range b.fourgrams {
+						if fkey[0] == fctx[0] && fkey[1] == fctx[1] && fkey[2] == fctx[2] {
+							w := fkey[3]
+							triKey := [2]string{fctx[1], fctx[2]}
+							tn2 := triContextTotal[triKey]
+							tt2 := triContextTypes[triKey]
+							if tc, ok := b.trigrams[[3]string{fctx[1], fctx[2], w}]; ok {
+								sumTriProb += float64(tc) / float64(tn2+tt2)
+							} else {
+								biKey := [2]string{fctx[2], w}
+								if bc, ok := b.bigrams[biKey]; ok {
+									bn := biContextTotal[fctx[2]]
+									bt := biContextTypes[fctx[2]]
+									sumTriProb += float64(bc) / float64(bn+bt)
+								} else {
+									sumTriProb += float64(b.unigrams[w]) / float64(uniTotal)
+								}
+							}
+						}
+					}
+					if sumTriProb < 1.0 {
+						bo = math.Log10((1.0 - sumFourProb) / (1.0 - sumTriProb))
+					}
+				}
+			}
+
+			tris = append(tris, triProb{key, lp, bo})
 		}
 		sort.Slice(tris, func(i, j int) bool {
 			if tris[i].key[0] != tris[j].key[0] {
@@ -204,12 +260,39 @@ func (b *Builder) WriteARPA(w io.Writer) error {
 		})
 	}
 
+	// --- Compute fourgram probabilities (Witten-Bell) ---
+	type fourProb struct {
+		key     [4]string
+		logProb float64
+	}
+	fours := make([]fourProb, 0, len(b.fourgrams))
+	if b.order >= 4 {
+		for key, count := range b.fourgrams {
+			ctx := [3]string{key[0], key[1], key[2]}
+			n := fourContextTotal[ctx]
+			t := fourContextTypes[ctx]
+			lp := math.Log10(float64(count) / float64(n+t))
+			fours = append(fours, fourProb{key, lp})
+		}
+		sort.Slice(fours, func(i, j int) bool {
+			for k := 0; k < 4; k++ {
+				if fours[i].key[k] != fours[j].key[k] {
+					return fours[i].key[k] < fours[j].key[k]
+				}
+			}
+			return false
+		})
+	}
+
 	// --- Write ARPA ---
 	fmt.Fprintln(w, "\\data\\")
 	fmt.Fprintf(w, "ngram 1=%d\n", len(unis))
 	fmt.Fprintf(w, "ngram 2=%d\n", len(bis))
 	if b.order >= 3 && len(tris) > 0 {
 		fmt.Fprintf(w, "ngram 3=%d\n", len(tris))
+	}
+	if b.order >= 4 && len(fours) > 0 {
+		fmt.Fprintf(w, "ngram 4=%d\n", len(fours))
 	}
 	fmt.Fprintln(w)
 
@@ -225,7 +308,7 @@ func (b *Builder) WriteARPA(w io.Writer) error {
 
 	fmt.Fprintln(w, "\\2-grams:")
 	for _, bi := range bis {
-		if b.order >= 3 && bi.logBackoff != 0 {
+		if (b.order >= 3) && bi.logBackoff != 0 {
 			fmt.Fprintf(w, "%.6f\t%s %s\t%.6f\n", bi.logProb, bi.key[0], bi.key[1], bi.logBackoff)
 		} else {
 			fmt.Fprintf(w, "%.6f\t%s %s\n", bi.logProb, bi.key[0], bi.key[1])
@@ -236,7 +319,19 @@ func (b *Builder) WriteARPA(w io.Writer) error {
 	if b.order >= 3 && len(tris) > 0 {
 		fmt.Fprintln(w, "\\3-grams:")
 		for _, tri := range tris {
-			fmt.Fprintf(w, "%.6f\t%s %s %s\n", tri.logProb, tri.key[0], tri.key[1], tri.key[2])
+			if b.order >= 4 && tri.logBackoff != 0 {
+				fmt.Fprintf(w, "%.6f\t%s %s %s\t%.6f\n", tri.logProb, tri.key[0], tri.key[1], tri.key[2], tri.logBackoff)
+			} else {
+				fmt.Fprintf(w, "%.6f\t%s %s %s\n", tri.logProb, tri.key[0], tri.key[1], tri.key[2])
+			}
+		}
+		fmt.Fprintln(w)
+	}
+
+	if b.order >= 4 && len(fours) > 0 {
+		fmt.Fprintln(w, "\\4-grams:")
+		for _, f := range fours {
+			fmt.Fprintf(w, "%.6f\t%s %s %s %s\n", f.logProb, f.key[0], f.key[1], f.key[2], f.key[3])
 		}
 		fmt.Fprintln(w)
 	}

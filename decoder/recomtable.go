@@ -42,7 +42,8 @@ func hashRecomKey(k recomKey) uint64 {
 	h := uint64(k.nodeIdx)*0x9E3779B97F4A7C15 ^
 		uint64(k.stateIdx)*0x517CC1B727220A95 ^
 		uint64(k.lastWordID)*0x6C62272E07BB0142 ^
-		uint64(k.prevWordID)*0x62B821756295C58D
+		uint64(k.prevWordID)*0x62B821756295C58D ^
+		uint64(k.prevPrevWordID)*0x94D049BB133111EB
 	// Mix bits
 	h ^= h >> 33
 	h *= 0xFF51AFD7ED558CCD

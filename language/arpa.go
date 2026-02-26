@@ -123,6 +123,8 @@ func parseNGramLine(model *NGramModel, order int, line string) error {
 		model.Bigrams[[2]string{words[0], words[1]}] = entry
 	case 3:
 		model.Trigrams[[3]string{words[0], words[1], words[2]}] = entry
+	case 4:
+		model.Fourgrams[[4]string{words[0], words[1], words[2], words[3]}] = entry
 	}
 
 	return nil

@@ -25,6 +25,7 @@ import (
 type testCase struct {
 	features [][]float64
 	expected string
+	path     string
 }
 
 type paramSet struct {
@@ -58,6 +59,7 @@ func main() {
 	lmInterp := flag.Float64("lm-interp", 0.0, "LM interpolation weight")
 	hiragana := flag.Bool("hiragana", false, "enable hiragana fallback")
 	hiraganaPenalty := flag.Float64("hiragana-penalty", -15.0, "penalty for hiragana fallback words")
+	verbose := flag.Bool("verbose", false, "show per-utterance errors for best params")
 
 	flag.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage: tuner -am AM -lm LM -dict DICT -manifest M1,M2,...")
@@ -273,6 +275,32 @@ func main() {
 			r.params.MaxActiveTokens, r.params.MaxWordEnds,
 			r.correct, r.total, acc)
 	}
+
+	// Verbose: re-run best params and show per-utterance errors
+	if *verbose && len(results) > 0 {
+		best := results[0].params
+		fmt.Fprintf(os.Stderr, "\n=== Verbose: errors with best params (LW=%.1f WP=%.1f MT=%d MWE=%d) ===\n",
+			best.LMWeight, best.WordInsertionPenalty, best.MaxActiveTokens, best.MaxWordEnds)
+		cfg := decoder.Config{
+			BeamWidth:            *beam,
+			MaxActiveTokens:      best.MaxActiveTokens,
+			LMWeight:             best.LMWeight,
+			WordInsertionPenalty: best.WordInsertionPenalty,
+			LMInterpolation:     *lmInterp,
+			MaxWordEnds:          best.MaxWordEnds,
+			HiraganaSet:          hiraganaSet,
+			HiraganaPenalty:      *hiraganaPenalty,
+		}
+		errCount := 0
+		for _, tc := range tests {
+			r := decoder.Decode(tc.features, am, lm, dict, cfg)
+			if r.Text != tc.expected {
+				errCount++
+				fmt.Fprintf(os.Stderr, "  [MISS] expected: %-30s got: %-30s file: %s\n", tc.expected, r.Text, tc.path)
+			}
+		}
+		fmt.Fprintf(os.Stderr, "Total errors: %d/%d\n", errCount, len(tests))
+	}
 }
 
 func loadManifest(path string) []testCase {
@@ -309,7 +337,7 @@ func loadManifest(path string) []testCase {
 			fmt.Fprintf(os.Stderr, "features %s: %v\n", wavPath, err)
 			continue
 		}
-		cases = append(cases, testCase{features: feats, expected: expected})
+		cases = append(cases, testCase{features: feats, expected: expected, path: wavPath})
 	}
 	return cases
 }
