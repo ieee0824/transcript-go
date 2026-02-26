@@ -24,6 +24,7 @@ func main() {
 	dnnPath := flag.String("dnn", "", "path to DNN model file (enables DNN-HMM hybrid)")
 	hiragana := flag.Bool("hiragana", false, "enable hiragana fallback for unknown words")
 	hiraganaPenalty := flag.Float64("hiragana-penalty", -15.0, "penalty for hiragana fallback words")
+	wpPerFrame := flag.Float64("wp-per-frame", 0.0, "per-frame WP adjustment (effectiveWP = WP + wpPerFrame*T)")
 	verbose := flag.Bool("v", false, "verbose output")
 
 	flag.Parse()
@@ -43,6 +44,7 @@ func main() {
 			MaxWordEnds:          *maxWordEnds,
 			LMInterpolation:     *lmInterp,
 			HiraganaPenalty:      *hiraganaPenalty,
+			WPPerFrame:           *wpPerFrame,
 		}),
 		transcript.WithOOVLogProb(*oovProb),
 		transcript.WithVTLN(*vtln),

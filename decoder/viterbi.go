@@ -22,6 +22,7 @@ type Config struct {
 	HiraganaSet          map[string]bool // set of hiragana fallback words (nil = disabled)
 	HiraganaPenalty      float64         // additional penalty for hiragana word completions
 	NBestCount           int             // number of N-best hypotheses to return (0 = 1-best only)
+	WPPerFrame           float64         // per-frame WP adjustment: effectiveWP = WordInsertionPenalty + WPPerFrame*T
 }
 
 // DefaultConfig returns reasonable default parameters.
@@ -137,6 +138,9 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 		cfg.BeamWidth *= scale
 		cfg.MaxActiveTokens = int(float64(cfg.MaxActiveTokens) * scale)
 	}
+
+	// Frame-length adaptive WP: adjust word insertion penalty based on utterance length.
+	effectiveWP := cfg.WordInsertionPenalty + cfg.WPPerFrame*float64(T)
 
 	vocab := dict.Words()
 	if len(vocab) == 0 {
@@ -514,7 +518,7 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 						} else {
 							lmScore = scoreLM(lmHistBuf, word)
 						}
-						wordBaseScore := baseScore - lmLookAhead + lmScore + cfg.WordInsertionPenalty
+						wordBaseScore := baseScore - lmLookAhead + lmScore + effectiveWP
 						if cfg.HiraganaSet != nil && cfg.HiraganaSet[word] {
 							wordBaseScore += cfg.HiraganaPenalty
 						}
@@ -585,7 +589,7 @@ func Decode(features [][]float64, am *acoustic.AcousticModel, lm *language.NGram
 				} else {
 					lmScore = scoreLM(lmHistBuf, w)
 				}
-				s := tok.score - lmLookAhead + lmScore + cfg.WordInsertionPenalty
+				s := tok.score - lmLookAhead + lmScore + effectiveWP
 				if cfg.HiraganaSet != nil && cfg.HiraganaSet[w] {
 					s += cfg.HiraganaPenalty
 				}

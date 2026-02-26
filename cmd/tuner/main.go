@@ -35,6 +35,7 @@ type paramSet struct {
 	MaxActiveTokens      int
 	MaxWordEnds          int
 	RescoreWeight        float64
+	WPPerFrame           float64
 }
 
 type result struct {
@@ -65,6 +66,7 @@ func main() {
 	nbest := flag.Int("nbest", 0, "N-best count for rescoring (0=disabled)")
 	rescoreLMPath := flag.String("rescore-lm", "", "path to rescoring LM (ARPA)")
 	rescoreWeightsStr := flag.String("rescore-weights", "1,2,3,5", "comma-separated rescore LM weights")
+	wpPerFrameStr := flag.String("wp-per-frame", "0", "comma-separated WP per-frame adjustments (effectiveWP = WP + wpPerFrame*T)")
 	correctDictPath := flag.String("correct-dict", "", "large dictionary for post-correction")
 	correctLMPath := flag.String("correct-lm", "", "large LM for post-correction")
 	correctMaxDist := flag.Int("correct-max-dist", 2, "max phoneme edit distance for correction candidates")
@@ -205,20 +207,20 @@ func main() {
 	maxTokens := parseInts(*maxToksStr)
 	maxWordEnds := parseInts(*maxWeStr)
 	rescoreWeights := parseFloats(*rescoreWeightsStr)
+	wpPerFrames := parseFloats(*wpPerFrameStr)
 
 	// If rescoring is not enabled, use a single dummy weight so grid loop works
 	if rescoreLM == nil {
 		rescoreWeights = []float64{0}
 	}
 
-	combos := len(lmWeights) * len(wordPenalties) * len(maxTokens) * len(maxWordEnds) * len(rescoreWeights)
+	combos := len(lmWeights) * len(wordPenalties) * len(maxTokens) * len(maxWordEnds) * len(rescoreWeights) * len(wpPerFrames)
+	fmt.Fprintf(os.Stderr, "Grid: %d LMWeight × %d WordPenalty × %d MaxTokens × %d MaxWordEnds × %d WPPerFrame",
+		len(lmWeights), len(wordPenalties), len(maxTokens), len(maxWordEnds), len(wpPerFrames))
 	if rescoreLM != nil {
-		fmt.Fprintf(os.Stderr, "Grid: %d LMWeight × %d WordPenalty × %d MaxTokens × %d MaxWordEnds × %d RescoreWeight = %d combos\n",
-			len(lmWeights), len(wordPenalties), len(maxTokens), len(maxWordEnds), len(rescoreWeights), combos)
-	} else {
-		fmt.Fprintf(os.Stderr, "Grid: %d LMWeight × %d WordPenalty × %d MaxTokens × %d MaxWordEnds = %d combos\n",
-			len(lmWeights), len(wordPenalties), len(maxTokens), len(maxWordEnds), combos)
+		fmt.Fprintf(os.Stderr, " × %d RescoreWeight", len(rescoreWeights))
 	}
+	fmt.Fprintf(os.Stderr, " = %d combos\n", combos)
 
 	// Load and pre-extract features from all manifests
 	fmt.Fprintln(os.Stderr, "Extracting features...")
@@ -233,7 +235,7 @@ func main() {
 	}
 	fmt.Fprintf(os.Stderr, "Loaded %d test files\n", len(tests))
 
-	// Build parameter grid
+	// Build parameter grid (base dimensions, then expand with WPPerFrame)
 	var grid []paramSet
 	for _, lw := range lmWeights {
 		for _, wp := range wordPenalties {
@@ -249,6 +251,16 @@ func main() {
 						})
 					}
 				}
+			}
+		}
+	}
+	if len(wpPerFrames) > 1 || (len(wpPerFrames) == 1 && wpPerFrames[0] != 0) {
+		base := grid
+		grid = make([]paramSet, 0, len(base)*len(wpPerFrames))
+		for _, ps := range base {
+			for _, wppf := range wpPerFrames {
+				ps.WPPerFrame = wppf
+				grid = append(grid, ps)
 			}
 		}
 	}
@@ -322,6 +334,7 @@ func main() {
 				HiraganaSet:          hiraganaSet,
 				HiraganaPenalty:      *hiraganaPenalty,
 				NBestCount:           *nbest,
+				WPPerFrame:           ps.WPPerFrame,
 			}
 			for _, tc := range tests {
 				r := decoder.Decode(tc.features, am, lm, dict, cfg)
@@ -354,41 +367,47 @@ func main() {
 	})
 
 	// Print results
+	showWPPF := len(wpPerFrames) > 1 || (len(wpPerFrames) == 1 && wpPerFrames[0] != 0)
 	if rescoreLM != nil {
-		fmt.Printf("%-10s %-12s %-12s %-12s %-12s %8s %6s %8s\n",
-			"LMWeight", "WordPenalty", "MaxTokens", "MaxWordEnds", "RescoreWt", "Correct", "Total", "Accuracy")
-		fmt.Println(strings.Repeat("-", 90))
+		fmt.Printf("%-10s %-12s %-12s %-12s %-12s", "LMWeight", "WordPenalty", "MaxTokens", "MaxWordEnds", "RescoreWt")
 	} else {
-		fmt.Printf("%-10s %-12s %-12s %-12s %8s %6s %8s\n",
-			"LMWeight", "WordPenalty", "MaxTokens", "MaxWordEnds", "Correct", "Total", "Accuracy")
-		fmt.Println(strings.Repeat("-", 78))
+		fmt.Printf("%-10s %-12s %-12s %-12s", "LMWeight", "WordPenalty", "MaxTokens", "MaxWordEnds")
 	}
+	if showWPPF {
+		fmt.Printf(" %-10s", "WPPerFrm")
+	}
+	fmt.Printf(" %8s %6s %8s\n", "Correct", "Total", "Accuracy")
+	fmt.Println(strings.Repeat("-", 90))
 	for _, r := range results {
 		acc := float64(r.correct) / float64(r.total) * 100
 		if rescoreLM != nil {
-			fmt.Printf("%-10.1f %-12.1f %-12d %-12d %-12.1f %8d %6d %7.1f%%\n",
+			fmt.Printf("%-10.1f %-12.1f %-12d %-12d %-12.1f",
 				r.params.LMWeight, r.params.WordInsertionPenalty,
 				r.params.MaxActiveTokens, r.params.MaxWordEnds,
-				r.params.RescoreWeight,
-				r.correct, r.total, acc)
+				r.params.RescoreWeight)
 		} else {
-			fmt.Printf("%-10.1f %-12.1f %-12d %-12d %8d %6d %7.1f%%\n",
+			fmt.Printf("%-10.1f %-12.1f %-12d %-12d",
 				r.params.LMWeight, r.params.WordInsertionPenalty,
-				r.params.MaxActiveTokens, r.params.MaxWordEnds,
-				r.correct, r.total, acc)
+				r.params.MaxActiveTokens, r.params.MaxWordEnds)
 		}
+		if showWPPF {
+			fmt.Printf(" %-10.4f", r.params.WPPerFrame)
+		}
+		fmt.Printf(" %8d %6d %7.1f%%\n", r.correct, r.total, acc)
 	}
 
 	// Verbose: re-run best params and show per-utterance errors
 	if *verbose && len(results) > 0 {
 		best := results[0].params
-		if rescoreLM != nil {
-			fmt.Fprintf(os.Stderr, "\n=== Verbose: errors with best params (LW=%.1f WP=%.1f MT=%d MWE=%d RW=%.1f) ===\n",
-				best.LMWeight, best.WordInsertionPenalty, best.MaxActiveTokens, best.MaxWordEnds, best.RescoreWeight)
-		} else {
-			fmt.Fprintf(os.Stderr, "\n=== Verbose: errors with best params (LW=%.1f WP=%.1f MT=%d MWE=%d) ===\n",
-				best.LMWeight, best.WordInsertionPenalty, best.MaxActiveTokens, best.MaxWordEnds)
+		hdr := fmt.Sprintf("LW=%.1f WP=%.1f MT=%d MWE=%d",
+			best.LMWeight, best.WordInsertionPenalty, best.MaxActiveTokens, best.MaxWordEnds)
+		if best.WPPerFrame != 0 {
+			hdr += fmt.Sprintf(" WPPF=%.4f", best.WPPerFrame)
 		}
+		if rescoreLM != nil {
+			hdr += fmt.Sprintf(" RW=%.1f", best.RescoreWeight)
+		}
+		fmt.Fprintf(os.Stderr, "\n=== Verbose: errors with best params (%s) ===\n", hdr)
 		cfg := decoder.Config{
 			BeamWidth:            *beam,
 			MaxActiveTokens:      best.MaxActiveTokens,
@@ -399,6 +418,7 @@ func main() {
 			HiraganaSet:          hiraganaSet,
 			HiraganaPenalty:      *hiraganaPenalty,
 			NBestCount:           *nbest,
+			WPPerFrame:           best.WPPerFrame,
 		}
 		errCount := 0
 		for _, tc := range tests {
