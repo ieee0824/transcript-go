@@ -64,6 +64,7 @@ func main() {
 
 	var batch []string
 	var totalIn, totalOut int
+	var lineCount int
 
 	flush := func() {
 		if len(batch) == 0 {
@@ -85,6 +86,10 @@ func main() {
 	}
 
 	for scanner.Scan() {
+		lineCount++
+		if lineCount%500000 == 0 {
+			fmt.Fprintf(os.Stderr, "  [lmtext] %dK lines read, %d sentences in, %d out\n", lineCount/1000, totalIn, totalOut)
+		}
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" || tagRe.MatchString(line) {
 			continue

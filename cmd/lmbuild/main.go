@@ -24,6 +24,7 @@ func main() {
 	flag.Parse()
 
 	b := language.NewBuilder(*order)
+	b.Log = os.Stderr
 
 	// Read input
 	var sentCount int
@@ -76,6 +77,9 @@ func readLines(b *language.Builder, f *os.File) int {
 		if len(words) > 0 {
 			b.AddSentence(words)
 			count++
+			if count%100000 == 0 {
+				fmt.Fprintf(os.Stderr, "  [lmbuild] %dK sentences read\n", count/1000)
+			}
 		}
 	}
 	return count

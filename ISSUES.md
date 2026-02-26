@@ -1041,3 +1041,50 @@ mega-batch (256 × NumCPU frames)
 | # | 施策 | 状態 |
 |---|---|---|
 | 10 | 特徴量抽出・モノフォン学習・強制アライメント・トライフォン学習をgoroutineワーカプール(NumCPU)で並列化 | ✅ |
+
+### lmbuild WriteARPA高速化
+
+#### 問題
+
+`language/builder.go` の `WriteARPA` メソッドでbackoff weight計算が O(V×B + B×T) の計算量。各unigram/bigramに対して全bigram/trigramをリニアスキャンしている。
+
+- unigram backoff: 各unigramで全bigramをスキャン (lines 121-132) → O(V × B)
+- bigram backoff: 各bigramで全trigramをスキャン (lines 163-181) → O(B × T)
+- trigram backoff: 各trigramで全fourgramをスキャン (lines 218-243) → O(T × F)
+
+実測 (ベンチマーク改修前):
+
+| データ規模 | 時間 |
+|---|---|
+| 500語, 1K文 (trigram) | 638ms |
+| 2K語, 5K文 (trigram) | 23.4秒 |
+| 5K語, 20K文 (trigram) | 462秒 (7.7分) |
+| 32K語, 50K文 (trigram) | 完了不可能 (38分超で中断) |
+
+#### 改修方針
+
+n-gramをコンテキスト(先頭語)でpre-indexしたlookup mapを構築。リニアスキャンを定数時間ルックアップに置換。
+
+```go
+// 改修前: O(B) per unigram
+for key, c := range b.bigrams {
+    if key[0] == word { ... }
+}
+
+// 改修後: O(b) per unigram (b = そのコンテキストのbigram数)
+for _, entry := range bigramsByCtx[word] { ... }
+```
+
+期待計算量: O(V + B + T + F) — 全体で1パスずつ。
+
+#### 結果
+
+| ベンチマーク | Before | After | 高速化 |
+|---|---|---|---|
+| Bigram_Small (500語, 1K文) | 59ms | 3.2ms | **18x** |
+| Trigram_Small (500語, 1K文) | 638ms | 8.9ms | **72x** |
+| Trigram_Medium (2K語, 5K文) | 23.4秒 | 53ms | **440x** |
+| Trigram_Large (5K語, 20K文) | 462秒 | 304ms | **1,520x** |
+| 実データ (32K語, 50K文, trigram) | 38分超 (中断) | **2.8秒** | — |
+
+実データ: 32,497 unigrams, 220,103 bigrams, 414,768 trigrams を2.8秒で構築。
