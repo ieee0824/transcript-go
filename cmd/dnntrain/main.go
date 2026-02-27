@@ -38,6 +38,9 @@ func main() {
 	specAugFreq := flag.Int("specaug-freq", 0, "SpecAugment max frequency mask width (0=disabled, recommended 6)")
 	specAugTime := flag.Int("specaug-time", 0, "SpecAugment max time mask width (0=disabled, recommended 3)")
 	manifestNoAug := flag.String("manifest-noaug", "", "additional manifest (no augmentation applied)")
+	alignDNNPath := flag.String("align-dnn", "", "DNN model for forced alignment (uses DNN instead of GMM)")
+	initDNNPath := flag.String("init", "", "pre-trained DNN for weight initialization (fine-tuning)")
+	warmupEpochs := flag.Int("warmup", 0, "linear LR warmup epochs (recommended 2-3 for fine-tuning)")
 
 	flag.Usage = func() {
 		fmt.Fprintln(os.Stderr, "Usage: dnntrain [flags]")
@@ -71,6 +74,23 @@ func main() {
 	}
 	fmt.Fprintf(os.Stderr, "Acoustic model: %d phonemes, %d triphones\n",
 		len(am.Phonemes), len(am.Triphones))
+
+	// Optionally load DNN for alignment
+	var alignDNN *acoustic.DNN
+	if *alignDNNPath != "" {
+		dnnFile, err := os.Open(*alignDNNPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "open align DNN: %v\n", err)
+			os.Exit(1)
+		}
+		alignDNN, err = acoustic.LoadDNN(dnnFile)
+		dnnFile.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "load align DNN: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Fprintf(os.Stderr, "Alignment DNN: %d classes, context=%d\n", alignDNN.OutputDim, alignDNN.ContextLen)
+	}
 
 	// Read manifest(s)
 	type utterance struct {
@@ -209,8 +229,14 @@ func main() {
 			defer wgAlign.Done()
 			defer func() { <-alignSem }()
 
-			states, err := acoustic.ForcedAlignStates(am, u.phonemes, u.features)
-			if err != nil {
+			var states []acoustic.StateAlignment
+			var alignErr error
+			if alignDNN != nil {
+				states, alignErr = acoustic.ForcedAlignStatesDNN(alignDNN, u.phonemes, u.features)
+			} else {
+				states, alignErr = acoustic.ForcedAlignStates(am, u.phonemes, u.features)
+			}
+			if alignErr != nil {
 				return
 			}
 			alignCh <- alignedUtt{features: u.features, alignments: states}
@@ -232,8 +258,42 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Create DNN
-	dnn := acoustic.NewDNN(featureDim, *hiddenDim, *contextLen, *numLayers, *dropout, *batchNorm, *residual)
+	// Create or load DNN
+	var dnn *acoustic.DNN
+	if *initDNNPath != "" {
+		f, err := os.Open(*initDNNPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "open init DNN: %v\n", err)
+			os.Exit(1)
+		}
+		dnn, err = acoustic.LoadDNN(f)
+		f.Close()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "load init DNN: %v\n", err)
+			os.Exit(1)
+		}
+		// Validate architecture match
+		expectedInputDim := (2*(*contextLen) + 1) * featureDim
+		if dnn.InputDim != expectedInputDim {
+			fmt.Fprintf(os.Stderr, "init DNN InputDim %d != expected %d\n", dnn.InputDim, expectedInputDim)
+			os.Exit(1)
+		}
+		if dnn.HiddenDim != *hiddenDim {
+			fmt.Fprintf(os.Stderr, "init DNN HiddenDim %d != -hidden %d\n", dnn.HiddenDim, *hiddenDim)
+			os.Exit(1)
+		}
+		nHidden := len(dnn.Layers) - 1
+		if nHidden != *numLayers {
+			fmt.Fprintf(os.Stderr, "init DNN has %d hidden layers, -layers=%d\n", nHidden, *numLayers)
+			os.Exit(1)
+		}
+		// Apply dropout from flag (not preserved in serialization)
+		dnn.DropoutRate = *dropout
+		fmt.Fprintf(os.Stderr, "Loaded init DNN: input=%d hidden=%d layers=%d output=%d\n",
+			dnn.InputDim, dnn.HiddenDim, nHidden, dnn.OutputDim)
+	} else {
+		dnn = acoustic.NewDNN(featureDim, *hiddenDim, *contextLen, *numLayers, *dropout, *batchNorm, *residual)
+	}
 
 	// Count total frames and compute class priors
 	totalFrames := 0
@@ -302,6 +362,7 @@ func main() {
 		LRSchedule:      *lrSchedule,
 		SpecAugFreqMask: *specAugFreq,
 		SpecAugTimeMask: *specAugTime,
+		WarmupEpochs:    *warmupEpochs,
 	}
 	totalParams := 0
 	for _, l := range dnn.Layers {
@@ -309,6 +370,12 @@ func main() {
 	}
 	fmt.Fprintf(os.Stderr, "Training DNN: input=%d hidden=%d layers=%d output=%d dropout=%.2f batchnorm=%v params=%d\n",
 		dnn.InputDim, dnn.HiddenDim, len(dnn.Layers)-1, dnn.OutputDim, dnn.DropoutRate, dnn.UseBatchNorm, totalParams)
+	if *initDNNPath != "" {
+		fmt.Fprintf(os.Stderr, "  Fine-tuning from: %s\n", *initDNNPath)
+	}
+	if trainCfg.WarmupEpochs > 0 {
+		fmt.Fprintf(os.Stderr, "  LR warmup: %d epochs\n", trainCfg.WarmupEpochs)
+	}
 	if trainCfg.SpecAugFreqMask > 0 || trainCfg.SpecAugTimeMask > 0 {
 		fmt.Fprintf(os.Stderr, "  SpecAugment: freq_mask=%d time_mask=%d\n",
 			trainCfg.SpecAugFreqMask, trainCfg.SpecAugTimeMask)

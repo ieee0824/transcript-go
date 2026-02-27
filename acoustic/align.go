@@ -208,6 +208,127 @@ func ForcedAlignStates(am *AcousticModel, phonemes []Phoneme, features [][]float
 	return ForcedAlignStatesHMMs(hmms, phonemes, features)
 }
 
+// ForcedAlignStatesDNN performs forced alignment using DNN emission scores
+// instead of GMM scores, returning per-frame state assignments.
+func ForcedAlignStatesDNN(dnn *DNN, phonemes []Phoneme, features [][]float64) ([]StateAlignment, error) {
+	T := len(features)
+	N := len(phonemes)
+	if N == 0 {
+		return nil, fmt.Errorf("empty phoneme sequence")
+	}
+	if T < N {
+		return nil, fmt.Errorf("too few frames (%d) for %d phonemes", T, N)
+	}
+
+	S := N * NumEmittingStates
+
+	// Compute DNN log-likelihoods: posteriors - prior
+	dnnLogLikes := dnn.ForwardFrames(features)
+	emit := mathutil.NewMat(T, S)
+	for t := 0; t < T; t++ {
+		dnn.SubtractPrior(dnnLogLikes[t])
+		for p := 0; p < N; p++ {
+			for s := 1; s <= NumEmittingStates; s++ {
+				j := p*NumEmittingStates + (s - 1)
+				ci := dnn.StateClassIndex(phonemes[p], s)
+				if ci >= 0 && ci < len(dnnLogLikes[t]) {
+					emit[t][j] = dnnLogLikes[t][ci]
+				} else {
+					emit[t][j] = mathutil.LogZero
+				}
+			}
+		}
+	}
+
+	// Viterbi with uniform transitions (no HMM transition params needed)
+	selfLoop := math.Log(0.5)
+	forward := math.Log(0.5)
+	exitScore := math.Log(0.5)
+
+	prev := mathutil.NewVecFill(S, mathutil.LogZero)
+	curr := mathutil.NewVecFill(S, mathutil.LogZero)
+	bp := make([][]int32, T)
+	for t := range bp {
+		bp[t] = make([]int32, S)
+	}
+
+	prev[0] = emit[0][0] // entry to first state
+
+	for t := 1; t < T; t++ {
+		mathutil.FillVec(curr, mathutil.LogZero)
+		for j := 0; j < S; j++ {
+			p := j / NumEmittingStates
+			s := j%NumEmittingStates + 1
+
+			bestScore := mathutil.LogZero
+			bestPrev := int32(0)
+
+			// Self-loop
+			score := prev[j] + selfLoop
+			if score > bestScore {
+				bestScore = score
+				bestPrev = int32(j)
+			}
+
+			// Intra-phoneme forward
+			if s >= 2 {
+				prevJ := p*NumEmittingStates + (s - 2)
+				score = prev[prevJ] + forward
+				if score > bestScore {
+					bestScore = score
+					bestPrev = int32(prevJ)
+				}
+			}
+
+			// Cross-phoneme
+			if s == 1 && p >= 1 {
+				prevJ := (p-1)*NumEmittingStates + (NumEmittingStates - 1)
+				score = prev[prevJ] + exitScore
+				if score > bestScore {
+					bestScore = score
+					bestPrev = int32(prevJ)
+				}
+			}
+
+			if bestScore > mathutil.LogZero+1 {
+				curr[j] = bestScore + emit[t][j]
+			}
+			bp[t][j] = bestPrev
+		}
+		prev, curr = curr, prev
+	}
+
+	bestJ := -1
+	bestScore := mathutil.LogZero
+	for s := 0; s < NumEmittingStates; s++ {
+		j := (N-1)*NumEmittingStates + s
+		if prev[j] > bestScore {
+			bestScore = prev[j]
+			bestJ = j
+		}
+	}
+	if bestJ < 0 || bestScore <= mathutil.LogZero+1 {
+		return nil, fmt.Errorf("forced alignment failed: no valid path")
+	}
+
+	path := make([]int, T)
+	path[T-1] = bestJ
+	for t := T - 1; t > 0; t-- {
+		path[t-1] = int(bp[t][path[t]])
+	}
+
+	result := make([]StateAlignment, T)
+	for t := 0; t < T; t++ {
+		p := path[t] / NumEmittingStates
+		s := path[t]%NumEmittingStates + 1
+		result[t] = StateAlignment{
+			Phoneme:  phonemes[p],
+			StateIdx: s,
+		}
+	}
+	return result, nil
+}
+
 // ForcedAlignStatesHMMs performs forced alignment with explicit HMMs and returns
 // per-frame state assignments. Reuses the same Viterbi logic as ForcedAlignHMMs.
 func ForcedAlignStatesHMMs(hmms []*PhonemeHMM, phonemes []Phoneme, features [][]float64) ([]StateAlignment, error) {

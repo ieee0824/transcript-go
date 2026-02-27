@@ -28,6 +28,7 @@ type DNNTrainConfig struct {
 	SpecAugTimeMask int    // max time mask width (0 = disabled)
 	SpecAugNumFreq  int    // number of frequency masks (default 2 if FreqMask > 0)
 	SpecAugNumTime  int    // number of time masks (default 1 if TimeMask > 0)
+	WarmupEpochs    int    // linear LR warmup epochs (0 = disabled)
 }
 
 // DefaultDNNTrainConfig returns sensible defaults for DNN training.
@@ -277,10 +278,18 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 		epochStart := time.Now()
 		// Compute effective learning rate
 		effectiveLR := cfg.LearningRate
-		if cfg.LRSchedule == "cosine" {
-			lrMin := cfg.LearningRate * 0.01
-			cosine := 0.5 * (1.0 + math.Cos(math.Pi*float64(epoch)/float64(cfg.MaxEpochs)))
-			effectiveLR = lrMin + (cfg.LearningRate-lrMin)*cosine
+		if cfg.WarmupEpochs > 0 && epoch < cfg.WarmupEpochs {
+			// Linear warmup: ramp from ~0 to target LR
+			effectiveLR = cfg.LearningRate * float64(epoch+1) / float64(cfg.WarmupEpochs)
+		} else if cfg.LRSchedule == "cosine" {
+			// Cosine annealing (starts after warmup if enabled)
+			schedEpoch := epoch - cfg.WarmupEpochs
+			schedTotal := cfg.MaxEpochs - cfg.WarmupEpochs
+			if schedTotal > 0 {
+				lrMin := cfg.LearningRate * 0.01
+				cosine := 0.5 * (1.0 + math.Cos(math.Pi*float64(schedEpoch)/float64(schedTotal)))
+				effectiveLR = lrMin + (cfg.LearningRate-lrMin)*cosine
+			}
 		}
 
 		// Shuffle training indices
@@ -413,7 +422,7 @@ func TrainDNN(dnn *DNN, inputs []float64, targets []int, cfg DNNTrainConfig) err
 		valLoss, valAcc := evaluateDNNParallel(dnn, inputs, targets, valIdx, cfg.BatchSize, workerWSList)
 
 		elapsed := time.Since(epochStart)
-		if cfg.LRSchedule == "cosine" {
+		if cfg.LRSchedule == "cosine" || cfg.WarmupEpochs > 0 {
 			fmt.Fprintf(os.Stderr, "  Epoch %2d: train_loss=%.4f train_acc=%.1f%% val_loss=%.4f val_acc=%.1f%% lr=%.6f [%s]\n",
 				epoch+1, trainLoss, trainAcc, valLoss, valAcc, effectiveLR, elapsed.Round(time.Millisecond))
 		} else {
